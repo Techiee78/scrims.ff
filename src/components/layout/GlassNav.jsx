@@ -20,8 +20,8 @@ export default function GlassNav() {
             end={end}
             className={({ isActive }) =>
               cn(
-                'flex flex-1 flex-col items-center gap-1 rounded-3xl px-1 py-2.5 text-[10px] font-medium transition-all duration-300',
-                isActive ? 'bg-white/10 text-foreground' : 'text-muted-foreground hover:text-foreground'
+                'flex flex-1 flex-col items-center gap-1 rounded-3xl px-1 py-2.5 text-[10px] font-bold transition-colors duration-300',
+                isActive ? 'text-primary' : 'text-white'
               )
             }
           >
@@ -30,7 +30,7 @@ export default function GlassNav() {
                 <Icon
                   className={cn(
                     'h-[18px] w-[18px] transition-transform duration-300',
-                    isActive ? 'scale-110 text-primary' : 'text-muted-foreground'
+                    isActive ? 'scale-110 text-primary' : 'text-white'
                   )}
                 />
                 <span>{label}</span>

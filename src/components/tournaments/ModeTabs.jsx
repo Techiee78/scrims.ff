@@ -24,7 +24,7 @@ export default function ModeTabs({ value, onChange, options = MATCH_MODES }) {
             className={cn(
               'flex flex-col items-center gap-0.5 rounded-3xl px-3 py-2.5 transition-all duration-300',
               active
-                ? 'bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-[0_6px_24px_rgba(249,115,22,0.32)]'
+                ? 'bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-[0_6px_24px_rgba(56,189,248,0.32)]'
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
