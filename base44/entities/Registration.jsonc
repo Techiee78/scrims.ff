@@ -37,6 +37,17 @@
         "cancelled"
       ],
       "default": "joined"
+    },
+    "played": {
+      "type": "boolean",
+      "default": false
+    },
+    "placement": {
+      "type": "number"
+    },
+    "kills": {
+      "type": "number",
+      "default": 0
     }
   },
   "required": [

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { initials } from '@/lib/format';
+import PlayerStats from '@/components/profile/PlayerStats';
 
 export default function ProfileSheet({ open, onOpenChange, user, onSaved }) {
   const [ign, setIgn] = useState('');
@@ -56,6 +57,8 @@ export default function ProfileSheet({ open, onOpenChange, user, onSaved }) {
             <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
           </div>
         </div>
+
+        <PlayerStats user={user} />
 
         <div className="mt-6 space-y-4">
           <div className="space-y-2">
