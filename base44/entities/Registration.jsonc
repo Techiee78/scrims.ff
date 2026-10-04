@@ -1,0 +1,46 @@
+{
+  "name": "Registration",
+  "type": "object",
+  "properties": {
+    "tournament_id": {
+      "type": "string"
+    },
+    "tournament_title": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "ff_ign": {
+      "type": "string"
+    },
+    "ff_uid": {
+      "type": "string"
+    },
+    "slot_number": {
+      "type": "number"
+    },
+    "entry_fee": {
+      "type": "number",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "joined",
+        "cancelled"
+      ],
+      "default": "joined"
+    }
+  },
+  "required": [
+    "tournament_id",
+    "user_email"
+  ]
+}

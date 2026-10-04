@@ -1,0 +1,70 @@
+{
+  "name": "Tournament",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "Full Map",
+        "CS"
+      ],
+      "default": "Full Map"
+    },
+    "map": {
+      "type": "string"
+    },
+    "entry_fee": {
+      "type": "number",
+      "default": 0
+    },
+    "prize_pool": {
+      "type": "number",
+      "default": 0
+    },
+    "per_kill": {
+      "type": "number",
+      "default": 0
+    },
+    "match_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "total_slots": {
+      "type": "number",
+      "default": 48
+    },
+    "filled_slots": {
+      "type": "number",
+      "default": 0
+    },
+    "banner_url": {
+      "type": "string"
+    },
+    "room_id": {
+      "type": "string"
+    },
+    "room_password": {
+      "type": "string"
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "upcoming",
+        "live",
+        "completed"
+      ],
+      "default": "upcoming"
+    }
+  },
+  "required": [
+    "title",
+    "mode"
+  ]
+}
