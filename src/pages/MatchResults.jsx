@@ -104,7 +104,7 @@ export default function MatchResults() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => (selected ? setSelected(null) : navigate('/'))}
+          onClick={() => (selected ? setSelected(null) : navigate('/admin'))}
           className="rounded-full"
         >
           <ChevronLeft className="h-5 w-5" />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ClipboardList, LogOut, User as UserIcon } from 'lucide-react';
+import { LayoutDashboard, LogOut, User as UserIcon } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -120,12 +120,12 @@ export default function ProfileSheet({ open, onOpenChange, user, onSaved }) {
             variant="outline"
             onClick={() => {
               onOpenChange(false);
-              navigate('/results');
+              navigate('/admin');
             }}
             className="mt-4 h-11 w-full rounded-full border-white/10"
           >
-            <ClipboardList className="mr-2 h-4 w-4" />
-            Enter match results
+            <LayoutDashboard className="mr-2 h-4 w-4" />
+            Admin panel
           </Button>
         )}
       </SheetContent>
