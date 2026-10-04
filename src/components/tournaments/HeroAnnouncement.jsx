@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import SlotBar from './SlotBar';
 import StatTile from './StatTile';
 import { coins, matchTime, startsIn } from '@/lib/format';
+import { slotCapacity } from '@/lib/slots';
 
 export default function HeroAnnouncement({ tournament, joined, onJoin }) {
-  const full = (tournament.filled_slots || 0) >= (tournament.total_slots || 0);
+  const capacity = slotCapacity(tournament.mode, tournament.team_type);
+  const full = (tournament.filled_slots || 0) >= capacity;
 
   return (
     <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-[#0B0817]/70 shadow-[0_18px_60px_rgba(3,2,12,0.55)] backdrop-blur-2xl">
@@ -19,7 +21,7 @@ export default function HeroAnnouncement({ tournament, joined, onJoin }) {
         <div className="absolute inset-0 bg-gradient-to-t from-[#0B0817] via-[#0B0817]/40 to-transparent" />
         <span className="glass absolute left-4 top-4 flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-          Latest tournament
+          Upcoming tournament
         </span>
       </div>
 
@@ -29,6 +31,9 @@ export default function HeroAnnouncement({ tournament, joined, onJoin }) {
           <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
             <span className="glass-soft rounded-full px-2.5 py-1 font-semibold uppercase tracking-[0.14em] text-accent">
               {tournament.mode}
+            </span>
+            <span className="glass-soft rounded-full px-2.5 py-1 font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              {tournament.team_type || 'Solo'}
             </span>
             <span className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
@@ -47,7 +52,7 @@ export default function HeroAnnouncement({ tournament, joined, onJoin }) {
           <StatTile icon={Zap} label="Per kill" value={coins(tournament.per_kill)} />
         </div>
 
-        <SlotBar filled={tournament.filled_slots || 0} total={tournament.total_slots || 0} />
+        <SlotBar filled={tournament.filled_slots || 0} total={capacity} />
 
         {joined ? (
           <div className="glass-soft flex items-center justify-center gap-2 rounded-full py-3 text-sm font-medium">

@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { ensureWallet } from '../../shared/wallet.ts';
+import { slotCapacity } from '../../shared/slots.ts';
 
 export default async function (req) {
   try {
@@ -31,8 +32,8 @@ export default async function (req) {
     if (already.length > 0) return Response.json({ error: 'You have already joined this match' }, { status: 400 });
 
     const filled = tournament.filled_slots || 0;
-    const total = tournament.total_slots || 0;
-    if (filled >= total) return Response.json({ error: 'All slots for this match are full' }, { status: 400 });
+    const capacity = slotCapacity(tournament.mode, tournament.team_type);
+    if (filled >= capacity) return Response.json({ error: 'All slots for this match are full' }, { status: 400 });
 
     const wallet = await ensureWallet(base44, user.email);
     const fee = tournament.entry_fee || 0;
@@ -67,7 +68,10 @@ export default async function (req) {
       status: 'joined'
     });
 
-    await base44.asServiceRole.entities.Tournament.update(tournament.id, { filled_slots: filled + 1 });
+    await base44.asServiceRole.entities.Tournament.update(tournament.id, {
+      filled_slots: filled + 1,
+      total_slots: capacity
+    });
 
     return Response.json({ success: true, balance: newBalance, registration });
   } catch (error) {

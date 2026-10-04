@@ -13,6 +13,15 @@
       ],
       "default": "Full Map"
     },
+    "team_type": {
+      "type": "string",
+      "enum": [
+        "Solo",
+        "Duo",
+        "Squad"
+      ],
+      "default": "Solo"
+    },
     "map": {
       "type": "string"
     },

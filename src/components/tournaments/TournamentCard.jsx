@@ -3,17 +3,24 @@ import { Button } from '@/components/ui/button';
 import SlotBar from './SlotBar';
 import StatTile from './StatTile';
 import { coins, matchTime } from '@/lib/format';
+import { slotCapacity } from '@/lib/slots';
 
 export default function TournamentCard({ tournament, joined, onJoin }) {
-  const full = (tournament.filled_slots || 0) >= (tournament.total_slots || 0);
+  const capacity = slotCapacity(tournament.mode, tournament.team_type);
+  const full = (tournament.filled_slots || 0) >= capacity;
 
   return (
     <article className="glass rounded-[26px] p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <span className="glass-soft inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
-            {tournament.mode}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="glass-soft inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
+              {tournament.mode}
+            </span>
+            <span className="glass-soft inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              {tournament.team_type || 'Solo'}
+            </span>
+          </div>
           <h3 className="mt-2 truncate font-display text-base font-semibold">{tournament.title}</h3>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
             <span className="flex items-center gap-1">
@@ -39,7 +46,7 @@ export default function TournamentCard({ tournament, joined, onJoin }) {
       </div>
 
       <div className="mt-3.5">
-        <SlotBar filled={tournament.filled_slots || 0} total={tournament.total_slots || 0} />
+        <SlotBar filled={tournament.filled_slots || 0} total={capacity} />
       </div>
 
       {joined ? (
