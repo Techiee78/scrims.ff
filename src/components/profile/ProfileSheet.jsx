@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { LogOut, User as UserIcon } from 'lucide-react';
+import { ClipboardList, LogOut, User as UserIcon } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { useNavigate } from 'react-router-dom';
 import {
   Sheet,
   SheetContent,
@@ -18,6 +19,7 @@ export default function ProfileSheet({ open, onOpenChange, user, onSaved }) {
   const [ign, setIgn] = useState('');
   const [uid, setUid] = useState('');
   const [saving, setSaving] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!open) return;
@@ -111,6 +113,20 @@ export default function ProfileSheet({ open, onOpenChange, user, onSaved }) {
             <UserIcon className="h-3.5 w-3.5" />
             Add your IGN and UID once — we'll prefill them when you join a match.
           </p>
+        )}
+
+        {user?.role === 'admin' && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              onOpenChange(false);
+              navigate('/results');
+            }}
+            className="mt-4 h-11 w-full rounded-full border-white/10"
+          >
+            <ClipboardList className="mr-2 h-4 w-4" />
+            Enter match results
+          </Button>
         )}
       </SheetContent>
     </Sheet>

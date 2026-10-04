@@ -16,6 +16,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import MatchResults from './pages/MatchResults';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -53,6 +54,7 @@ const AuthenticatedApp = () => {
           <Route path="/tournaments" element={<Tournaments />} />
           <Route path="/my-matches" element={<MyMatches />} />
           <Route path="/wallet" element={<WalletPage />} />
+          <Route path="/results" element={<MatchResults />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
