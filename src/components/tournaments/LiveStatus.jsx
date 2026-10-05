@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { getTimeStatus } from '@/lib/tournamentTime';
 
 function formatCountdown(ms) {
   const totalSec = Math.max(0, Math.floor(ms / 1000));
@@ -11,15 +11,8 @@ function formatCountdown(ms) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export default function LiveStatus({ tournament }) {
-  const [now, setNow] = useState(Date.now());
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  const status = tournament?.status;
+export default function LiveStatus({ tournament, now = Date.now() }) {
+  const status = getTimeStatus(tournament, now);
   const matchTime = tournament?.match_time ? new Date(tournament.match_time).getTime() : null;
 
   if (status === 'completed') {
@@ -33,14 +26,13 @@ export default function LiveStatus({ tournament }) {
   if (!matchTime) {
     return (
       <span className="glass-soft inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-        {status || 'Upcoming'}
+        {tournament?.status || 'Upcoming'}
       </span>
     );
   }
 
-  const diff = matchTime - now;
-
-  if (diff > 0) {
+  if (status === 'upcoming') {
+    const diff = matchTime - now;
     return (
       <span className="glass-soft inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
         Starts in {formatCountdown(diff)}
