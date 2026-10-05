@@ -21,22 +21,10 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    Promise.all([
-      base44.entities.Tournament.list('-created_date', 500),
-      base44.entities.Registration.filter({ status: 'joined' }, '-created_date', 500),
-      base44.entities.Wallet.list('-created_date', 500),
-    ]).then(([tours, regs, wallets]) => {
-      setStats({
-        tournaments: tours.length,
-        live: tours.filter((t) => t.status === 'live').length,
-        upcoming: tours.filter((t) => t.status === 'upcoming').length,
-        registrations: regs.length,
-        players: new Set(regs.map((r) => r.user_email)).size,
-        coins: wallets.reduce((sum, w) => sum + Number(w.balance || 0), 0),
-        prizePool: tours.reduce((sum, t) => sum + Number(t.prize_pool || 0), 0),
-        liveMatches: tours.filter((t) => t.status === 'live'),
-      });
-    });
+    base44.functions
+      .invoke('getAdminStats', {})
+      .then((res) => setStats(res?.data ?? res))
+      .catch(() => setStats(null));
   }, []);
 
   if (!stats) {

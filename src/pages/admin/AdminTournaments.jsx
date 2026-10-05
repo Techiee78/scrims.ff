@@ -18,8 +18,8 @@ export default function AdminTournaments() {
 
   const load = () => {
     setLoading(true);
-    base44.entities.Tournament.list('-created_date', 100).then((list) => {
-      setItems(list);
+    base44.functions.invoke('listTournaments', {}).then((res) => {
+      setItems((res?.data ?? res)?.tournaments ?? []);
       setLoading(false);
     });
   };

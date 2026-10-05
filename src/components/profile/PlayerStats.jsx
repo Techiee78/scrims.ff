@@ -13,10 +13,10 @@ export default function PlayerStats({ user }) {
       return;
     }
     setLoading(true);
-    base44.entities.Registration
-      .filter({ user_email: user.email, played: true }, '-created_date', 50)
-      .then((rows) => {
-        setResults(rows);
+    base44.functions
+      .invoke('getMyRegistrations', {})
+      .then((res) => {
+        setResults(((res?.data ?? res)?.registrations ?? []).filter((row) => row.played));
         setLoading(false);
       });
   }, [user?.email]);

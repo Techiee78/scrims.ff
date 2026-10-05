@@ -24,8 +24,8 @@ export default function MatchResults() {
         setLoading(false);
         return;
       }
-      base44.entities.Tournament.list('-match_time', 60).then((list) => {
-        setTournaments(list);
+      base44.functions.invoke('listTournaments', {}).then((res) => {
+        setTournaments((res?.data ?? res)?.tournaments ?? []);
         setLoading(false);
       });
     });
@@ -34,11 +34,8 @@ export default function MatchResults() {
   const pick = async (tournament) => {
     setSelected(tournament);
     setDraft({});
-    const regs = await base44.entities.Registration.filter(
-      { tournament_id: tournament.id, status: 'joined' },
-      'slot_number',
-      100
-    );
+    const res = await base44.functions.invoke('getMatchRegistrations', { tournament_id: tournament.id });
+    const regs = (res?.data ?? res)?.registrations ?? [];
     setRows(regs);
     const next = {};
     for (const r of regs) {

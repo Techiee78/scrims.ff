@@ -10,16 +10,13 @@ async function fetchUser() {
 }
 
 async function fetchTournaments() {
-  return base44.entities.Tournament.list('-created_date', 60);
+  const res = await base44.functions.invoke('listTournaments', {});
+  return (res?.data ?? res)?.tournaments ?? [];
 }
 
 async function fetchRegistrations() {
-  const me = await base44.auth.me();
-  return base44.entities.Registration.filter(
-    { user_email: me.email, status: 'joined' },
-    '-created_date',
-    60
-  );
+  const res = await base44.functions.invoke('getMyRegistrations', {});
+  return (res?.data ?? res)?.registrations ?? [];
 }
 
 export default function useTournamentData() {
