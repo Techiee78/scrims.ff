@@ -3,7 +3,10 @@ import { initials } from '@/lib/format';
 
 export default function TopBar({ user, onProfile }) {
   return (
-    <header className="fixed inset-x-0 top-0 z-40 px-4 pt-4">
+    <header
+      className="fixed inset-x-0 top-0 z-40 px-4"
+      style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}
+    >
       <div className="mx-auto flex w-full max-w-md items-center justify-between md:max-w-2xl">
         <div className="glass flex items-center gap-2 rounded-full py-2 pl-2 pr-4">
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">

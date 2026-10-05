@@ -4,6 +4,7 @@ import ModeTabs, { ALL_MODES, MATCH_MODES } from '@/components/tournaments/ModeT
 import TournamentCard from '@/components/tournaments/TournamentCard';
 import EmptyMatches from '@/components/tournaments/EmptyMatches';
 import JoinDialog from '@/components/tournaments/JoinDialog';
+import PullToRefresh from '@/components/common/PullToRefresh';
 
 const FILTERS = [...ALL_MODES, ...MATCH_MODES];
 
@@ -16,6 +17,7 @@ export default function Tournaments() {
   const list = tournaments.filter((item) => filter === 'All' || item.mode === filter);
 
   return (
+    <PullToRefresh onRefresh={reload}>
     <div className="space-y-5">
       <div className="px-1">
         <h1 className="font-display text-2xl font-semibold">Tournaments</h1>
@@ -51,5 +53,6 @@ export default function Tournaments() {
         }}
       />
     </div>
+    </PullToRefresh>
   );
 }

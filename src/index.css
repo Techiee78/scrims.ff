@@ -80,6 +80,13 @@
 
   body {
     @apply bg-background text-foreground font-body antialiased;
+    overscroll-behavior: none;
+  }
+
+  button,
+  a {
+    -webkit-user-select: none;
+    user-select: none;
   }
 }
 

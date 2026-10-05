@@ -5,6 +5,7 @@ import ModeTabs from '@/components/tournaments/ModeTabs';
 import TournamentCard from '@/components/tournaments/TournamentCard';
 import EmptyMatches from '@/components/tournaments/EmptyMatches';
 import JoinDialog from '@/components/tournaments/JoinDialog';
+import PullToRefresh from '@/components/common/PullToRefresh';
 
 export default function Home() {
   const { loading, user, tournaments, registrations, reload } = useTournamentData();
@@ -26,6 +27,7 @@ export default function Home() {
   const matches = tournaments.filter((item) => item.mode === mode);
 
   return (
+    <PullToRefresh onRefresh={reload}>
     <div className="space-y-5">
       {featured && (
         <HeroAnnouncement
@@ -67,5 +69,6 @@ export default function Home() {
         }}
       />
     </div>
+    </PullToRefresh>
   );
 }

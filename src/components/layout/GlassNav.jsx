@@ -11,7 +11,10 @@ const items = [
 
 export default function GlassNav() {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 px-4 pb-4">
+    <nav
+      className="fixed inset-x-0 bottom-0 z-40 px-4"
+      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
+    >
       <div className="glass mx-auto flex w-full max-w-md items-center gap-1 rounded-[28px] p-1.5 md:max-w-2xl">
         {items.map(({ to, label, icon: Icon, end }) => (
           <NavLink
