@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { slotCapacity } from '@/lib/slots';
+import FormSelect from '@/components/admin/FormSelect';
 
 const blank = {
   title: '',
@@ -40,8 +41,7 @@ function Field({ label, children }) {
   );
 }
 
-const selectClass =
-  'glass-soft h-11 w-full rounded-2xl border-white/10 bg-transparent px-3 text-sm focus:outline-none';
+const triggerClass = 'glass-soft h-11 w-full rounded-2xl border-white/10 px-3 text-sm';
 
 export default function TournamentFormDialog({ open, onOpenChange, tournament, onSaved }) {
   const { toast } = useToast();
@@ -135,25 +135,27 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
 
           <div className="grid grid-cols-2 gap-3">
             <Field label="Mode">
-              <select
+              <FormSelect
                 value={form.mode}
-                onChange={(event) => set('mode', event.target.value)}
-                className={selectClass}
-              >
-                <option value="Full Map" className="bg-card">Full Map</option>
-                <option value="CS" className="bg-card">CS</option>
-              </select>
+                onChange={(value) => set('mode', value)}
+                options={[
+                  { value: 'Full Map', label: 'Full Map' },
+                  { value: 'CS', label: 'CS' },
+                ]}
+                className={triggerClass}
+              />
             </Field>
             <Field label="Team type">
-              <select
+              <FormSelect
                 value={form.team_type}
-                onChange={(event) => set('team_type', event.target.value)}
-                className={selectClass}
-              >
-                <option value="Solo" className="bg-card">Solo</option>
-                <option value="Duo" className="bg-card">Duo</option>
-                <option value="Squad" className="bg-card">Squad</option>
-              </select>
+                onChange={(value) => set('team_type', value)}
+                options={[
+                  { value: 'Solo', label: 'Solo' },
+                  { value: 'Duo', label: 'Duo' },
+                  { value: 'Squad', label: 'Squad' },
+                ]}
+                className={triggerClass}
+              />
             </Field>
           </div>
 
@@ -230,15 +232,16 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
 
           <div className="grid grid-cols-2 gap-3">
             <Field label="Status">
-              <select
+              <FormSelect
                 value={form.status}
-                onChange={(event) => set('status', event.target.value)}
-                className={selectClass}
-              >
-                <option value="upcoming" className="bg-card">Upcoming</option>
-                <option value="live" className="bg-card">Live</option>
-                <option value="completed" className="bg-card">Completed</option>
-              </select>
+                onChange={(value) => set('status', value)}
+                options={[
+                  { value: 'upcoming', label: 'Upcoming' },
+                  { value: 'live', label: 'Live' },
+                  { value: 'completed', label: 'Completed' },
+                ]}
+                className={triggerClass}
+              />
             </Field>
             <Field label={`Slots (auto: ${capacity})`}>
               <div className="glass-soft flex h-11 items-center rounded-2xl border-white/10 px-3 text-sm text-muted-foreground">
