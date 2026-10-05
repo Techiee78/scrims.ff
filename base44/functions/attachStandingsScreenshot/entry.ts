@@ -1,34 +1,34 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { serviceClient, getUserFromToken } from '../../shared/supabase.ts';
 
-export default async function (req) {
+export default async function (req: Request): Promise<Response> {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const body = await req.json();
+    const user = await getUserFromToken(body.__supabase_token);
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const body = await req.json();
     const registrationId = body.registration_id;
-    const fileUri = body.file_uri;
-    if (!registrationId || !fileUri) {
+    const filePath = body.file_path;
+    if (!registrationId || !filePath) {
       return Response.json({ error: 'Missing registration or file' }, { status: 400 });
     }
 
-    let registration = null;
-    try {
-      registration = await base44.asServiceRole.entities.Registration.get(registrationId);
-    } catch (_notFound) {
-      registration = null;
-    }
+    const supa = serviceClient();
+    const { data: registration } = await supa
+      .from('registrations')
+      .select('id, user_id')
+      .eq('id', registrationId)
+      .maybeSingle();
     if (!registration) return Response.json({ error: 'Registration not found' }, { status: 404 });
-    if (registration.user_email !== user.email) {
+    if (registration.user_id !== user.id) {
       return Response.json({ error: 'This registration belongs to another player' }, { status: 403 });
     }
 
-    const updated = await base44.asServiceRole.entities.Registration.update(registrationId, {
-      standings_screenshot: fileUri,
-    });
+    await supa
+      .from('registrations')
+      .update({ standings_screenshot: filePath })
+      .eq('id', registrationId);
 
-    return Response.json({ success: true, registration: updated });
+    return Response.json({ success: true });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
