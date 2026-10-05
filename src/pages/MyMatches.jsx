@@ -3,7 +3,9 @@ import { Clock, Hash, KeyRound, Trophy } from 'lucide-react';
 import useTournamentData from '@/hooks/useTournamentData';
 import EmptyMatches from '@/components/tournaments/EmptyMatches';
 import StandingsUpload from '@/components/matches/StandingsUpload';
+import LiveStatus from '@/components/tournaments/LiveStatus';
 import { matchTime } from '@/lib/format';
+import { getTimeStatus } from '@/lib/tournamentTime';
 
 export default function MyMatches() {
   const { loading, tournaments, registrations, reload } = useTournamentData();
@@ -26,9 +28,12 @@ export default function MyMatches() {
               <article key={registration.id} className="glass rounded-[26px] p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <span className="glass-soft inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
-                      {registration.mode}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="glass-soft inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
+                        {registration.mode}
+                      </span>
+                      {match && <LiveStatus tournament={match} />}
+                    </div>
                     <h3 className="mt-2 truncate font-display text-base font-semibold">
                       {registration.tournament_title}
                     </h3>
@@ -63,7 +68,7 @@ export default function MyMatches() {
                   </div>
                 </div>
 
-                {match?.status && match.status !== 'upcoming' && (
+                {match && getTimeStatus(match) === 'completed' && (
                   <StandingsUpload registration={registration} onUploaded={reload} />
                 )}
               </article>

@@ -6,6 +6,7 @@ import TournamentCard from '@/components/tournaments/TournamentCard';
 import EmptyMatches from '@/components/tournaments/EmptyMatches';
 import JoinDialog from '@/components/tournaments/JoinDialog';
 import PullToRefresh from '@/components/common/PullToRefresh';
+import { getTimeStatus } from '@/lib/tournamentTime';
 
 export default function Home() {
   const { loading, user, tournaments, registrations, reload } = useTournamentData();
@@ -24,8 +25,9 @@ export default function Home() {
 
   const joinedIds = new Set(registrations.map((item) => item.tournament_id));
   const regByTournament = new Map(registrations.map((r) => [r.tournament_id, r]));
-  const featured = tournaments.find((item) => item.featured) || tournaments[0];
-  const matches = tournaments.filter((item) => item.mode === mode);
+  const open = tournaments.filter((item) => getTimeStatus(item) !== 'completed');
+  const featured = open.find((item) => item.featured) || open[0];
+  const matches = open.filter((item) => item.mode === mode);
 
   return (
     <PullToRefresh onRefresh={reload}>
