@@ -2,6 +2,7 @@ import { Check, Clock, Coins, MapPin, Trophy, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SlotBar from './SlotBar';
 import StatTile from './StatTile';
+import LiveStatus from './LiveStatus';
 import { coins, matchTime } from '@/lib/format';
 import { slotCapacity } from '@/lib/slots';
 
@@ -20,6 +21,7 @@ export default function TournamentCard({ tournament, joined, onJoin }) {
             <span className="glass-soft inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               {tournament.team_type || 'Solo'}
             </span>
+            <LiveStatus tournament={tournament} />
           </div>
           <h3 className="mt-2 truncate font-display text-base font-semibold">{tournament.title}</h3>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
