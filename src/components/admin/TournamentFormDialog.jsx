@@ -237,11 +237,13 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
                 onChange={(value) => set('status', value)}
                 options={[
                   { value: 'upcoming', label: 'Upcoming' },
-                  { value: 'live', label: 'Live' },
                   { value: 'completed', label: 'Completed' },
                 ]}
                 className={triggerClass}
               />
+              <p className="text-[10px] text-muted-foreground">
+                Live is automatic once the match time is reached.
+              </p>
             </Field>
             <Field label={`Slots (auto: ${capacity})`}>
               <div className="glass-soft flex h-11 items-center rounded-2xl border-white/10 px-3 text-sm text-muted-foreground">

@@ -23,6 +23,7 @@ export default function Home() {
   }
 
   const joinedIds = new Set(registrations.map((item) => item.tournament_id));
+  const regByTournament = new Map(registrations.map((r) => [r.tournament_id, r]));
   const featured = tournaments.find((item) => item.featured) || tournaments[0];
   const matches = tournaments.filter((item) => item.mode === mode);
 
@@ -50,7 +51,9 @@ export default function Home() {
             key={tournament.id}
             tournament={tournament}
             joined={joinedIds.has(tournament.id)}
+            registration={regByTournament.get(tournament.id)}
             onJoin={() => setTarget(tournament)}
+            onUploaded={reload}
           />
         ))}
         {matches.length === 0 && (

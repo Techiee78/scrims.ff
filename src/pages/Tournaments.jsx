@@ -14,6 +14,7 @@ export default function Tournaments() {
   const [target, setTarget] = useState(null);
 
   const joinedIds = new Set(registrations.map((item) => item.tournament_id));
+  const regByTournament = new Map(registrations.map((r) => [r.tournament_id, r]));
   const list = tournaments.filter((item) => filter === 'All' || item.mode === filter);
 
   return (
@@ -34,7 +35,9 @@ export default function Tournaments() {
               key={tournament.id}
               tournament={tournament}
               joined={joinedIds.has(tournament.id)}
+              registration={regByTournament.get(tournament.id)}
               onJoin={() => setTarget(tournament)}
+              onUploaded={reload}
             />
           ))}
         {!loading && list.length === 0 && (

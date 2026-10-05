@@ -1,14 +1,25 @@
-import { Check, Clock, Coins, MapPin, Trophy, Zap } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Check, Clock, Coins, Lock, MapPin, Trophy, Zap } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { Button } from '@/components/ui/button';
 import SlotBar from './SlotBar';
 import StatTile from './StatTile';
+import LiveStatus from './LiveStatus';
 import { coins, matchTime, startsIn } from '@/lib/format';
 import { slotCapacity } from '@/lib/slots';
+import { getTimeStatus } from '@/lib/tournamentTime';
 
 export default function HeroAnnouncement({ tournament, joined, onJoin }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
   const capacity = slotCapacity(tournament.mode, tournament.team_type);
   const full = (tournament.filled_slots || 0) >= capacity;
+  const timeStatus = getTimeStatus(tournament, now);
+  const entryClosed = timeStatus === 'live' || timeStatus === 'completed';
 
   return (
     <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-[#0B0817]/70 shadow-[0_18px_60px_rgba(3,2,12,0.55)] backdrop-blur-2xl">
@@ -19,10 +30,9 @@ export default function HeroAnnouncement({ tournament, joined, onJoin }) {
           className="h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0B0817] via-[#0B0817]/40 to-transparent" />
-        <span className="glass absolute left-4 top-4 flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-          Upcoming tournament
-        </span>
+        <div className="absolute left-4 top-4">
+          <LiveStatus tournament={tournament} now={now} />
+        </div>
       </div>
 
       <div className="relative -mt-8 space-y-4 p-5">
@@ -58,6 +68,11 @@ export default function HeroAnnouncement({ tournament, joined, onJoin }) {
           <div className="glass-soft flex items-center justify-center gap-2 rounded-full py-3 text-sm font-medium">
             <Check className="h-4 w-4 text-accent" />
             You're in — details in My Matches
+          </div>
+        ) : entryClosed ? (
+          <div className="glass-soft flex items-center justify-center gap-2 rounded-full py-3 text-sm font-medium text-muted-foreground">
+            <Lock className="h-4 w-4" />
+            {timeStatus === 'live' ? 'Match is live — entry closed' : 'Entry closed — match completed'}
           </div>
         ) : (
           <div className="flex items-center gap-3">

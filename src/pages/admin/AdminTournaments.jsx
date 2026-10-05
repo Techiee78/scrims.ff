@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { coins } from '@/lib/format';
 import TournamentFormDialog from '@/components/admin/TournamentFormDialog';
+import { getTimeStatus } from '@/lib/tournamentTime';
+
+const statusLabel = (s) => (s === 'live' ? 'Live' : s === 'completed' ? 'Completed' : 'Upcoming');
 
 export default function AdminTournaments() {
   const { toast } = useToast();
@@ -84,7 +87,7 @@ export default function AdminTournaments() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">{t.title}</p>
                 <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                  {t.mode} · {t.team_type || 'Solo'} · {t.status}
+                  {t.mode} · {t.team_type || 'Solo'} · {statusLabel(getTimeStatus(t))}
                 </p>
                 <p className="text-[10px] text-muted-foreground">
                   {t.filled_slots || 0}/{t.total_slots || 0} slots · prize {coins(t.prize_pool)}
