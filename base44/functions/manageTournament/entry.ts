@@ -1,13 +1,15 @@
-import { serviceClient, getUserFromToken } from '../../shared/supabase.ts';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { serviceClient } from '../../shared/supabase.ts';
 import { slotCapacity } from '../../shared/slots.ts';
 
 export default async function (req: Request): Promise<Response> {
   try {
-    const body = await req.json();
-    const user = await getUserFromToken(body.__supabase_token);
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'admin') return Response.json({ error: 'Admins only' }, { status: 403 });
 
+    const body = await req.json();
     const action = body.action;
     if (!['create', 'update', 'delete'].includes(action)) {
       return Response.json({ error: 'Invalid action' }, { status: 400 });
@@ -51,7 +53,6 @@ export default async function (req: Request): Promise<Response> {
 
     const id = body.tournament_id;
     if (!id) return Response.json({ error: 'Missing tournament' }, { status: 400 });
-
     const { data: updated } = await supa.from('tournaments').update(payload).eq('id', id).select().single();
     return Response.json({ success: true, tournament: updated });
   } catch (error) {

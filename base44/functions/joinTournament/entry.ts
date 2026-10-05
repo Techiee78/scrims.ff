@@ -1,4 +1,5 @@
-import { serviceClient, getUserFromToken } from '../../shared/supabase.ts';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { serviceClient } from '../../shared/supabase.ts';
 import { ensureWallet } from '../../shared/wallet.ts';
 import { slotCapacity } from '../../shared/slots.ts';
 
@@ -10,10 +11,11 @@ function teamSize(teamType: string) {
 
 export default async function (req: Request): Promise<Response> {
   try {
-    const body = await req.json();
-    const user = await getUserFromToken(body.__supabase_token);
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
+    const body = await req.json();
     const tournamentId = body.tournament_id;
     const ign = (body.ff_ign || '').trim();
     const uid = (body.ff_uid || '').trim();
@@ -25,7 +27,6 @@ export default async function (req: Request): Promise<Response> {
     if (!ign || !uid) return Response.json({ error: 'In-game name and UID are required' }, { status: 400 });
 
     const supa = serviceClient();
-
     const { data: tournament } = await supa
       .from('tournaments')
       .select('*')
@@ -49,7 +50,7 @@ export default async function (req: Request): Promise<Response> {
       .from('registrations')
       .select('id')
       .eq('tournament_id', tournamentId)
-      .eq('user_id', user.id)
+      .eq('user_email', user.email)
       .eq('status', 'joined')
       .maybeSingle();
     if (already) return Response.json({ error: 'You have already joined this match' }, { status: 400 });
@@ -58,7 +59,7 @@ export default async function (req: Request): Promise<Response> {
     const capacity = slotCapacity(tournament.mode, tournament.team_type);
     if (filled >= capacity) return Response.json({ error: 'All slots for this match are full' }, { status: 400 });
 
-    const wallet = await ensureWallet(supa, user.id, user.email);
+    const wallet = await ensureWallet(supa, user.email);
     const fee = tournament.entry_fee || 0;
     if ((wallet.balance || 0) < fee) {
       return Response.json({ error: 'Not enough coins — top up your wallet to join' }, { status: 400 });
@@ -69,7 +70,6 @@ export default async function (req: Request): Promise<Response> {
     if (fee > 0) {
       await supa.from('wallets').update({ balance: newBalance }).eq('id', wallet.id);
       await supa.from('wallet_transactions').insert({
-        user_id: user.id,
         user_email: user.email,
         type: 'debit',
         amount: fee,
@@ -85,7 +85,6 @@ export default async function (req: Request): Promise<Response> {
         tournament_id: tournamentId,
         tournament_title: tournament.title,
         mode: tournament.mode,
-        user_id: user.id,
         user_email: user.email,
         user_name: user.full_name || user.email,
         ff_ign: ign,

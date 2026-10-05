@@ -1,24 +1,20 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
-import { serviceClient, getUserFromToken } from '../../shared/supabase.ts';
+import { serviceClient } from '../../shared/supabase.ts';
 
 export default async function (req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
-    const body = await req.json().catch(() => ({}));
-    const user = await getUserFromToken(body.__supabase_token);
+    const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const supa = serviceClient();
+    try {
+      await supa.from('deletion_requests').insert({ user_email: user.email, status: 'pending' });
+    } catch (_e) {
+      // best-effort record
+    }
 
-    // Record the request
-    await supa.from('deletion_requests').insert({
-      user_id: user.id,
-      user_email: user.email,
-      status: 'pending',
-    });
-
-    // Best-effort: email the admins
-    const { data: admins } = await supa.from('profiles').select('email').eq('role', 'admin');
+    const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
     const recipients = (admins || []).map((a: any) => a.email).filter(Boolean);
     const name = user.full_name || user.email;
     const textBody =
@@ -32,7 +28,7 @@ export default async function (req: Request): Promise<Response> {
           subject: 'Account deletion request',
           body: textBody,
         });
-      } catch (_e) {
+      } catch (_pushError) {
         // a single failed send shouldn't block the others
       }
     }
