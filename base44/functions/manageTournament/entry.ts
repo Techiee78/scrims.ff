@@ -50,8 +50,46 @@ export default async function(req) {
 
     const id = body.tournament_id;
     if (!id) return Response.json({ error: 'Missing tournament' }, { status: 400 });
+
+    let existing = null;
+    try {
+      existing = await base44.asServiceRole.entities.Tournament.get(id);
+    } catch (_notFound) {
+      existing = null;
+    }
     const updated = await base44.asServiceRole.entities.Tournament.update(id, payload);
-    return Response.json({ success: true, tournament: updated });
+
+    const roomPublished =
+      payload.room_id && payload.room_password &&
+      (!existing?.room_id || !existing?.room_password);
+
+    let notified = 0;
+    if (roomPublished) {
+      const regs = await base44.asServiceRole.entities.Registration.filter({
+        tournament_id: id,
+        status: 'joined'
+      });
+      const emails = [...new Set((regs || []).map((r) => r.user_email).filter(Boolean))];
+      for (const email of emails) {
+        try {
+          const users = await base44.asServiceRole.entities.User.filter({ email });
+          const u = users && users[0];
+          if (!u) continue;
+          await base44.asServiceRole.integrations.Core.SendPushNotification({
+            user_id: u.id,
+            title: 'Room details are out',
+            content: 'Room ID & password for ' + (updated.title || 'your match') + ' are now in My Matches.',
+            action_label: 'View match',
+            action_url: 'https://scrim-fire-hub.base44.app/my-matches'
+          });
+          notified += 1;
+        } catch (_pushError) {
+          // a single failed send shouldn't block the others
+        }
+      }
+    }
+
+    return Response.json({ success: true, tournament: updated, notified });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

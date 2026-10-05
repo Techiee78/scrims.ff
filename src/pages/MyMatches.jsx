@@ -2,10 +2,11 @@ import { Link } from 'react-router-dom';
 import { Clock, Hash, KeyRound, Trophy } from 'lucide-react';
 import useTournamentData from '@/hooks/useTournamentData';
 import EmptyMatches from '@/components/tournaments/EmptyMatches';
+import StandingsUpload from '@/components/matches/StandingsUpload';
 import { matchTime } from '@/lib/format';
 
 export default function MyMatches() {
-  const { loading, tournaments, registrations } = useTournamentData();
+  const { loading, tournaments, registrations, reload } = useTournamentData();
   const byId = new Map(tournaments.map((item) => [item.id, item]));
 
   return (
@@ -61,6 +62,10 @@ export default function MyMatches() {
                     <p className="font-display text-sm font-semibold">{match?.room_password || '—'}</p>
                   </div>
                 </div>
+
+                {match?.status && match.status !== 'upcoming' && (
+                  <StandingsUpload registration={registration} onUploaded={reload} />
+                )}
               </article>
             );
           })}

@@ -18,6 +18,7 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
   const { toast } = useToast();
   const [ign, setIgn] = useState('');
   const [uid, setUid] = useState('');
+  const [teammates, setTeammates] = useState([]);
   const [balance, setBalance] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -27,21 +28,34 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
     setError('');
     setIgn(user?.ff_ign || '');
     setUid(user?.ff_uid || '');
+    const ts =
+      tournament?.team_type === 'Duo' ? 2 : tournament?.team_type === 'Squad' ? 4 : 1;
+    setTeammates(Array.from({ length: Math.max(0, ts - 1) }, () => ''));
     setBalance(null);
     base44.functions
       .invoke('getWalletOverview', {})
       .then((res) => setBalance((res?.data ?? res)?.wallet?.balance ?? 0));
-  }, [open, user]);
+  }, [open, user, tournament]);
 
   if (!tournament) return null;
 
   const fee = tournament.entry_fee || 0;
   const shortOnCoins = balance !== null && balance < fee;
+  const teamSize =
+    tournament.team_type === 'Duo' ? 2 : tournament.team_type === 'Squad' ? 4 : 1;
+  const teammateCount = Math.max(0, teamSize - 1);
 
   const submit = async () => {
     setError('');
     if (!ign.trim() || !uid.trim()) {
       setError('Enter your Free Fire IGN and UID to join.');
+      return;
+    }
+    const cleanedTeammates = teammates.map((t) => t.trim()).filter(Boolean);
+    if (teammateCount > 0 && cleanedTeammates.length !== teammateCount) {
+      setError(
+        `Enter all ${teammateCount} teammate name${teammateCount > 1 ? 's' : ''} for this ${tournament.team_type} match.`
+      );
       return;
     }
     setSubmitting(true);
@@ -50,6 +64,7 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
         tournament_id: tournament.id,
         ff_ign: ign,
         ff_uid: uid,
+        teammates: cleanedTeammates,
       });
       const data = res?.data ?? res;
       if (data?.error) {
@@ -105,6 +120,29 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
               className="glass-soft h-11 rounded-2xl border-white/10"
             />
           </div>
+
+          {teammateCount > 0 && (
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                Teammate {teammateCount > 1 ? 'names' : 'name'} · {teamSize} players total
+              </Label>
+              <div className="space-y-2">
+                {teammates.map((name, index) => (
+                  <Input
+                    key={index}
+                    value={name}
+                    onChange={(event) =>
+                      setTeammates((prev) =>
+                        prev.map((value, idx) => (idx === index ? event.target.value : value))
+                      )
+                    }
+                    placeholder={`Teammate ${index + 2} IGN`}
+                    className="glass-soft h-11 rounded-2xl border-white/10"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="glass-soft flex items-center justify-between rounded-2xl px-3.5 py-3">
             <span className="flex items-center gap-2 text-xs text-muted-foreground">

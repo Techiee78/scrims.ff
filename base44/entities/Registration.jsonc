@@ -23,6 +23,13 @@
     "ff_uid": {
       "type": "string"
     },
+    "teammates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
     "slot_number": {
       "type": "number"
     },
@@ -48,6 +55,9 @@
     "kills": {
       "type": "number",
       "default": 0
+    },
+    "standings_screenshot": {
+      "type": "string"
     }
   },
   "required": [
