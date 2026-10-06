@@ -33,15 +33,11 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
+  // Handle authentication errors (Supabase flow doesn't emit
+  // user_not_registered; unknown/auth errors send the user to login.)
   if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
-      navigateToLogin();
-      return null;
-    }
+    navigateToLogin();
+    return null;
   }
 
   // Render the main app

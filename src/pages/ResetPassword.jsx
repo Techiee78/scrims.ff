@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { getSupabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,13 +8,33 @@ import { Lock, Loader2, AlertTriangle } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 
 export default function ResetPassword() {
-  const [searchParams] = useSearchParams();
-  const resetToken = searchParams.get("token");
-
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  // Supabase delivers the recovery token in the URL hash. The detectSessionInUrl
+  // option exchanges it into a session automatically on client init. Wait for that.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const supa = await getSupabase();
+        // Give detectSessionInUrl a tick to process the hash.
+        await new Promise((r) => setTimeout(r, 200));
+        const { data: { session } } = await supa.auth.getSession();
+        if (active) {
+          setHasSession(!!session);
+          setChecking(false);
+        }
+      } catch {
+        if (active) setChecking(false);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,23 +43,37 @@ export default function ResetPassword() {
       setError("Passwords do not match");
       return;
     }
+    if (newPassword.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
     setLoading(true);
     try {
-      await base44.auth.resetPassword({ resetToken, newPassword });
+      const supa = await getSupabase();
+      const { error: updateError } = await supa.auth.updateUser({ password: newPassword });
+      if (updateError) throw updateError;
+      await supa.auth.signOut();
       window.location.href = "/login";
     } catch (err) {
       setError(err.message || "Failed to reset password");
-    } finally {
       setLoading(false);
     }
   };
 
-  if (!resetToken) {
+  if (checking) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!hasSession) {
     return (
       <AuthLayout
         icon={AlertTriangle}
         title="Invalid reset link"
-        subtitle="This password reset link is missing or invalid"
+        subtitle="This password reset link is missing or expired"
         footer={
           <Link to="/forgot-password" className="text-primary font-medium hover:underline">
             Request a new link
@@ -47,7 +81,7 @@ export default function ResetPassword() {
         }
       >
         <p className="text-sm text-foreground text-center">
-          The link you used appears to be incomplete. Please request a new password reset email.
+          The link you used appears to be incomplete or has expired. Please request a new password reset email.
         </p>
       </AuthLayout>
     );
