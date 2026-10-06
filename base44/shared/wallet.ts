@@ -1,5 +1,5 @@
 // Shared wallet helpers (Supabase) used by backend functions that touch coins.
-// Wallets are keyed by user_email (Base44 identity).
+// Wallets are keyed by user_email (Supabase auth identity).
 export const WELCOME_BONUS = 100;
 
 // Returns the player's wallet, creating it (with the welcome bonus) on first use.

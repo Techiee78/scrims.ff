@@ -1,4 +1,3 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { getUserFromRequest, serviceClient } from '../../shared/supabase.ts';
 
 // Admin-only dashboard stats.

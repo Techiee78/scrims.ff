@@ -1,13 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
 
-const USER_KEY = ['me'];
 const TOURNAMENTS_KEY = ['tournaments'];
 const REGISTRATIONS_KEY = ['registrations'];
-
-async function fetchUser() {
-  return base44.auth.me();
-}
 
 async function fetchTournaments() {
   const res = await base44.functions.invoke('listTournaments', {});
@@ -21,8 +17,8 @@ async function fetchRegistrations() {
 
 export default function useTournamentData() {
   const queryClient = useQueryClient();
+  const { user, refreshUser } = useAuth();
 
-  const userQuery = useQuery({ queryKey: USER_KEY, queryFn: fetchUser, staleTime: 5 * 60 * 1000 });
   const tournamentsQuery = useQuery({
     queryKey: TOURNAMENTS_KEY,
     queryFn: fetchTournaments,
@@ -35,7 +31,6 @@ export default function useTournamentData() {
   });
 
   const loading = tournamentsQuery.isLoading || registrationsQuery.isLoading;
-  const user = userQuery.data ?? null;
   const tournaments = tournamentsQuery.data ?? [];
   const registrations = registrationsQuery.data ?? [];
 
@@ -43,6 +38,7 @@ export default function useTournamentData() {
     await Promise.all([
       queryClient.refetchQueries({ queryKey: TOURNAMENTS_KEY }),
       queryClient.refetchQueries({ queryKey: REGISTRATIONS_KEY }),
+      refreshUser(),
     ]);
   };
 

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { LayoutDashboard, LogOut, Trash2, User as UserIcon } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { getSupabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/lib/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
   Sheet,
@@ -34,6 +36,7 @@ export default function ProfileSheet({ open, onOpenChange, user, onSaved }) {
   const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { refreshUser, logout } = useAuth();
 
   useEffect(() => {
     if (!open) return;
@@ -43,8 +46,24 @@ export default function ProfileSheet({ open, onOpenChange, user, onSaved }) {
 
   const save = async () => {
     setSaving(true);
-    const updated = await base44.auth.updateMe({ ff_ign: ign.trim(), ff_uid: uid.trim() });
-    onSaved({ ...user, ...(updated || {}), ff_ign: ign.trim(), ff_uid: uid.trim() });
+    try {
+      const supa = await getSupabase();
+      const { data: { session } } = await supa.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) throw new Error('Not signed in');
+      const cleanIgn = ign.trim();
+      const cleanUid = uid.trim();
+      const { error: updateError } = await supa
+        .from('profiles')
+        .update({ ff_ign: cleanIgn, ff_uid: cleanUid })
+        .eq('id', userId);
+      if (updateError) throw updateError;
+      await refreshUser();
+    } catch (err) {
+      toast({ title: 'Could not save', description: err?.message, variant: 'destructive' });
+      setSaving(false);
+      return;
+    }
     setSaving(false);
     onOpenChange(false);
   };
@@ -62,7 +81,7 @@ export default function ProfileSheet({ open, onOpenChange, user, onSaved }) {
       toast({ title: 'Deletion request sent', description: 'Our team will process it. Logging you out.' });
       setDeleteOpen(false);
       onOpenChange(false);
-      setTimeout(() => base44.auth.logout(), 600);
+      setTimeout(() => logout(), 600);
     } catch (err) {
       toast({ title: 'Could not submit request', description: err?.message, variant: 'destructive' });
     } finally {
@@ -135,7 +154,7 @@ export default function ProfileSheet({ open, onOpenChange, user, onSaved }) {
           </Button>
           <Button
             variant="ghost"
-            onClick={() => base44.auth.logout()}
+            onClick={() => logout()}
             className="h-11 rounded-full text-muted-foreground hover:text-foreground"
           >
             <LogOut className="mr-2 h-4 w-4" />

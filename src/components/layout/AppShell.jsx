@@ -1,21 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useLocation, useOutlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
 import AppBackground from './AppBackground';
 import TopBar from './TopBar';
 import GlassNav from './GlassNav';
 import ProfileSheet from '@/components/profile/ProfileSheet';
 
 export default function AppShell() {
-  const [user, setUser] = useState(null);
+  const { user, refreshUser } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
   const location = useLocation();
   const outlet = useOutlet();
-
-  useEffect(() => {
-    base44.auth.me().then(setUser);
-  }, []);
 
   return (
     <div className="relative min-h-screen">
@@ -39,7 +35,7 @@ export default function AppShell() {
         open={profileOpen}
         onOpenChange={setProfileOpen}
         user={user}
-        onSaved={setUser}
+        onSaved={() => refreshUser()}
       />
     </div>
   );
