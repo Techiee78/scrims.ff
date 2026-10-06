@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ClipboardList, LayoutDashboard, Trophy } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -12,18 +11,10 @@ const items = [
 ];
 
 export default function AdminLayout() {
-  const [user, setUser] = useState(null);
-  const [checking, setChecking] = useState(true);
+  const { user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    base44.auth.me().then((me) => {
-      setUser(me);
-      setChecking(false);
-    });
-  }, []);
-
-  if (checking) {
+  if (!user?.role) {
     return (
       <div className="flex min-h-screen items-center justify-center text-xs text-muted-foreground">
         Loading…

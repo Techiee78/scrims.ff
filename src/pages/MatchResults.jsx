@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Save } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import ResultRow from '@/components/results/ResultRow';
@@ -9,7 +10,7 @@ import ResultRow from '@/components/results/ResultRow';
 export default function MatchResults() {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
   const [tournaments, setTournaments] = useState([]);
   const [selected, setSelected] = useState(null);
   const [rows, setRows] = useState([]);
@@ -18,18 +19,15 @@ export default function MatchResults() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then((me) => {
-      setUser(me);
-      if (me?.role !== 'admin') {
-        setLoading(false);
-        return;
-      }
-      base44.functions.invoke('listTournaments', {}).then((res) => {
-        setTournaments((res?.data ?? res)?.tournaments ?? []);
-        setLoading(false);
-      });
+    if (user?.role !== 'admin') {
+      setLoading(false);
+      return;
+    }
+    base44.functions.invoke('listTournaments', {}).then((res) => {
+      setTournaments((res?.data ?? res)?.tournaments ?? []);
+      setLoading(false);
     });
-  }, []);
+  }, [user]);
 
   const pick = async (tournament) => {
     setSelected(tournament);
