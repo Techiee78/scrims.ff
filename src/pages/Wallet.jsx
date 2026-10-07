@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Coins, Trophy } from 'lucide-react';
+import { Coins, Plus, Trophy } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { coins as formatCoins } from '@/lib/format';
 import TransactionHistory from '@/components/wallet/TransactionHistory';
+import AddCoinsDialog from '@/components/wallet/AddCoinsDialog';
 
 export default function Wallet() {
   const [data, setData] = useState(null);
+  const [addOpen, setAddOpen] = useState(false);
 
   useEffect(() => {
     base44.functions
@@ -50,9 +52,19 @@ export default function Wallet() {
         <p className="mt-2 text-[11px] text-muted-foreground">
           Coins are in-app credits used for entry fees.
         </p>
+        <button
+          type="button"
+          onClick={() => setAddOpen(true)}
+          className="mt-4 flex h-10 w-full items-center justify-center gap-1.5 rounded-full bg-primary font-display text-xs font-semibold text-primary-foreground shadow transition-colors hover:bg-primary/90"
+        >
+          <Plus className="h-4 w-4" />
+          Add coins
+        </button>
       </section>
 
       <TransactionHistory transactions={transactions} />
+
+      <AddCoinsDialog open={addOpen} onClose={() => setAddOpen(false)} />
     </div>
   );
 }
