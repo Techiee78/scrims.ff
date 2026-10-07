@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { ArrowDownLeft, ArrowUpRight, Coins, Trophy } from 'lucide-react';
+import { Coins, Trophy } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { coins as formatCoins } from '@/lib/format';
+import TransactionHistory from '@/components/wallet/TransactionHistory';
 
 export default function Wallet() {
   const [data, setData] = useState(null);
@@ -51,43 +52,7 @@ export default function Wallet() {
         </p>
       </section>
 
-      <div className="space-y-3">
-        <h2 className="px-1 font-display text-sm font-semibold">Recent activity</h2>
-
-        {transactions.length === 0 && (
-          <div className="glass rounded-[26px] px-6 py-8 text-center text-xs text-muted-foreground">
-            No transactions yet.
-          </div>
-        )}
-
-        {transactions.map((item) => {
-          const isCredit = item.type === 'credit';
-          const Icon = isCredit ? ArrowDownLeft : ArrowUpRight;
-          return (
-            <div key={item.id} className="glass flex items-center gap-3 rounded-[22px] px-4 py-3">
-              <span className="glass-soft flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
-                <Icon className={isCredit ? 'h-4 w-4 text-accent' : 'h-4 w-4 text-primary'} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{item.label || 'Transaction'}</p>
-                <p className="text-[11px] text-muted-foreground">
-                  {item.balance_after !== undefined ? `Balance ${formatCoins(item.balance_after)}` : ''}
-                </p>
-              </div>
-              <span
-                className={
-                  isCredit
-                    ? 'font-display text-sm font-semibold text-accent'
-                    : 'font-display text-sm font-semibold text-foreground'
-                }
-              >
-                {isCredit ? '+' : '−'}
-                {formatCoins(item.amount)}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+      <TransactionHistory transactions={transactions} />
     </div>
   );
 }
