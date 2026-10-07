@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Coins, Plus, Trophy } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { coins as formatCoins } from '@/lib/format';
@@ -9,12 +9,16 @@ export default function Wallet() {
   const [data, setData] = useState(null);
   const [addOpen, setAddOpen] = useState(false);
 
-  useEffect(() => {
+  const loadWallet = useCallback(() => {
     base44.functions
       .invoke('getWalletOverview', {})
       .then((res) => setData(res?.data ?? res))
       .catch(() => setData({ wallet: { balance: 0, total_won: 0 }, transactions: [] }));
   }, []);
+
+  useEffect(() => {
+    loadWallet();
+  }, [loadWallet]);
 
   if (!data) {
     return (
@@ -64,7 +68,11 @@ export default function Wallet() {
 
       <TransactionHistory transactions={transactions} />
 
-      <AddCoinsDialog open={addOpen} onClose={() => setAddOpen(false)} />
+      <AddCoinsDialog
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onSuccess={loadWallet}
+      />
     </div>
   );
 }

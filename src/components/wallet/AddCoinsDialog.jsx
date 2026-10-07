@@ -1,22 +1,116 @@
 import { useState } from 'react';
-import { Coins, Loader2, Sparkles, X } from 'lucide-react';
+import { Coins, Loader2, Lock, Sparkles, X } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
 import { coins as formatCoins } from '@/lib/format';
 
+// 1 coin = 1 INR
 const PACKS = [
-  { coins: 100, price: '₹20', tag: 'Starter' },
-  { coins: 500, price: '₹90', tag: 'Popular' },
-  { coins: 1500, price: '₹250', tag: 'Best value' },
+  { coins: 100, tag: 'Starter' },
+  { coins: 500, tag: 'Popular' },
+  { coins: 1500, tag: 'Best value' },
 ];
 
-export default function AddCoinsDialog({ open, onClose }) {
+const inr = (coins) => `₹${coins.toLocaleString('en-IN')}`;
+
+export default function AddCoinsDialog({ open, onClose, onSuccess }) {
   const [selected, setSelected] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   if (!open) return null;
 
-  const handleTopUp = () => {
-    // Coin purchase flow is not yet enabled — inform the user for now.
-    setSelected(null);
-    onClose();
+  const startPayment = async () => {
+    if (!selected) return;
+    setLoading(true);
+    try {
+      const orderRes = await base44.functions.invoke('createCoinOrder', { coins: selected });
+      const order = orderRes?.data ?? orderRes;
+
+      if (order?.configured === false) {
+        toast({
+          title: 'Payments coming soon',
+          description: 'Razorpay keys are not configured yet. Coin top-ups will be live shortly.',
+        });
+        return;
+      }
+      if (!order?.orderId) {
+        throw new Error(order?.error || 'Could not start payment');
+      }
+
+      if (typeof window === 'undefined' || !window.Razorpay) {
+        toast({
+          title: 'Checkout unavailable',
+          description: 'Razorpay script failed to load. Check your connection and retry.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const rzp = new window.Razorpay({
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        name: 'Scrims.ff',
+        description: `${formatCoins(order.coins)} coins`,
+        order_id: order.orderId,
+        prefill: {
+          email: user?.email || '',
+          name: user?.full_name || '',
+        },
+        theme: { color: '#1f6fe8' },
+        handler: async (response) => {
+          try {
+            const verifyRes = await base44.functions.invoke('verifyCoinPayment', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            const verify = verifyRes?.data ?? verifyRes;
+            if (verify?.credited) {
+              toast({
+                title: 'Top-up successful',
+                description: `${formatCoins(verify.coins)} coins added. New balance: ${formatCoins(verify.balance)}.`,
+              });
+              setSelected(null);
+              onClose();
+              onSuccess?.(verify);
+            } else if (verify?.already) {
+              toast({ title: 'Already credited', description: 'This payment was already applied.' });
+            } else {
+              throw new Error(verify?.error || 'Verification failed');
+            }
+          } catch (err) {
+            toast({
+              title: 'Verification failed',
+              description: err.message || 'Please contact support if coins were debited.',
+              variant: 'destructive',
+            });
+          }
+        },
+        modal: { ondismiss: () => {} },
+      });
+
+      rzp.on('payment.failed', (resp) => {
+        toast({
+          title: 'Payment failed',
+          description: resp?.error?.description || 'No money was debited. Try again.',
+          variant: 'destructive',
+        });
+      });
+
+      rzp.open();
+    } catch (err) {
+      toast({
+        title: 'Top-up failed',
+        description: err.message || 'Something went wrong.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -26,7 +120,7 @@ export default function AddCoinsDialog({ open, onClose }) {
         <div className="flex items-start justify-between">
           <div>
             <h2 className="font-display text-lg font-semibold">Add coins</h2>
-            <p className="text-xs text-muted-foreground">Top up your balance to join tournaments.</p>
+            <p className="text-xs text-muted-foreground">1 coin = ₹1. Top up to join tournaments.</p>
           </div>
           <button
             type="button"
@@ -56,7 +150,7 @@ export default function AddCoinsDialog({ open, onClose }) {
                   <p className="text-sm font-medium">{formatCoins(pack.coins)} coins</p>
                   <p className="text-[11px] text-muted-foreground">{pack.tag}</p>
                 </div>
-                <span className="font-display text-sm font-semibold">{pack.price}</span>
+                <span className="font-display text-sm font-semibold">{inr(pack.coins)}</span>
               </button>
             );
           })}
@@ -64,16 +158,16 @@ export default function AddCoinsDialog({ open, onClose }) {
 
         <button
           type="button"
-          disabled={!selected}
-          onClick={handleTopUp}
+          disabled={!selected || loading}
+          onClick={startPayment}
           className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary font-display text-sm font-semibold text-primary-foreground shadow disabled:opacity-40"
         >
-          <Sparkles className="h-4 w-4" />
-          {selected ? `Top up ${formatCoins(selected)} coins` : 'Select a pack'}
-          <Loader2 className="hidden" />
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+          {selected ? `Pay ${inr(selected)} · ${formatCoins(selected)} coins` : 'Select a pack'}
         </button>
-        <p className="mt-2 text-center text-[10px] text-muted-foreground">
-          Payments are coming soon. Coin packs will be available shortly.
+        <p className="mt-2 flex items-center justify-center gap-1 text-center text-[10px] text-muted-foreground">
+          <Lock className="h-3 w-3" />
+          Secured by Razorpay. Coins are credited after payment verification.
         </p>
       </div>
     </div>

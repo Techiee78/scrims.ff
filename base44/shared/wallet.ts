@@ -27,3 +27,34 @@ export async function ensureWallet(supa, email) {
 
   return wallet;
 }
+
+// Credits coins to a user's wallet and records the transaction.
+// Returns the updated wallet row.
+export async function creditCoins(supa, email, coins, label) {
+  const { data: wallet } = await supa
+    .from('wallets')
+    .select('*')
+    .eq('user_email', email)
+    .maybeSingle();
+
+  let current = wallet;
+  if (!current) {
+    current = await ensureWallet(supa, email);
+  }
+
+  const newBalance = (current.balance || 0) + Number(coins);
+  await supa
+    .from('wallets')
+    .update({ balance: newBalance })
+    .eq('user_email', email);
+
+  await supa.from('wallet_transactions').insert({
+    user_email: email,
+    type: 'credit',
+    amount: Number(coins),
+    label: label || 'Coin top-up',
+    balance_after: newBalance,
+  });
+
+  return { ...current, balance: newBalance };
+}
