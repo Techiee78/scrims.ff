@@ -8,6 +8,7 @@ import { UserPlus, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import { toast } from "@/components/ui/use-toast";
 import { safeReturnTo } from "@/lib/authReturnTo";
+import GoogleButton, { AuthDivider } from "@/components/auth/SocialAuth";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -16,7 +17,24 @@ export default function Register() {
   const [fullName, setFullName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [confirmSent, setConfirmSent] = useState(false);
+
+  const handleGoogle = async () => {
+    setError("");
+    setGoogleLoading(true);
+    try {
+      const supa = await getSupabase();
+      const { error: oauthError } = await supa.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin + safeReturnTo() },
+      });
+      if (oauthError) throw oauthError;
+    } catch (err) {
+      setError(err.message || "Google sign-up failed");
+      setGoogleLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -93,6 +111,9 @@ export default function Register() {
           {error}
         </div>
       )}
+
+      <GoogleButton onClick={handleGoogle} loading={googleLoading} label="Sign up with Google" />
+      <AuthDivider />
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
