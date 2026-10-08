@@ -3,9 +3,10 @@ import { serviceClient } from '../../shared/supabase.ts';
 import { secrets } from 'base44:runtime';
 import { creditCoins } from '../../shared/wallet.ts';
 
-// Verifies a Cashfree payment for a coin top-up and credits the wallet.
-// Looks up the order via Cashfree PG API and credits only when status is PAID.
-// Returns { credited: true, coins, balance } on success.
+// Verifies a Cashfree coin top-up and credits the wallet exactly once.
+// Cashfree's order is the source of truth (owner, amount, PAID status), so a
+// paid order is credited even if its pending record was never saved.
+// Returns { credited: true, coins, balance } or { already: true }.
 export default async function (req: Request): Promise<Response> {
   try {
     const user = await getUserFromRequest(req);
@@ -18,7 +19,7 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ error: 'Invalid request body' }, { status: 400 });
     }
     const { orderId } = body || {};
-    if (!orderId) {
+    if (!orderId || typeof orderId !== 'string') {
       return Response.json({ error: 'Missing orderId' }, { status: 400 });
     }
 
@@ -28,55 +29,61 @@ export default async function (req: Request): Promise<Response> {
     if (!appId || !secretKey) {
       return Response.json({ error: 'Payments are not configured.' }, { status: 503 });
     }
-
     const baseUrl = env === 'TEST' ? 'https://sandbox.cashfree.com' : 'https://api.cashfree.com';
-    const apiVersion = '2023-08-01';
 
-    const res = await fetch(`${baseUrl}/pg/orders/${encodeURIComponent(orderId)}/payments`, {
+    const res = await fetch(`${baseUrl}/pg/orders/${encodeURIComponent(orderId)}`, {
       method: 'GET',
       headers: {
         'x-client-id': appId,
         'x-client-secret': secretKey,
-        'x-api-version': apiVersion,
+        'x-api-version': '2023-08-01',
         accept: 'application/json',
       },
       signal: AbortSignal.timeout(12000),
     });
-
     if (!res.ok) {
-      const errText = await res.text();
-      return Response.json({ error: 'Cashfree verification failed', details: errText }, { status: 502 });
+      return Response.json({ error: 'Could not reach Cashfree to verify. Try again.' }, { status: 502 });
     }
-    const data = await res.json();
-    // Cashfree returns an array of payment attempts; the most recent is first.
-    const payment = Array.isArray(data) ? data[0] : data;
-    if (!payment || payment.payment_status !== 'SUCCESS') {
-      return Response.json({ error: 'Payment not successful', status: payment?.payment_status || 'unknown' }, { status: 400 });
-    }
+    const order = await res.json();
 
-    const supa = serviceClient();
-    const { data: topup } = await supa
-      .from('coin_topups')
-      .select('*')
-      .eq('order_id', orderId)
-      .eq('user_email', user.email)
-      .maybeSingle();
-
-    if (!topup) {
+    if (order?.customer_details?.customer_id !== user.id) {
       return Response.json({ error: 'Order not found for this user' }, { status: 404 });
     }
-    if (topup.status === 'paid') {
-      return Response.json({ credited: false, already: true, coins: topup.coins });
+    if (order?.order_status !== 'PAID') {
+      return Response.json({ error: 'Payment not completed yet', status: order?.order_status }, { status: 400 });
+    }
+    const coins = Math.round(Number(order.order_amount)); // 1 coin = 1 INR
+    const paymentRef = String(order.cf_order_id || orderId);
+
+    // Claim the order atomically so it is credited only once.
+    const supa = serviceClient();
+    const { data: claimed, error: claimError } = await supa
+      .from('coin_topups')
+      .update({ status: 'paid', payment_id: paymentRef, coins, amount_inr: coins })
+      .eq('order_id', orderId)
+      .neq('status', 'paid')
+      .select();
+    if (claimError) throw new Error(claimError.message);
+
+    if (!claimed?.length) {
+      const { error: insertError } = await supa.from('coin_topups').insert({
+        user_email: user.email,
+        coins,
+        amount_inr: coins,
+        order_id: orderId,
+        payment_id: paymentRef,
+        status: 'paid',
+      });
+      if (insertError) {
+        if (insertError.code === '23505') {
+          return Response.json({ credited: false, already: true, coins });
+        }
+        throw new Error(insertError.message);
+      }
     }
 
-    await supa
-      .from('coin_topups')
-      .update({ status: 'paid', payment_id: payment.cf_payment_id || payment.order_id })
-      .eq('order_id', orderId);
-
-    const wallet = await creditCoins(supa, user.email, topup.coins, `Coin top-up · ${topup.coins} coins`);
-
-    return Response.json({ credited: true, coins: topup.coins, balance: wallet.balance });
+    const wallet = await creditCoins(supa, user.email, coins, `Coin top-up · ${coins} coins`);
+    return Response.json({ credited: true, coins, balance: wallet.balance });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

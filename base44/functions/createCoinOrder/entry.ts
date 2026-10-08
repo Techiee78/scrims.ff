@@ -42,6 +42,19 @@ export default async function (req: Request): Promise<Response> {
     const baseUrl = env === 'TEST' ? 'https://sandbox.cashfree.com' : 'https://api.cashfree.com';
     const apiVersion = '2023-08-01';
 
+    // Save the pending top-up first — never open checkout without a record.
+    const supa = serviceClient();
+    const { error: saveError } = await supa.from('coin_topups').insert({
+      user_email: user.email,
+      coins,
+      amount_inr: coins,
+      order_id: orderId,
+      status: 'created',
+    });
+    if (saveError) {
+      return Response.json({ error: 'Top-ups are temporarily unavailable. Please try again later.' }, { status: 503 });
+    }
+
     const res = await fetch(`${baseUrl}/pg/orders`, {
       method: 'POST',
       headers: {
@@ -73,16 +86,6 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ error: 'Cashfree order failed', details: errText }, { status: 502 });
     }
     const order = await res.json();
-
-    // Persist a pending top-up record so verify is idempotent and auditable.
-    const supa = serviceClient();
-    await supa.from('coin_topups').insert({
-      user_email: user.email,
-      coins,
-      amount_inr: coins,
-      order_id: orderId,
-      status: 'created',
-    });
 
     return Response.json({
       configured: true,
