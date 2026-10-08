@@ -30,6 +30,13 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ error: 'Invalid coin amount' }, { status: 400 });
     }
 
+    // Send the player back to the app's own Wallet page after checkout
+    // (the function's own host is not the app, so use the caller's origin).
+    const returnOrigin =
+      typeof body?.returnOrigin === 'string' && /^https?:\/\/[^/\s]+$/.test(body.returnOrigin)
+        ? body.returnOrigin
+        : 'https://scrim-fire-hub.base44.app';
+
     const amountInr = coins.toFixed(2); // Cashfree expects a string amount
     const orderId = `coins_${user.id}_${Date.now()}`;
     const baseUrl = env === 'TEST' ? 'https://sandbox.cashfree.com' : 'https://api.cashfree.com';
@@ -54,7 +61,7 @@ export default async function (req: Request): Promise<Response> {
           customer_name: user.full_name || user.email,
         },
         order_meta: {
-          return_url: `${new URL(req.url).origin}/wallet?order_id=${orderId}`,
+          return_url: `${returnOrigin}/wallet?order_id=${orderId}`,
         },
         order_note: `${coins} coins top-up · Scrims.ff`,
       }),

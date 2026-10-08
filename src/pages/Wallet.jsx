@@ -6,6 +6,7 @@ import TransactionHistory from '@/components/wallet/TransactionHistory';
 import AddCoinsDialog from '@/components/wallet/AddCoinsDialog';
 import StateScreen from '@/components/states/StateScreen';
 import { withAuth } from '@/lib/authToken';
+import useReturnedTopup from '@/hooks/useReturnedTopup';
 
 export default function Wallet() {
   const [data, setData] = useState(null);
@@ -27,6 +28,9 @@ export default function Wallet() {
   useEffect(() => {
     loadWallet();
   }, [loadWallet]);
+
+  // Cashfree sends the player back here with ?order_id=… after checkout.
+  useReturnedTopup(loadWallet);
 
   if (!data) {
     return (

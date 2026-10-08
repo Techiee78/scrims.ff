@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { withAuth } from '@/lib/authToken';
 import { coins as formatCoins } from '@/lib/format';
+import { verifyTopup } from '@/lib/verifyTopup';
 
 // 1 coin = 1 INR
 const PACKS = [
@@ -24,28 +25,11 @@ export default function AddCoinsDialog({ open, onClose, onSuccess }) {
   if (!open) return null;
 
   const verify = async (orderId) => {
-    try {
-      const verifyRes = await base44.functions.invoke('verifyCoinPayment', await withAuth({ orderId }));
-      const verifyData = verifyRes?.data ?? verifyRes;
-      if (verifyData?.credited) {
-        toast({
-          title: 'Top-up successful',
-          description: `${formatCoins(verifyData.coins)} coins added. New balance: ${formatCoins(verifyData.balance)}.`,
-        });
-        setSelected(null);
-        onClose();
-        onSuccess?.(verifyData);
-      } else if (verifyData?.already) {
-        toast({ title: 'Already credited', description: 'This payment was already applied.' });
-      } else {
-        throw new Error(verifyData?.error || 'Verification failed');
-      }
-    } catch (err) {
-      toast({
-        title: 'Verification failed',
-        description: err.message || 'Please contact support if coins were debited.',
-        variant: 'destructive',
-      });
+    const ok = await verifyTopup(orderId, toast);
+    if (ok) {
+      setSelected(null);
+      onClose();
+      onSuccess?.();
     }
   };
 
@@ -53,7 +37,10 @@ export default function AddCoinsDialog({ open, onClose, onSuccess }) {
     if (!selected) return;
     setLoading(true);
     try {
-      const orderRes = await base44.functions.invoke('createCoinOrder', await withAuth({ coins: selected }));
+      const orderRes = await base44.functions.invoke(
+        'createCoinOrder',
+        await withAuth({ coins: selected, returnOrigin: window.location.origin })
+      );
       const order = orderRes?.data ?? orderRes;
 
       if (order?.configured === false) {
