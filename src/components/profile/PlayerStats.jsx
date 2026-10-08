@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Crosshair, Swords, Trophy } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatTile from '@/components/tournaments/StatTile';
+import { withAuth } from '@/lib/authToken';
 
 export default function PlayerStats({ user }) {
   const [loading, setLoading] = useState(true);
@@ -13,12 +14,11 @@ export default function PlayerStats({ user }) {
       return;
     }
     setLoading(true);
-    base44.functions
-      .invoke('getMyRegistrations', {})
-      .then((res) => {
-        setResults(((res?.data ?? res)?.registrations ?? []).filter((row) => row.played));
-        setLoading(false);
-      });
+    (async () => {
+      const res = await base44.functions.invoke('getMyRegistrations', await withAuth({}));
+      setResults(((res?.data ?? res)?.registrations ?? []).filter((row) => row.played));
+      setLoading(false);
+    })();
   }, [user?.email]);
 
   const matches = results.length;
