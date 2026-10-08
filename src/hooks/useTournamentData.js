@@ -32,6 +32,7 @@ export default function useTournamentData() {
   });
 
   const loading = tournamentsQuery.isLoading || registrationsQuery.isLoading;
+  const error = tournamentsQuery.isError || registrationsQuery.isError;
   const tournaments = tournamentsQuery.data ?? [];
   const registrations = registrationsQuery.data ?? [];
 
@@ -43,5 +44,5 @@ export default function useTournamentData() {
     ]);
   };
 
-  return { loading, user, tournaments, registrations, reload };
+  return { loading, error, user, tournaments, registrations, reload };
 }

@@ -7,6 +7,7 @@ import { withAuth } from '@/lib/authToken';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import ResultRow from '@/components/results/ResultRow';
+import StateScreen from '@/components/states/StateScreen';
 
 export default function MatchResults() {
   const { toast } = useToast();
@@ -88,9 +89,13 @@ export default function MatchResults() {
 
   if (user?.role !== 'admin') {
     return (
-      <div className="glass mt-6 rounded-3xl p-6 text-center text-sm text-muted-foreground">
-        Organizer tools are admin-only.
-      </div>
+      <StateScreen
+        variant="permission"
+        title="Admin access only"
+        hint="Organizer tools are restricted to tournament organizers. Contact an admin if you need access."
+        actionLabel="Back to home"
+        actionTo="/"
+      />
     );
   }
 

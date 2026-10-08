@@ -4,17 +4,22 @@ import { base44 } from '@/api/base44Client';
 import { coins as formatCoins } from '@/lib/format';
 import TransactionHistory from '@/components/wallet/TransactionHistory';
 import AddCoinsDialog from '@/components/wallet/AddCoinsDialog';
+import StateScreen from '@/components/states/StateScreen';
 import { withAuth } from '@/lib/authToken';
 
 export default function Wallet() {
   const [data, setData] = useState(null);
+  const [loadError, setLoadError] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
 
   const loadWallet = useCallback(async () => {
+    setLoadError(false);
+    setData(null);
     try {
       const res = await base44.functions.invoke('getWalletOverview', await withAuth({}));
       setData(res?.data ?? res);
     } catch (_e) {
+      setLoadError(true);
       setData({ wallet: { balance: 0, total_won: 0 }, transactions: [] });
     }
   }, []);
@@ -40,6 +45,16 @@ export default function Wallet() {
         <h1 className="font-display text-2xl font-semibold">Wallet</h1>
         <p className="text-xs text-muted-foreground">Entry fees and winnings, all in one place.</p>
       </div>
+
+      {loadError && (
+        <StateScreen
+          variant="error"
+          title="Couldn't load your wallet"
+          hint="Check your connection and retry."
+          showRetry
+          onRetry={loadWallet}
+        />
+      )}
 
       <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-gradient-to-br from-primary/25 via-[#0B0817]/80 to-accent/20 p-5 shadow-[0_18px_60px_rgba(3,2,12,0.5)] backdrop-blur-2xl">
         <div className="flex items-center justify-between">

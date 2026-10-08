@@ -4,11 +4,12 @@ import useTournamentData from '@/hooks/useTournamentData';
 import EmptyMatches from '@/components/tournaments/EmptyMatches';
 import StandingsUpload from '@/components/matches/StandingsUpload';
 import LiveStatus from '@/components/tournaments/LiveStatus';
+import StateScreen from '@/components/states/StateScreen';
 import { matchTime } from '@/lib/format';
 import { getTimeStatus } from '@/lib/tournamentTime';
 
 export default function MyMatches() {
-  const { loading, tournaments, registrations, reload } = useTournamentData();
+  const { loading, error, tournaments, registrations, reload } = useTournamentData();
   const byId = new Map(tournaments.map((item) => [item.id, item]));
 
   return (
@@ -21,7 +22,16 @@ export default function MyMatches() {
       {loading && <div className="h-40 animate-pulse rounded-[26px] bg-white/5" />}
 
       <div className="space-y-3">
-        {!loading &&
+        {!loading && error && (
+          <StateScreen
+            variant="error"
+            title="Couldn't load your matches"
+            hint="Pull down or retry to see your booked slots."
+            showRetry
+            onRetry={reload}
+          />
+        )}
+        {!loading && !error &&
           registrations.map((registration) => {
             const match = byId.get(registration.tournament_id);
             return (
@@ -76,7 +86,7 @@ export default function MyMatches() {
           })}
       </div>
 
-      {!loading && registrations.length === 0 && (
+      {!loading && !error && registrations.length === 0 && (
         <EmptyMatches
           title="No matches booked yet"
           hint="Join a Full Map or CS room from the home screen."

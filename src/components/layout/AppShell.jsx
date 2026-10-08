@@ -6,6 +6,7 @@ import AppBackground from './AppBackground';
 import TopBar from './TopBar';
 import GlassNav from './GlassNav';
 import ProfileSheet from '@/components/profile/ProfileSheet';
+import ConnectionBanner from '@/components/states/ConnectionBanner';
 
 export default function AppShell() {
   const { user, refreshUser } = useAuth();
@@ -26,6 +27,7 @@ export default function AppShell() {
             exit={{ opacity: 0, x: -24 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
           >
+            <ConnectionBanner />
             {outlet}
           </motion.div>
         </AnimatePresence>
