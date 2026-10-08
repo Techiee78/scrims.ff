@@ -76,17 +76,22 @@ export default function AddCoinsDialog({ open, onClose, onSuccess }) {
         return;
       }
 
-      const cashfree = window.Cashfree(order.paymentSessionId);
-      cashfree.on('PAYMENT_SUCCESS', () => verify(order.orderId));
-      cashfree.on('PAYMENT_ERROR', (resp) => {
+      const cashfree = window.Cashfree({ mode: order.env === 'TEST' ? 'sandbox' : 'production' });
+      const result = await cashfree.checkout({
+        paymentSessionId: order.paymentSessionId,
+        redirectTarget: '_modal',
+      });
+      if (result?.paymentDetails?.paymentStatus === 'SUCCESS') {
+        await verify(order.orderId);
+      } else if (result?.error) {
         toast({
           title: 'Payment failed',
-          description: resp?.error?.message || 'No money was debited. Try again.',
+          description: result.error.message || 'No money was debited. Try again.',
           variant: 'destructive',
         });
-      });
-      cashfree.on('PAYMENT_CLOSE', () => {});
-      cashfree.render('#cashfree-checkout');
+      } else if (result?.paymentDetails) {
+        await verify(order.orderId);
+      }
     } catch (err) {
       toast({
         title: 'Top-up failed',
