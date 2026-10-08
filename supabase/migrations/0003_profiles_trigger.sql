@@ -19,6 +19,15 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
+-- set_updated_at function (idempotent — safe if already exists from 0001)
+create or replace function public.set_updated_at()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer as $$
 begin
@@ -38,7 +47,6 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- updated_at trigger for profiles
 drop trigger if exists profiles_updated_at on public.profiles;
 create trigger profiles_updated_at before update on public.profiles
   for each row execute function public.set_updated_at();
