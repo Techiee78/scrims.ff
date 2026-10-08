@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Lock, Loader2, AlertTriangle } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
+import { isRecoveryPending, clearRecoveryPending } from "@/lib/passwordRecovery";
 
 export default function ResetPassword() {
   const [newPassword, setNewPassword] = useState("");
@@ -28,13 +29,10 @@ export default function ResetPassword() {
         await new Promise((r) => setTimeout(r, 250));
         const { data: { session } } = await supa.auth.getSession();
         if (!active) return;
-        // Only treat this as a reset if the link was a recovery link.
-        const hash = typeof window !== 'undefined' ? window.location.hash : '';
-        const isRecovery = hash.includes('type=recovery');
-        if (active) {
-          setHasSession(!!session && isRecovery);
-          setChecking(false);
-        }
+        // Supabase clears the URL hash after reading it, so rely on the
+        // flag captured at page load to confirm this came from a reset link.
+        setHasSession(!!session && isRecoveryPending());
+        setChecking(false);
       } catch {
         if (active) setChecking(false);
       }
@@ -58,6 +56,7 @@ export default function ResetPassword() {
       const supa = await getSupabase();
       const { error: updateError } = await supa.auth.updateUser({ password: newPassword });
       if (updateError) throw updateError;
+      clearRecoveryPending();
       await supa.auth.signOut();
       window.location.href = "/login";
     } catch (err) {

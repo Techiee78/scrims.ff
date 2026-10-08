@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect, useCallback } fr
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
 import { getSupabase } from '@/lib/supabaseClient';
+import { isOnResetPage } from '@/lib/passwordRecovery';
 
 const AuthContext = createContext();
 
@@ -67,13 +68,9 @@ export const AuthProvider = ({ children }) => {
 
         const { data: { session } } = await supa.auth.getSession();
         if (!active) return;
-        // Same recovery guard as the onAuthStateChange handler below:
-        // a recovery link creates a temporary session. Do not log in from it.
-        const hash = typeof window !== 'undefined' ? window.location.hash : '';
-        const isRecovery = hash.includes('type=recovery')
-          || (typeof window !== 'undefined' && window.location.pathname === '/reset-password')
-          || (session?.user?.recovery_sent_at && !session?.user?.email_confirmed_at);
-        if (isRecovery) {
+        // A recovery link creates a temporary session — don't log in from it
+        // while the user is on the reset page.
+        if (isOnResetPage()) {
           setIsAuthenticated(false);
           setUser(null);
           setAuthChecked(true);
@@ -93,12 +90,7 @@ export const AuthProvider = ({ children }) => {
           // temporary session. Do NOT log the user in from that session —
           // the ResetPassword page uses it to set a new password, then signs
           // out. Auto-logging in here would bypass the reset entirely.
-          const isRecovery = event === 'PASSWORD_RECOVERY'
-            || (newSession?.user?.recovery_sent_at && !newSession?.user?.email_confirmed_at)
-            || (typeof window !== 'undefined'
-              && (window.location.hash.includes('type=recovery')
-                || window.location.pathname === '/reset-password'));
-          if (isRecovery) {
+          if (event === 'PASSWORD_RECOVERY' || isOnResetPage()) {
             setIsAuthenticated(false);
             setUser(null);
             setAuthChecked(true);
