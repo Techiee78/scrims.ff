@@ -20,6 +20,7 @@ import MatchResults from './pages/MatchResults';
 import AdminLayout from '@/components/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminTournaments from './pages/admin/AdminTournaments';
+import AdminUsers from './pages/admin/AdminUsers';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -57,6 +58,7 @@ const AuthenticatedApp = () => {
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/tournaments" element={<AdminTournaments />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/results" element={<MatchResults />} />
         </Route>
       </Route>

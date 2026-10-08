@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ClipboardList, LayoutDashboard, Trophy } from 'lucide-react';
+import { ArrowLeft, ClipboardList, LayoutDashboard, Trophy, Users } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,7 @@ const items = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/tournaments', label: 'Tournaments', icon: Trophy },
   { to: '/admin/results', label: 'Results', icon: ClipboardList },
+  { to: '/admin/users', label: 'Users', icon: Users },
 ];
 
 export default function AdminLayout() {
