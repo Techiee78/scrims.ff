@@ -55,7 +55,6 @@ export default async function (req: Request): Promise<Response> {
         },
         order_meta: {
           return_url: `${new URL(req.url).origin}/wallet?order_id=${orderId}`,
-          notify_url: `${new URL(req.url).origin}/functions/verifyCoinPayment`,
         },
         order_note: `${coins} coins top-up · Scrims.ff`,
       }),
