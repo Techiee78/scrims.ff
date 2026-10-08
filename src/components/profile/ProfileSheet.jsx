@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
+import { withAuth } from '@/lib/authToken';
 
 export default function ProfileSheet({ open, onOpenChange, user, onSaved }) {
   const [ign, setIgn] = useState('');
@@ -71,7 +72,7 @@ export default function ProfileSheet({ open, onOpenChange, user, onSaved }) {
   const deleteAccount = async () => {
     setDeleting(true);
     try {
-      const res = await base44.functions.invoke('requestAccountDeletion');
+      const res = await base44.functions.invoke('requestAccountDeletion', await withAuth({}));
       const data = res?.data ?? res;
       if (data?.error) {
         toast({ title: 'Could not submit request', description: data.error, variant: 'destructive' });

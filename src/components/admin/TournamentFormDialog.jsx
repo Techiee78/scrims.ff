@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { slotCapacity } from '@/lib/slots';
+import { withAuth } from '@/lib/authToken';
 import FormSelect from '@/components/admin/FormSelect';
 
 const blank = {
@@ -92,7 +93,7 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
       const body = tournament
         ? { action: 'update', tournament_id: tournament.id, data: payload }
         : { action: 'create', data: payload };
-      const res = await base44.functions.invoke('manageTournament', body);
+      const res = await base44.functions.invoke('manageTournament', await withAuth(body));
       const data = res?.data ?? res;
       if (data?.error) {
         toast({ title: 'Could not save', description: data.error, variant: 'destructive' });

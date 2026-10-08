@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { withAuth } from '@/lib/authToken';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { coins } from '@/lib/format';
@@ -31,10 +32,10 @@ export default function AdminTournaments() {
   const remove = async (tournament) => {
     if (!window.confirm(`Delete "${tournament.title}"? This can't be undone.`)) return;
     try {
-      const res = await base44.functions.invoke('manageTournament', {
+      const res = await base44.functions.invoke('manageTournament', await withAuth({
         action: 'delete',
         tournament_id: tournament.id,
-      });
+      }));
       const data = res?.data ?? res;
       if (data?.error) {
         toast({ title: 'Could not delete', description: data.error, variant: 'destructive' });

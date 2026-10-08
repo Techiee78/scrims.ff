@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Save } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
+import { withAuth } from '@/lib/authToken';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import ResultRow from '@/components/results/ResultRow';
@@ -32,7 +33,7 @@ export default function MatchResults() {
   const pick = async (tournament) => {
     setSelected(tournament);
     setDraft({});
-    const res = await base44.functions.invoke('getMatchRegistrations', { tournament_id: tournament.id });
+    const res = await base44.functions.invoke('getMatchRegistrations', await withAuth({ tournament_id: tournament.id }));
     const regs = (res?.data ?? res)?.registrations ?? [];
     setRows(regs);
     const next = {};
@@ -60,10 +61,10 @@ export default function MatchResults() {
         kills: Number(draft[r.id]?.kills || 0),
         placement: Number(draft[r.id]?.placement || 0),
       }));
-      const res = await base44.functions.invoke('recordMatchResults', {
+      const res = await base44.functions.invoke('recordMatchResults', await withAuth({
         tournament_id: selected.id,
         results,
-      });
+      }));
       const data = res?.data ?? res;
       if (data?.error) {
         toast({ title: 'Could not save', description: data.error, variant: 'destructive' });

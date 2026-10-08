@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { coins } from '@/lib/format';
+import { withAuth } from '@/lib/authToken';
 
 export default function JoinDialog({ tournament, open, onOpenChange, user, onJoined }) {
   const { toast } = useToast();
@@ -32,9 +33,10 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
       tournament?.team_type === 'Duo' ? 2 : tournament?.team_type === 'Squad' ? 4 : 1;
     setTeammates(Array.from({ length: Math.max(0, ts - 1) }, () => ''));
     setBalance(null);
-    base44.functions
-      .invoke('getWalletOverview', {})
-      .then((res) => setBalance((res?.data ?? res)?.wallet?.balance ?? 0));
+    (async () => {
+      const res = await base44.functions.invoke('getWalletOverview', await withAuth({}));
+      setBalance((res?.data ?? res)?.wallet?.balance ?? 0);
+    })();
   }, [open, user, tournament]);
 
   if (!tournament) return null;
@@ -60,12 +62,12 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
     }
     setSubmitting(true);
     try {
-      const res = await base44.functions.invoke('joinTournament', {
+      const res = await base44.functions.invoke('joinTournament', await withAuth({
         tournament_id: tournament.id,
         ff_ign: ign,
         ff_uid: uid,
         teammates: cleanedTeammates,
-      });
+      }));
       const data = res?.data ?? res;
       if (data?.error) {
         setError(data.error);

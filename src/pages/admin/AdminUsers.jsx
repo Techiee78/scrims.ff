@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Shield, ShieldOff, Search, Users as UsersIcon, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { withAuth } from '@/lib/authToken';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +25,7 @@ export default function AdminUsers() {
     setLoading(true);
     setError('');
     try {
-      const res = await base44.functions.invoke('manageUsers', { action: 'list' });
+      const res = await base44.functions.invoke('manageUsers', await withAuth({ action: 'list' }));
       const data = res?.data ?? res;
       if (data?.error) throw new Error(data.error);
       setUsers(data?.users || []);
@@ -43,11 +44,11 @@ export default function AdminUsers() {
     const newRole = u.role === 'admin' ? 'user' : 'admin';
     setUpdatingId(u.id);
     try {
-      const res = await base44.functions.invoke('manageUsers', {
+      const res = await base44.functions.invoke('manageUsers', await withAuth({
         action: 'update',
         user_id: u.id,
         role: newRole,
-      });
+      }));
       const data = res?.data ?? res;
       if (data?.error) throw new Error(data.error);
       setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, role: newRole } : x)));

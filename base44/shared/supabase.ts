@@ -23,25 +23,37 @@ export interface SupabaseUser {
 // Extracts the Supabase access token from the request and verifies it
 // against Supabase Auth. Returns the user row (merged with their
 // public.profiles row) or null if unauthenticated/invalid.
+// Token sources, in priority order:
+//   1. Authorization: Bearer <token> header (when it's a Supabase JWT)
+//   2. __supabase_token field in the JSON body (frontend passes this)
+// The Base44 SDK injects its own platform token into the Authorization
+// header; this app authenticates via Supabase, so the body field is the
+// reliable path for Supabase-authenticated calls.
 export async function getUserFromRequest(req: Request): Promise<SupabaseUser | null> {
   try {
+    // Read the body first (non-destructively via clone) so both the header
+    // and body paths can be checked. The body is the source of truth for
+    // the Supabase token in this app.
+    let bodyToken: string | null = null;
+    try {
+      const cloned = req.clone();
+      const body = await cloned.json();
+      if (body && typeof body.__supabase_token === 'string' && body.__supabase_token) {
+        bodyToken = body.__supabase_token;
+      }
+    } catch (_e) {
+      // not JSON or no body — ignore
+    }
+
     const authHeader = req.headers.get('Authorization') || '';
-    const token = authHeader.startsWith('Bearer ')
+    const headerToken = authHeader.startsWith('Bearer ')
       ? authHeader.slice(7).trim()
       : '';
-    // Also accept a token in the JSON body for non-standard callers.
-    let accessToken = token;
-    if (!accessToken) {
-      try {
-        const cloned = req.clone();
-        const body = await cloned.json();
-        if (body && typeof body.__supabase_token === 'string') {
-          accessToken = body.__supabase_token;
-        }
-      } catch (_e) {
-        // not JSON or no body — ignore
-      }
-    }
+
+    // Prefer the explicit Supabase token from the body; fall back to the
+    // header token (which may be the Base44 platform token — if so,
+    // supa.auth.getUser will reject it and return null).
+    const accessToken = bodyToken || headerToken;
     if (!accessToken) return null;
 
     const supa = serviceClient();

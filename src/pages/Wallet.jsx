@@ -4,16 +4,19 @@ import { base44 } from '@/api/base44Client';
 import { coins as formatCoins } from '@/lib/format';
 import TransactionHistory from '@/components/wallet/TransactionHistory';
 import AddCoinsDialog from '@/components/wallet/AddCoinsDialog';
+import { withAuth } from '@/lib/authToken';
 
 export default function Wallet() {
   const [data, setData] = useState(null);
   const [addOpen, setAddOpen] = useState(false);
 
-  const loadWallet = useCallback(() => {
-    base44.functions
-      .invoke('getWalletOverview', {})
-      .then((res) => setData(res?.data ?? res))
-      .catch(() => setData({ wallet: { balance: 0, total_won: 0 }, transactions: [] }));
+  const loadWallet = useCallback(async () => {
+    try {
+      const res = await base44.functions.invoke('getWalletOverview', await withAuth({}));
+      setData(res?.data ?? res);
+    } catch (_e) {
+      setData({ wallet: { balance: 0, total_won: 0 }, transactions: [] });
+    }
   }, []);
 
   useEffect(() => {

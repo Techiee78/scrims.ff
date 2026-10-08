@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
+import { withAuth } from '@/lib/authToken';
 
 const TOURNAMENTS_KEY = ['tournaments'];
 const REGISTRATIONS_KEY = ['registrations'];
@@ -11,7 +12,7 @@ async function fetchTournaments() {
 }
 
 async function fetchRegistrations() {
-  const res = await base44.functions.invoke('getMyRegistrations', {});
+  const res = await base44.functions.invoke('getMyRegistrations', await withAuth({}));
   return (res?.data ?? res)?.registrations ?? [];
 }
 

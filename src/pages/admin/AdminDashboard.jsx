@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CalendarClock, Coins, Radio, Swords, Trophy, Users } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { withAuth } from '@/lib/authToken';
 import { coins } from '@/lib/format';
 
 function StatCard({ icon: Icon, value, label }) {
@@ -21,10 +22,14 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    base44.functions
-      .invoke('getAdminStats', {})
-      .then((res) => setStats(res?.data ?? res))
-      .catch(() => setStats(null));
+    (async () => {
+      try {
+        const res = await base44.functions.invoke('getAdminStats', await withAuth({}));
+        setStats(res?.data ?? res);
+      } catch (_e) {
+        setStats(null);
+      }
+    })();
   }, []);
 
   if (!stats) {

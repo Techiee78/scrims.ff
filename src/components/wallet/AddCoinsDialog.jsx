@@ -3,6 +3,7 @@ import { Coins, Loader2, Lock, Sparkles, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { withAuth } from '@/lib/authToken';
 import { coins as formatCoins } from '@/lib/format';
 
 // 1 coin = 1 INR
@@ -26,7 +27,7 @@ export default function AddCoinsDialog({ open, onClose, onSuccess }) {
     if (!selected) return;
     setLoading(true);
     try {
-      const orderRes = await base44.functions.invoke('createCoinOrder', { coins: selected });
+      const orderRes = await base44.functions.invoke('createCoinOrder', await withAuth({ coins: selected }));
       const order = orderRes?.data ?? orderRes;
 
       if (order?.configured === false) {
@@ -63,11 +64,11 @@ export default function AddCoinsDialog({ open, onClose, onSuccess }) {
         theme: { color: '#1f6fe8' },
         handler: async (response) => {
           try {
-            const verifyRes = await base44.functions.invoke('verifyCoinPayment', {
+            const verifyRes = await base44.functions.invoke('verifyCoinPayment', await withAuth({
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-            });
+            }));
             const verify = verifyRes?.data ?? verifyRes;
             if (verify?.credited) {
               toast({
