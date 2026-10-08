@@ -76,8 +76,24 @@ export const AuthProvider = ({ children }) => {
           setIsLoadingAuth(false);
         }
 
-        const { data: sub } = supa.auth.onAuthStateChange(async (_event, newSession) => {
+        const { data: sub } = supa.auth.onAuthStateChange(async (event, newSession) => {
           if (!active) return;
+          // Password recovery: Supabase sends a recovery link that creates a
+          // temporary session. Do NOT log the user in from that session —
+          // the ResetPassword page uses it to set a new password, then signs
+          // out. Auto-logging in here would bypass the reset entirely.
+          const isRecovery = event === 'PASSWORD_RECOVERY'
+            || (newSession?.user?.recovery_sent_at && !newSession?.user?.email_confirmed_at)
+            || (typeof window !== 'undefined'
+              && (window.location.hash.includes('type=recovery')
+                || window.location.pathname === '/reset-password'));
+          if (isRecovery) {
+            setIsAuthenticated(false);
+            setUser(null);
+            setAuthChecked(true);
+            setIsLoadingAuth(false);
+            return;
+          }
           if (newSession?.user) {
             await loadProfile(newSession.user);
           } else {

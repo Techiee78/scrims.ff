@@ -22,11 +22,17 @@ export default function ResetPassword() {
     (async () => {
       try {
         const supa = await getSupabase();
-        // Give detectSessionInUrl a tick to process the hash.
-        await new Promise((r) => setTimeout(r, 200));
+        // Supabase recovery links deliver the token in the URL hash. The
+        // client exchanges it into a session on init (detectSessionInUrl).
+        // Give that a brief tick, then confirm a recovery session exists.
+        await new Promise((r) => setTimeout(r, 250));
         const { data: { session } } = await supa.auth.getSession();
+        if (!active) return;
+        // Only treat this as a reset if the link was a recovery link.
+        const hash = typeof window !== 'undefined' ? window.location.hash : '';
+        const isRecovery = hash.includes('type=recovery');
         if (active) {
-          setHasSession(!!session);
+          setHasSession(!!session && isRecovery);
           setChecking(false);
         }
       } catch {
