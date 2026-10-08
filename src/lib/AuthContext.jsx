@@ -67,7 +67,18 @@ export const AuthProvider = ({ children }) => {
 
         const { data: { session } } = await supa.auth.getSession();
         if (!active) return;
-        if (session?.user) {
+        // Same recovery guard as the onAuthStateChange handler below:
+        // a recovery link creates a temporary session. Do not log in from it.
+        const hash = typeof window !== 'undefined' ? window.location.hash : '';
+        const isRecovery = hash.includes('type=recovery')
+          || (typeof window !== 'undefined' && window.location.pathname === '/reset-password')
+          || (session?.user?.recovery_sent_at && !session?.user?.email_confirmed_at);
+        if (isRecovery) {
+          setIsAuthenticated(false);
+          setUser(null);
+          setAuthChecked(true);
+          setIsLoadingAuth(false);
+        } else if (session?.user) {
           await loadProfile(session.user);
         } else {
           setIsAuthenticated(false);
