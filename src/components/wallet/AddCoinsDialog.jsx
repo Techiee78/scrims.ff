@@ -23,6 +23,32 @@ export default function AddCoinsDialog({ open, onClose, onSuccess }) {
 
   if (!open) return null;
 
+  const verify = async (orderId) => {
+    try {
+      const verifyRes = await base44.functions.invoke('verifyCoinPayment', await withAuth({ orderId }));
+      const verifyData = verifyRes?.data ?? verifyRes;
+      if (verifyData?.credited) {
+        toast({
+          title: 'Top-up successful',
+          description: `${formatCoins(verifyData.coins)} coins added. New balance: ${formatCoins(verifyData.balance)}.`,
+        });
+        setSelected(null);
+        onClose();
+        onSuccess?.(verifyData);
+      } else if (verifyData?.already) {
+        toast({ title: 'Already credited', description: 'This payment was already applied.' });
+      } else {
+        throw new Error(verifyData?.error || 'Verification failed');
+      }
+    } catch (err) {
+      toast({
+        title: 'Verification failed',
+        description: err.message || 'Please contact support if coins were debited.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const startPayment = async () => {
     if (!selected) return;
     setLoading(true);
@@ -33,76 +59,34 @@ export default function AddCoinsDialog({ open, onClose, onSuccess }) {
       if (order?.configured === false) {
         toast({
           title: 'Payments coming soon',
-          description: 'Razorpay keys are not configured yet. Coin top-ups will be live shortly.',
+          description: 'Cashfree keys are not configured yet. Coin top-ups will be live shortly.',
         });
         return;
       }
-      if (!order?.orderId) {
+      if (!order?.orderId || !order?.paymentSessionId) {
         throw new Error(order?.error || 'Could not start payment');
       }
 
-      if (typeof window === 'undefined' || !window.Razorpay) {
+      if (typeof window === 'undefined' || !window.Cashfree) {
         toast({
           title: 'Checkout unavailable',
-          description: 'Razorpay script failed to load. Check your connection and retry.',
+          description: 'Cashfree script failed to load. Check your connection and retry.',
           variant: 'destructive',
         });
         return;
       }
 
-      const rzp = new window.Razorpay({
-        key: order.keyId,
-        amount: order.amount,
-        currency: order.currency,
-        name: 'Scrims.ff',
-        description: `${formatCoins(order.coins)} coins`,
-        order_id: order.orderId,
-        prefill: {
-          email: user?.email || '',
-          name: user?.full_name || '',
-        },
-        theme: { color: '#1f6fe8' },
-        handler: async (response) => {
-          try {
-            const verifyRes = await base44.functions.invoke('verifyCoinPayment', await withAuth({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            }));
-            const verify = verifyRes?.data ?? verifyRes;
-            if (verify?.credited) {
-              toast({
-                title: 'Top-up successful',
-                description: `${formatCoins(verify.coins)} coins added. New balance: ${formatCoins(verify.balance)}.`,
-              });
-              setSelected(null);
-              onClose();
-              onSuccess?.(verify);
-            } else if (verify?.already) {
-              toast({ title: 'Already credited', description: 'This payment was already applied.' });
-            } else {
-              throw new Error(verify?.error || 'Verification failed');
-            }
-          } catch (err) {
-            toast({
-              title: 'Verification failed',
-              description: err.message || 'Please contact support if coins were debited.',
-              variant: 'destructive',
-            });
-          }
-        },
-        modal: { ondismiss: () => {} },
-      });
-
-      rzp.on('payment.failed', (resp) => {
+      const cashfree = window.Cashfree(order.paymentSessionId);
+      cashfree.on('PAYMENT_SUCCESS', () => verify(order.orderId));
+      cashfree.on('PAYMENT_ERROR', (resp) => {
         toast({
           title: 'Payment failed',
-          description: resp?.error?.description || 'No money was debited. Try again.',
+          description: resp?.error?.message || 'No money was debited. Try again.',
           variant: 'destructive',
         });
       });
-
-      rzp.open();
+      cashfree.on('PAYMENT_CLOSE', () => {});
+      cashfree.render('#cashfree-checkout');
     } catch (err) {
       toast({
         title: 'Top-up failed',
@@ -168,8 +152,9 @@ export default function AddCoinsDialog({ open, onClose, onSuccess }) {
         </button>
         <p className="mt-2 flex items-center justify-center gap-1 text-center text-[10px] text-muted-foreground">
           <Lock className="h-3 w-3" />
-          Secured by Razorpay. Coins are credited after payment verification.
+          Secured by Cashfree. Coins are credited after payment verification.
         </p>
+        <div id="cashfree-checkout" />
       </div>
     </div>
   );

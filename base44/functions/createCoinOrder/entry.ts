@@ -2,17 +2,20 @@ import { getUserFromRequest } from '../../shared/supabase.ts';
 import { serviceClient } from '../../shared/supabase.ts';
 import { secrets } from 'base44:runtime';
 
-// Creates a Razorpay order for a coin top-up.
-// 1 coin = 1 INR. Returns { configured: false } when Razorpay keys are absent
+// Creates a Cashfree order for a coin top-up.
+// 1 coin = 1 INR. Returns { configured: false } when Cashfree keys are absent
 // so the UI can inform the user without erroring.
+//
+// Cashfree PG API: https://api.cashfree.com/pg/orders (PROD) / https://sandbox.cashfree.com/pg/orders (TEST)
 export default async function (req: Request): Promise<Response> {
   try {
     const user = await getUserFromRequest(req);
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const keyId = secrets.get('RAZORPAY_KEY_ID');
-    const keySecret = secrets.get('RAZORPAY_KEY_SECRET');
-    if (!keyId || !keySecret) {
+    const appId = secrets.get('CASHFREE_APP_ID');
+    const secretKey = secrets.get('CASHFREE_SECRET_KEY');
+    const env = (secrets.get('CASHFREE_ENV') || 'PROD').toUpperCase();
+    if (!appId || !secretKey) {
       return Response.json({ configured: false, message: 'Payments are not configured yet.' });
     }
 
@@ -27,33 +30,41 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ error: 'Invalid coin amount' }, { status: 400 });
     }
 
-    const amountPaise = Math.round(coins) * 100; // 1 INR = 100 paise
-    const receipt = `coins_${user.id}_${Date.now()}`;
+    const amountInr = coins.toFixed(2); // Cashfree expects a string amount
+    const orderId = `coins_${user.id}_${Date.now()}`;
+    const baseUrl = env === 'TEST' ? 'https://sandbox.cashfree.com' : 'https://api.cashfree.com';
+    const apiVersion = '2023-08-01';
 
-    const auth = btoa(`${keyId}:${keySecret}`);
-    const res = await fetch('https://api.razorpay.com/v1/orders', {
+    const res = await fetch(`${baseUrl}/pg/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Basic ${auth}`,
+        'x-client-id': appId,
+        'x-client-secret': secretKey,
+        'x-api-version': apiVersion,
       },
       body: JSON.stringify({
-        amount: amountPaise,
-        currency: 'INR',
-        receipt,
-        notes: {
-          user_id: user.id,
-          user_email: user.email,
-          coins: String(coins),
-          source: 'scrims_ff_topup',
+        order_id: orderId,
+        order_amount: Number(amountInr),
+        order_currency: 'INR',
+        customer_details: {
+          customer_id: user.id,
+          customer_email: user.email,
+          customer_phone: '9999999999',
+          customer_name: user.full_name || user.email,
         },
+        order_meta: {
+          return_url: `${new URL(req.url).origin}/wallet?order_id=${orderId}`,
+          notify_url: `${new URL(req.url).origin}/functions/verifyCoinPayment`,
+        },
+        order_note: `${coins} coins top-up · Scrims.ff`,
       }),
       signal: AbortSignal.timeout(12000),
     });
 
     if (!res.ok) {
       const errText = await res.text();
-      return Response.json({ error: 'Razorpay order failed', details: errText }, { status: 502 });
+      return Response.json({ error: 'Cashfree order failed', details: errText }, { status: 502 });
     }
     const order = await res.json();
 
@@ -63,16 +74,18 @@ export default async function (req: Request): Promise<Response> {
       user_email: user.email,
       coins,
       amount_inr: coins,
-      order_id: order.id,
+      order_id: orderId,
       status: 'created',
     });
 
     return Response.json({
       configured: true,
-      orderId: order.id,
-      amount: amountPaise,
+      orderId,
+      paymentSessionId: order.payment_session_id,
+      amount: Number(amountInr),
       currency: 'INR',
-      keyId,
+      env,
+      appId,
       coins,
     });
   } catch (error) {
