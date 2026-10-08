@@ -1,17 +1,26 @@
 import { getUserFromRequest, serviceClient } from '../../shared/supabase.ts';
 
 // Admin-only user management: list profiles and toggle admin role.
-// GET  → returns all profiles with { id, email, full_name, role, ff_ign, ff_uid, created_at }
-// POST → body { user_id, role } sets role to 'admin' or 'user'. Prevents demoting yourself.
+// The Base44 SDK invokes functions via POST, so both list and update
+// go through POST with an action in the body.
+//   { action: 'list' }
+//   { action: 'update', user_id, role }
 export default async function (req: Request): Promise<Response> {
   try {
     const user = await getUserFromRequest(req);
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'admin') return Response.json({ error: 'Admins only' }, { status: 403 });
 
+    let body: any = {};
+    try {
+      body = await req.json();
+    } catch (_e) {
+      body = {};
+    }
+
     const supa = serviceClient();
 
-    if (req.method === 'GET') {
+    if (body.action === 'list' || !body.action) {
       const { data, error } = await supa
         .from('profiles')
         .select('id, email, full_name, role, ff_ign, ff_uid, created_at')
@@ -22,15 +31,9 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ users: data || [] });
     }
 
-    if (req.method === 'POST') {
-      let body: any = null;
-      try {
-        body = await req.json();
-      } catch (_e) {
-        return Response.json({ error: 'Invalid body' }, { status: 400 });
-      }
-      const targetId = body?.user_id;
-      const newRole = body?.role;
+    if (body.action === 'update') {
+      const targetId = body.user_id;
+      const newRole = body.role;
       if (!targetId || typeof targetId !== 'string') {
         return Response.json({ error: 'user_id is required' }, { status: 400 });
       }
@@ -54,7 +57,7 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ user: data });
     }
 
-    return Response.json({ error: 'Method not allowed' }, { status: 405 });
+    return Response.json({ error: 'Unknown action' }, { status: 400 });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

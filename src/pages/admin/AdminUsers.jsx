@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Shield, ShieldOff, Search, Users as UsersIcon, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { getSupabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +24,7 @@ export default function AdminUsers() {
     setLoading(true);
     setError('');
     try {
-      const res = await base44.functions.invoke('manageUsers', {});
+      const res = await base44.functions.invoke('manageUsers', { action: 'list' });
       const data = res?.data ?? res;
       if (data?.error) throw new Error(data.error);
       setUsers(data?.users || []);
@@ -44,13 +43,10 @@ export default function AdminUsers() {
     const newRole = u.role === 'admin' ? 'user' : 'admin';
     setUpdatingId(u.id);
     try {
-      const supa = await getSupabase();
-      const { data: { session } } = await supa.auth.getSession();
-      const token = session?.access_token;
       const res = await base44.functions.invoke('manageUsers', {
+        action: 'update',
         user_id: u.id,
         role: newRole,
-        __supabase_token: token,
       });
       const data = res?.data ?? res;
       if (data?.error) throw new Error(data.error);
