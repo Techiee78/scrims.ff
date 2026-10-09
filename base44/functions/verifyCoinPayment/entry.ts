@@ -6,7 +6,8 @@ import { creditCoins } from '../../shared/wallet.ts';
 // Verifies a Cashfree coin top-up and credits the wallet exactly once.
 // Cashfree's order is the source of truth (owner, amount, PAID status), so a
 // paid order is credited even if its pending record was never saved.
-// Returns { credited: true, coins, balance } or { already: true }.
+// Returns { credited, already, status } where status mirrors Cashfree's
+// order_status (PAID, ACTIVE, FAILED, EXPIRED, ...).
 export default async function (req: Request): Promise<Response> {
   try {
     const user = await getUserFromRequest(req);
@@ -49,14 +50,24 @@ export default async function (req: Request): Promise<Response> {
     if (order?.customer_details?.customer_id !== user.id) {
       return Response.json({ error: 'Order not found for this user' }, { status: 404 });
     }
-    if (order?.order_status !== 'PAID') {
-      return Response.json({ error: 'Payment not completed yet', status: order?.order_status }, { status: 400 });
-    }
+    const status = String(order?.order_status || 'UNKNOWN').toUpperCase();
     const coins = Math.round(Number(order.order_amount)); // 1 coin = 1 INR
     const paymentRef = String(order.cf_order_id || orderId);
+    const supa = serviceClient();
+
+    if (status !== 'PAID') {
+      // Reflect failed/active orders on the record so the status is visible.
+      if (status === 'FAILED' || status === 'EXPIRED') {
+        await supa
+          .from('coin_topups')
+          .update({ status: 'failed', payment_id: paymentRef })
+          .eq('order_id', orderId)
+          .neq('status', 'paid');
+      }
+      return Response.json({ credited: false, status });
+    }
 
     // Claim the order atomically so it is credited only once.
-    const supa = serviceClient();
     const { data: claimed, error: claimError } = await supa
       .from('coin_topups')
       .update({ status: 'paid', payment_id: paymentRef, coins, amount_inr: coins })
@@ -76,14 +87,14 @@ export default async function (req: Request): Promise<Response> {
       });
       if (insertError) {
         if (insertError.code === '23505') {
-          return Response.json({ credited: false, already: true, coins });
+          return Response.json({ credited: false, already: true, coins, status: 'PAID' });
         }
         throw new Error(insertError.message);
       }
     }
 
     const wallet = await creditCoins(supa, user.email, coins, `Coin top-up · ${coins} coins`);
-    return Response.json({ credited: true, coins, balance: wallet.balance });
+    return Response.json({ credited: true, coins, balance: wallet.balance, status: 'PAID' });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

@@ -5,9 +5,14 @@ import { format, isToday, isYesterday } from 'date-fns';
 
 const FILTERS = [
   { key: 'all', label: 'All' },
-  { key: 'credit', label: 'Winnings' },
+  { key: 'winnings', label: 'Winnings' },
+  { key: 'topup', label: 'Top-ups' },
   { key: 'debit', label: 'Entry fees' },
 ];
+
+function isTopup(item) {
+  return item.type === 'credit' && /top-?up/i.test(item.label || '');
+}
 
 function formatLabel(item) {
   if (item.label) return item.label;
@@ -28,12 +33,15 @@ export default function TransactionHistory({ transactions = [] }) {
 
   const counts = useMemo(() => ({
     all: transactions.length,
-    credit: transactions.filter((t) => t.type === 'credit').length,
+    winnings: transactions.filter((t) => t.type === 'credit' && !isTopup(t)).length,
+    topup: transactions.filter((t) => isTopup(t)).length,
     debit: transactions.filter((t) => t.type === 'debit').length,
   }), [transactions]);
 
   const visible = useMemo(() => {
     if (filter === 'all') return transactions;
+    if (filter === 'winnings') return transactions.filter((t) => t.type === 'credit' && !isTopup(t));
+    if (filter === 'topup') return transactions.filter((t) => isTopup(t));
     return transactions.filter((t) => t.type === filter);
   }, [transactions, filter]);
 
@@ -76,13 +84,14 @@ export default function TransactionHistory({ transactions = [] }) {
       ) : (
         <div className="space-y-2.5">
           {visible.map((item) => {
+            const topup = isTopup(item);
             const isCredit = item.type === 'credit';
             const Icon = isCredit ? ArrowDownLeft : ArrowUpRight;
             const when = formatWhen(item.created_date || item.created_at);
             return (
               <div key={item.id} className="glass flex items-center gap-3 rounded-[22px] px-4 py-3">
                 <span className="glass-soft flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
-                  <Icon className={isCredit ? 'h-4 w-4 text-accent' : 'h-4 w-4 text-primary'} />
+                  <Icon className={topup ? 'h-4 w-4 text-primary' : isCredit ? 'h-4 w-4 text-accent' : 'h-4 w-4 text-primary'} />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{formatLabel(item)}</p>
@@ -91,9 +100,11 @@ export default function TransactionHistory({ transactions = [] }) {
                 <div className="text-right">
                   <p
                     className={
-                      isCredit
-                        ? 'font-display text-sm font-semibold text-accent'
-                        : 'font-display text-sm font-semibold text-foreground'
+                      topup
+                        ? 'font-display text-sm font-semibold text-primary'
+                        : isCredit
+                          ? 'font-display text-sm font-semibold text-accent'
+                          : 'font-display text-sm font-semibold text-foreground'
                     }
                   >
                     {isCredit ? '+' : '−'}
