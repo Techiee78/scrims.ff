@@ -1,8 +1,7 @@
 // Shared wallet helpers (Supabase) used by backend functions that touch coins.
 // Wallets are keyed by user_email (Supabase auth identity).
-export const WELCOME_BONUS = 100;
 
-// Returns the player's wallet, creating it (with the welcome bonus) on first use.
+// Returns the player's wallet, creating it (with a zero balance) on first use.
 export async function ensureWallet(supa, email) {
   const { data: existing } = await supa
     .from('wallets')
@@ -13,17 +12,9 @@ export async function ensureWallet(supa, email) {
 
   const { data: wallet } = await supa
     .from('wallets')
-    .insert({ user_email: email, balance: WELCOME_BONUS, total_won: 0 })
+    .insert({ user_email: email, balance: 0, total_won: 0 })
     .select()
     .single();
-
-  await supa.from('wallet_transactions').insert({
-    user_email: email,
-    type: 'credit',
-    amount: WELCOME_BONUS,
-    label: 'Welcome bonus',
-    balance_after: WELCOME_BONUS,
-  });
 
   return wallet;
 }
