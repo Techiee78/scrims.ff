@@ -18,6 +18,7 @@ $$;
 -- ============================================================
 -- profiles
 -- ============================================================
+alter table public.profiles alter column name drop not null;
 alter table public.profiles add column if not exists email text;
 alter table public.profiles add column if not exists full_name text;
 alter table public.profiles add column if not exists role text not null default 'user';
@@ -32,9 +33,10 @@ set email = coalesce(p.email, u.email),
 from auth.users u
 where u.id = p.id;
 
-insert into public.profiles (id, email, full_name)
+insert into public.profiles (id, email, full_name, name)
 select u.id,
        u.email,
+       coalesce(u.raw_user_meta_data->>'full_name', u.raw_user_meta_data->>'name', ''),
        coalesce(u.raw_user_meta_data->>'full_name', u.raw_user_meta_data->>'name', '')
 from auth.users u
 on conflict (id) do nothing;
@@ -43,10 +45,11 @@ on conflict (id) do nothing;
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.profiles (id, email, full_name)
+  insert into public.profiles (id, email, full_name, name)
   values (
     new.id,
     new.email,
+    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', ''),
     coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', '')
   )
   on conflict (id) do nothing;
@@ -80,6 +83,9 @@ create policy profiles_update_own on public.profiles
 -- ============================================================
 -- tournaments
 -- ============================================================
+-- the old schema only allowed solo/duo/squad; the app uses "Full Map" / "CS"
+alter table public.tournaments drop constraint if exists tournaments_mode_check;
+
 alter table public.tournaments add column if not exists team_type text not null default 'Solo';
 alter table public.tournaments add column if not exists map text;
 alter table public.tournaments add column if not exists per_kill numeric not null default 0;
@@ -158,7 +164,7 @@ create table if not exists public.wallet_transactions (
   amount numeric not null default 0,
   label text,
   balance_after numeric,
-  tournament_id uuid,
+  tournament_id bigint,
   created_at timestamptz not null default now()
 );
 create index if not exists wallet_transactions_user_email_idx on public.wallet_transactions(user_email);
