@@ -37,6 +37,39 @@ export function matchTime(value) {
   return `${day} · ${istClock(date)} IST`;
 }
 
+const IST_OFFSET_MINUTES = 330;
+
+// "YYYY-MM-DDTHH:mm" typed by the admin is Indian Standard Time, whatever
+// the browser zone is -> stored as a UTC ISO string.
+export function istInputToIso(value) {
+  if (!value) return undefined;
+  const [datePart, timePart = '00:00'] = value.split('T');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hour = 0, minute = 0, second = 0] = timePart.split(':').map(Number);
+  const utcMs =
+    Date.UTC(year, month - 1, day, hour, minute, second) - IST_OFFSET_MINUTES * 60000;
+  return new Date(utcMs).toISOString();
+}
+
+// Stored UTC value -> "YYYY-MM-DDTHH:mm" in IST, for a datetime-local input.
+export function isoToIstInput(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: IST_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const get = (type) => parts.find((part) => part.type === type)?.value ?? '00';
+  const hour = get('hour') === '24' ? '00' : get('hour');
+  return `${get('year')}-${get('month')}-${get('day')}T${hour}:${get('minute')}`;
+}
+
 export function startsIn(value) {
   if (!value) return '';
   const date = new Date(value);

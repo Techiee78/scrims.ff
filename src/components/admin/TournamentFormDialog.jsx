@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { slotCapacity } from '@/lib/slots';
 import { withAuth } from '@/lib/authToken';
+import { isoToIstInput, istInputToIso } from '@/lib/format';
 import FormSelect from '@/components/admin/FormSelect';
 
 const blank = {
@@ -55,9 +56,7 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
       setForm({
         ...blank,
         ...tournament,
-        match_time: tournament.match_time
-          ? new Date(tournament.match_time).toISOString().slice(0, 16)
-          : '',
+        match_time: isoToIstInput(tournament.match_time),
       });
     } else {
       setForm(blank);
@@ -82,7 +81,7 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
         entry_fee: Number(form.entry_fee) || 0,
         prize_pool: Number(form.prize_pool) || 0,
         per_kill: Number(form.per_kill) || 0,
-        match_time: form.match_time ? new Date(form.match_time).toISOString() : undefined,
+        match_time: istInputToIso(form.match_time),
         total_slots: capacity,
         banner_url: form.banner_url,
         room_id: form.room_id,
@@ -169,7 +168,7 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
             />
           </Field>
 
-          <Field label="Match time">
+          <Field label="Match time (IST)">
             <Input
               type="datetime-local"
               value={form.match_time}
