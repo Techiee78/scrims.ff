@@ -90,6 +90,10 @@ create policy profiles_update_own on public.profiles
 -- the old schema only allowed solo/duo/squad; the app uses "Full Map" / "CS"
 alter table public.tournaments drop constraint if exists tournaments_mode_check;
 
+-- legacy required columns: the app writes total_slots / match_time instead
+alter table public.tournaments alter column max_slots drop not null;
+alter table public.tournaments alter column start_time drop not null;
+
 alter table public.tournaments add column if not exists team_type text not null default 'Solo';
 alter table public.tournaments add column if not exists map text;
 alter table public.tournaments add column if not exists per_kill numeric not null default 0;

@@ -18,7 +18,8 @@ export default async function (req: Request): Promise<Response> {
     if (action === 'delete') {
       const id = body.tournament_id;
       if (!id) return Response.json({ error: 'Missing tournament' }, { status: 400 });
-      await supa.from('tournaments').delete().eq('id', id);
+      const { error } = await supa.from('tournaments').delete().eq('id', id);
+      if (error) return Response.json({ error: error.message }, { status: 500 });
       return Response.json({ success: true });
     }
 
@@ -44,14 +45,25 @@ export default async function (req: Request): Promise<Response> {
     if (data.room_id !== undefined) payload.room_id = data.room_id ? String(data.room_id) : null;
     if (data.room_password !== undefined) payload.room_password = data.room_password ? String(data.room_password) : null;
 
+    // legacy columns still present in the table — keep them in sync
+    payload.max_slots = payload.total_slots;
+    if (data.match_time !== undefined) payload.start_time = data.match_time || null;
+
     if (action === 'create') {
-      const { data: created } = await supa.from('tournaments').insert(payload).select().single();
+      const { data: created, error } = await supa.from('tournaments').insert(payload).select().single();
+      if (error) return Response.json({ error: error.message }, { status: 500 });
       return Response.json({ success: true, tournament: created });
     }
 
     const id = body.tournament_id;
     if (!id) return Response.json({ error: 'Missing tournament' }, { status: 400 });
-    const { data: updated } = await supa.from('tournaments').update(payload).eq('id', id).select().single();
+    const { data: updated, error } = await supa
+      .from('tournaments')
+      .update(payload)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) return Response.json({ error: error.message }, { status: 500 });
     return Response.json({ success: true, tournament: updated });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
