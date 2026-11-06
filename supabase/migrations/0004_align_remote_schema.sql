@@ -18,6 +18,10 @@ $$;
 -- ============================================================
 -- profiles
 -- ============================================================
+-- legacy required field: the app uses ff_uid instead, and a NOT NULL unique
+-- freefire_uid made the sign-up trigger fail for every new user
+alter table public.profiles alter column freefire_uid drop not null;
+alter table public.profiles drop constraint if exists profiles_freefire_uid_key;
 alter table public.profiles alter column name drop not null;
 alter table public.profiles add column if not exists email text;
 alter table public.profiles add column if not exists full_name text;
