@@ -1,13 +1,40 @@
-import { format, isToday, isTomorrow } from 'date-fns';
-
 export const coins = (value) => Number(value || 0).toLocaleString('en-IN');
+
+// Every match time is shown in Indian Standard Time, whatever the device zone.
+export const IST_ZONE = 'Asia/Kolkata';
+
+const istDay = (date) =>
+  new Intl.DateTimeFormat('en-CA', {
+    timeZone: IST_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+
+const istShortDate = (date) =>
+  new Intl.DateTimeFormat('en-IN', { timeZone: IST_ZONE, day: 'numeric', month: 'short' }).format(date);
+
+const istClock = (date) =>
+  new Intl.DateTimeFormat('en-IN', {
+    timeZone: IST_ZONE,
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).format(date);
 
 export function matchTime(value) {
   if (!value) return 'TBA';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'TBA';
-  const day = isToday(date) ? 'Today' : isTomorrow(date) ? 'Tomorrow' : format(date, 'd MMM');
-  return `${day} · ${format(date, 'h:mm a')}`;
+  const now = new Date();
+  const dayKey = istDay(date);
+  const day =
+    dayKey === istDay(now)
+      ? 'Today'
+      : dayKey === istDay(new Date(now.getTime() + 86400000))
+        ? 'Tomorrow'
+        : istShortDate(date);
+  return `${day} · ${istClock(date)} IST`;
 }
 
 export function startsIn(value) {

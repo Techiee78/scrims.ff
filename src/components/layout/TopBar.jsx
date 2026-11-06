@@ -1,5 +1,6 @@
 import { Flame } from 'lucide-react';
 import { initials } from '@/lib/format';
+import IstClock from './IstClock';
 
 export default function TopBar({ user, onProfile }) {
   return (
@@ -16,6 +17,8 @@ export default function TopBar({ user, onProfile }) {
             Scrims<span className="text-primary">.ff</span>
           </span>
         </div>
+
+        <IstClock />
 
         <button
           type="button"
