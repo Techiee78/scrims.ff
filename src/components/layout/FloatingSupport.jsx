@@ -18,7 +18,7 @@ export default function FloatingSupport() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="glass-strong w-60 rounded-[26px] p-2"
+            className="w-60 rounded-[26px] border border-border bg-card p-2 shadow-2xl"
           >
             <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               Customer support
@@ -74,7 +74,7 @@ export default function FloatingSupport() {
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-label="Customer support"
-        className="glass-strong flex h-12 w-12 items-center justify-center rounded-full text-primary transition-transform active:scale-95"
+        className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-[0_10px_30px_rgba(3,2,12,0.6)] transition-transform hover:scale-105 active:scale-95"
       >
         {open ? <X className="h-5 w-5" /> : <Headset className="h-5 w-5" />}
       </button>
