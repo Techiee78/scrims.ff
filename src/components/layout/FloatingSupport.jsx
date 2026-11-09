@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LifeBuoy, X } from 'lucide-react';
+import { Headset, X } from 'lucide-react';
 import { SUPPORT_CHANNELS } from '@/lib/support';
 
 export default function FloatingSupport() {
@@ -76,7 +76,7 @@ export default function FloatingSupport() {
         aria-label="Customer support"
         className="glass-strong flex h-12 w-12 items-center justify-center rounded-full text-primary transition-transform active:scale-95"
       >
-        {open ? <X className="h-5 w-5" /> : <LifeBuoy className="h-5 w-5" />}
+        {open ? <X className="h-5 w-5" /> : <Headset className="h-5 w-5" />}
       </button>
     </div>
   );
