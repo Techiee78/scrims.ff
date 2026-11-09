@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/AuthContext';
 import AppBackground from './AppBackground';
 import TopBar from './TopBar';
 import GlassNav from './GlassNav';
+import FloatingSupport from './FloatingSupport';
 import ConnectionBanner from '@/components/states/ConnectionBanner';
 
 export default function AppShell() {
@@ -31,6 +32,7 @@ export default function AppShell() {
         </AnimatePresence>
       </main>
       <GlassNav />
+      <FloatingSupport />
     </div>
   );
 }

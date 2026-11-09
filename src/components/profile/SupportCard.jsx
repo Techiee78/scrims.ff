@@ -1,30 +1,4 @@
-import { Instagram, MessageCircle, Send } from 'lucide-react';
-
-const WHATSAPP_NUMBER = '8218732250';
-
-const CHANNELS = [
-  {
-    label: 'WhatsApp',
-    hint: 'Chat with our support team',
-    href: `https://wa.me/91${WHATSAPP_NUMBER}`,
-    icon: MessageCircle,
-    live: true,
-  },
-  {
-    label: 'Instagram',
-    hint: 'Coming soon',
-    href: null,
-    icon: Instagram,
-    live: false,
-  },
-  {
-    label: 'Telegram',
-    hint: 'Coming soon',
-    href: null,
-    icon: Send,
-    live: false,
-  },
-];
+import { SUPPORT_CHANNELS } from '@/lib/support';
 
 export default function SupportCard() {
   return (
@@ -35,7 +9,7 @@ export default function SupportCard() {
       <p className="mt-1 text-xs text-muted-foreground">Stuck with a slot or payment? Reach us.</p>
 
       <div className="mt-3 space-y-2">
-        {CHANNELS.map((channel) => {
+        {SUPPORT_CHANNELS.map((channel) => {
           const Icon = channel.icon;
           const content = (
             <>
