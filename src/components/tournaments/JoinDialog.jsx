@@ -16,6 +16,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { coins } from '@/lib/format';
 import { withAuth } from '@/lib/authToken';
 import { cn } from '@/lib/utils';
+import { missingProfileFields } from '@/lib/profile';
 
 const digits = (value) => String(value || '').replace(/\D/g, '');
 
@@ -39,6 +40,7 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
 
   const teamSize = teamSizeOf(tournament?.team_type);
   const needed = Math.max(0, teamSize - 1);
+  const missing = missingProfileFields(user);
 
   useEffect(() => {
     if (!open || !tournament) return;
@@ -49,6 +51,7 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
     setPicked([]);
     setRoster([]);
     setBalance(null);
+    if (missingProfileFields(user).length > 0) return;
     (async () => {
       const [walletRes, rosterRes] = await Promise.all([
         base44.functions.invoke('getWalletOverview', await withAuth({})),
@@ -132,6 +135,27 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
           </DialogDescription>
         </DialogHeader>
 
+        {missing.length > 0 ? (
+          <div className="space-y-4">
+            <div className="glass-soft space-y-2 rounded-2xl p-4">
+              <p className="font-display text-sm font-semibold">Complete your profile to join</p>
+              <p className="text-xs text-muted-foreground">
+                Your profile needs your Free Fire IGN, UID and WhatsApp number before you can take a
+                slot in any match.
+              </p>
+              <p className="text-xs text-destructive">Missing: {missing.join(', ')}</p>
+            </div>
+            <Button
+              onClick={() => {
+                onOpenChange(false);
+                navigate('/profile');
+              }}
+              className="h-12 w-full rounded-full font-display font-semibold"
+            >
+              Complete my profile
+            </Button>
+          </div>
+        ) : (
         <div className="space-y-4">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             Your details
@@ -282,6 +306,7 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
                 : 'Confirm my slot'}
           </Button>
         </div>
+        )}
       </DialogContent>
     </Dialog>
   );

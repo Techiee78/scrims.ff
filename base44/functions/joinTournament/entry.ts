@@ -9,6 +9,19 @@ export default async function (req: Request): Promise<Response> {
     const user = await getUserFromRequest(req);
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
+    // A player must finish their profile before taking a slot.
+    const profileMissing = [
+      String(user.ff_ign || '').trim() ? '' : 'Free Fire IGN',
+      String(user.ff_uid || '').trim() ? '' : 'Free Fire UID',
+      String(user.whatsapp || '').replace(/\D/g, '').length >= 10 ? '' : 'WhatsApp number',
+    ].filter(Boolean);
+    if (profileMissing.length) {
+      return Response.json(
+        { error: 'Complete your profile before joining — add ' + profileMissing.join(', ') + ' in Profile.' },
+        { status: 400 }
+      );
+    }
+
     const body = await req.json().catch(() => ({}));
     const tournamentId = body.tournament_id;
     if (!tournamentId) return Response.json({ error: 'Missing tournament' }, { status: 400 });

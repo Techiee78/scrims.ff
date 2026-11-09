@@ -18,6 +18,7 @@ export interface SupabaseUser {
   role?: string;
   ff_ign?: string;
   ff_uid?: string;
+  whatsapp?: string;
 }
 
 // Extracts the Supabase access token from the request and verifies it
@@ -80,6 +81,7 @@ export async function getUserFromRequest(req: Request): Promise<SupabaseUser | n
       role: profile?.role || 'user',
       ff_ign: profile?.ff_ign || '',
       ff_uid: profile?.ff_uid || '',
+      whatsapp: profile?.whatsapp || '',
     };
   } catch (_e) {
     return null;
