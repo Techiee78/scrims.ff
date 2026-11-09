@@ -16,6 +16,8 @@ import {
 import { withAuth } from '@/lib/authToken';
 import TeammateFormDialog from './TeammateFormDialog';
 
+const MAX_TEAMMATES = 5;
+
 export default function TeammateRoster() {
   const { toast } = useToast();
   const [teammates, setTeammates] = useState([]);
@@ -72,19 +74,24 @@ export default function TeammateRoster() {
     }
   };
 
+  const full = teammates.length >= MAX_TEAMMATES;
+
   return (
     <section className="glass rounded-[26px] p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Saved teammates
+            Saved teammates · {teammates.length}/{MAX_TEAMMATES}
           </p>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            Add once, then pick them for any duo or squad match.
+            {full
+              ? `You have saved the maximum of ${MAX_TEAMMATES}. Remove one to add another.`
+              : 'Add once, then pick them for any duo or squad match.'}
           </p>
         </div>
         <Button
           size="sm"
+          disabled={full}
           onClick={() => {
             setEditing(null);
             setFormOpen(true);

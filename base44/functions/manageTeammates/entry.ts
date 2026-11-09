@@ -3,6 +3,8 @@ import { normalizePlayer } from '../../shared/players.ts';
 
 // Saved teammate roster for the signed-in player.
 // Actions: list | create | update | delete — always scoped to the caller.
+const MAX_TEAMMATES = 5;
+
 export default async function (req: Request): Promise<Response> {
   try {
     const user = await getUserFromRequest(req);
@@ -29,6 +31,17 @@ export default async function (req: Request): Promise<Response> {
       const player = parsed.player!;
 
       if (action === 'create') {
+        const { count } = await supa
+          .from('teammates')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_email', user.email);
+        if ((count || 0) >= MAX_TEAMMATES) {
+          return Response.json(
+            { error: `You can save up to ${MAX_TEAMMATES} teammates — remove one to add another.` },
+            { status: 400 }
+          );
+        }
+
         const { data, error } = await supa
           .from('teammates')
           .insert({
