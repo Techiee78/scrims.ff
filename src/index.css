@@ -92,25 +92,25 @@
 
 @layer components {
   .glass {
-    background: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(22px) saturate(150%);
-    -webkit-backdrop-filter: blur(22px) saturate(150%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.13);
+    backdrop-filter: blur(26px) saturate(160%);
+    -webkit-backdrop-filter: blur(26px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 8px 32px rgba(3, 2, 12, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.07);
   }
 
   .glass-soft {
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(14px) saturate(140%);
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.13);
   }
 
   .glass-strong {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(28px) saturate(160%);
-    -webkit-backdrop-filter: blur(28px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(32px) saturate(170%);
+    -webkit-backdrop-filter: blur(32px) saturate(170%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
     box-shadow: 0 10px 40px rgba(3, 2, 12, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   }
 
