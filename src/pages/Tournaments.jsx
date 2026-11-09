@@ -7,6 +7,7 @@ import EmptyMatches from '@/components/tournaments/EmptyMatches';
 import JoinDialog from '@/components/tournaments/JoinDialog';
 import PullToRefresh from '@/components/common/PullToRefresh';
 import StateScreen from '@/components/states/StateScreen';
+import { getTimeStatus } from '@/lib/tournamentTime';
 
 const FILTERS = [...ALL_MODES, ...MATCH_MODES];
 
@@ -19,6 +20,7 @@ export default function Tournaments() {
   const joinedIds = new Set(registrations.map((item) => item.tournament_id));
   const regByTournament = new Map(registrations.map((r) => [r.tournament_id, r]));
   const list = tournaments.filter((item) => {
+    if (getTimeStatus(item) === 'completed') return false;
     const modeOk = filter === 'All' || item.mode === filter;
     const q = query.trim().toLowerCase();
     const queryOk = !q || (item.title || '').toLowerCase().includes(q) || (item.map || '').toLowerCase().includes(q);
