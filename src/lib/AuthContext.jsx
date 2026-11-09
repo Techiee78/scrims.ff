@@ -31,6 +31,7 @@ export const AuthProvider = ({ children }) => {
         role: profile?.role || 'user',
         ff_ign: profile?.ff_ign || '',
         ff_uid: profile?.ff_uid || '',
+        whatsapp: profile?.whatsapp || '',
       };
       setUser(merged);
       setIsAuthenticated(true);
@@ -45,6 +46,7 @@ export const AuthProvider = ({ children }) => {
         full_name: '',
         ff_ign: '',
         ff_uid: '',
+        whatsapp: '',
       });
       setIsAuthenticated(true);
       setAuthChecked(true);

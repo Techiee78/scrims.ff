@@ -74,14 +74,18 @@ export default function HeroAnnouncement({ tournament, joined, onJoin }) {
             <Lock className="h-4 w-4" />
             {timeStatus === 'live' ? 'Match is live — entry closed' : 'Entry closed — match completed'}
           </div>
+        ) : full ? (
+          <div className="glass-soft flex items-center justify-center gap-2 rounded-full py-3 text-sm font-medium text-muted-foreground">
+            <Lock className="h-4 w-4" />
+            All slots are full
+          </div>
         ) : (
           <div className="flex items-center gap-3">
             <Button
               onClick={onJoin}
-              disabled={full}
               className="h-12 flex-1 rounded-full font-display text-sm font-semibold"
             >
-              {full ? 'Slots full' : tournament.entry_fee ? `Join · ${coins(tournament.entry_fee)} coins` : 'Join free'}
+              {tournament.entry_fee ? `Join · ${coins(tournament.entry_fee)} coins` : 'Join free'}
             </Button>
             <span className="text-[11px] font-medium text-muted-foreground">
               {startsIn(tournament.match_time)}

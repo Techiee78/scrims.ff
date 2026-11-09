@@ -81,13 +81,17 @@ export default function TournamentCard({ tournament, joined, registration, onJoi
           <Lock className="h-4 w-4" />
           <span className="text-xs font-medium">Entry closed — match completed</span>
         </div>
+      ) : full ? (
+        <div className="glass-soft mt-3.5 flex items-center gap-2 rounded-2xl px-3 py-2.5 text-muted-foreground">
+          <Lock className="h-4 w-4" />
+          <span className="text-xs font-medium">All slots are full</span>
+        </div>
       ) : (
         <Button
           onClick={onJoin}
-          disabled={full}
           className="mt-3.5 h-11 w-full rounded-full font-display font-semibold"
         >
-          {full ? 'Slots full' : tournament.entry_fee ? `Join · ${coins(tournament.entry_fee)} coins` : 'Join free'}
+          {tournament.entry_fee ? `Join · ${coins(tournament.entry_fee)} coins` : 'Join free'}
         </Button>
       )}
     </article>

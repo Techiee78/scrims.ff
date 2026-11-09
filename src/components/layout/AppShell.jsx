@@ -1,23 +1,21 @@
-import { useState } from 'react';
-import { useLocation, useOutlet } from 'react-router-dom';
+import { useLocation, useNavigate, useOutlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/lib/AuthContext';
 import AppBackground from './AppBackground';
 import TopBar from './TopBar';
 import GlassNav from './GlassNav';
-import ProfileSheet from '@/components/profile/ProfileSheet';
 import ConnectionBanner from '@/components/states/ConnectionBanner';
 
 export default function AppShell() {
-  const { user, refreshUser } = useAuth();
-  const [profileOpen, setProfileOpen] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
   const outlet = useOutlet();
 
   return (
     <div className="relative min-h-screen">
       <AppBackground />
-      <TopBar user={user} onProfile={() => setProfileOpen(true)} />
+      <TopBar user={user} onProfile={() => navigate('/profile')} />
       <main className="mx-auto w-full max-w-md overflow-x-hidden px-4 pb-32 pt-24 md:max-w-2xl">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
@@ -33,12 +31,6 @@ export default function AppShell() {
         </AnimatePresence>
       </main>
       <GlassNav />
-      <ProfileSheet
-        open={profileOpen}
-        onOpenChange={setProfileOpen}
-        user={user}
-        onSaved={() => refreshUser()}
-      />
     </div>
   );
 }

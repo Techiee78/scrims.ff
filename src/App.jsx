@@ -12,6 +12,7 @@ import Home from './pages/Home';
 import Tournaments from './pages/Tournaments';
 import MyMatches from './pages/MyMatches';
 import WalletPage from './pages/Wallet';
+import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -54,6 +55,7 @@ const AuthenticatedApp = () => {
           <Route path="/tournaments" element={<Tournaments />} />
           <Route path="/my-matches" element={<MyMatches />} />
           <Route path="/wallet" element={<WalletPage />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<AdminDashboard />} />
