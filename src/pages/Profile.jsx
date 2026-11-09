@@ -4,6 +4,7 @@ import PlayerStats from '@/components/profile/PlayerStats';
 import PlayerDetailsForm from '@/components/profile/PlayerDetailsForm';
 import TeammateRoster from '@/components/profile/TeammateRoster';
 import AccountActions from '@/components/profile/AccountActions';
+import SupportCard from '@/components/profile/SupportCard';
 
 export default function Profile() {
   const { user, refreshUser } = useAuth();
@@ -35,6 +36,8 @@ export default function Profile() {
       <PlayerDetailsForm user={user} onSaved={refreshUser} />
 
       <TeammateRoster />
+
+      <SupportCard />
 
       <AccountActions user={user} />
     </div>

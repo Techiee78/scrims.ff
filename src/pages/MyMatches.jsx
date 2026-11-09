@@ -11,6 +11,13 @@ import { getTimeStatus } from '@/lib/tournamentTime';
 export default function MyMatches() {
   const { loading, error, tournaments, registrations, reload } = useTournamentData();
   const byId = new Map(tournaments.map((item) => [item.id, item]));
+  const isCompleted = (registration) => {
+    const match = byId.get(registration.tournament_id);
+    return !!match && getTimeStatus(match) === 'completed';
+  };
+  const active = registrations.filter((registration) => !isCompleted(registration));
+  const completed = registrations.filter(isCompleted);
+  const ordered = [...active, ...completed];
 
   return (
     <div className="space-y-5">
@@ -32,7 +39,7 @@ export default function MyMatches() {
           />
         )}
         {!loading && !error &&
-          registrations.map((registration) => {
+          ordered.map((registration) => {
             const match = byId.get(registration.tournament_id);
             return (
               <article key={registration.id} className="glass rounded-[26px] p-4">
