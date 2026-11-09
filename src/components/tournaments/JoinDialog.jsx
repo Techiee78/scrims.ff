@@ -10,7 +10,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { coins } from '@/lib/format';
@@ -40,18 +39,26 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
 
   const teamSize = teamSizeOf(tournament?.team_type);
   const needed = Math.max(0, teamSize - 1);
-  const missing = missingProfileFields(user);
 
   useEffect(() => {
-    if (!open || !tournament) return;
+    if (!open || !tournament || !user) return;
+    const missing = missingProfileFields(user);
+    if (missing.length > 0) {
+      onOpenChange(false);
+      toast({
+        title: 'Complete your profile first',
+        description: `Add ${missing.join(', ')} in your profile to join a match.`,
+      });
+      navigate('/profile');
+      return;
+    }
     setError('');
-    setIgn(user?.ff_ign || '');
-    setUid(user?.ff_uid || '');
-    setWhatsapp(user?.whatsapp || '');
+    setIgn(user.ff_ign || '');
+    setUid(user.ff_uid || '');
+    setWhatsapp(user.whatsapp || '');
     setPicked([]);
     setRoster([]);
     setBalance(null);
-    if (missingProfileFields(user).length > 0) return;
     (async () => {
       const [walletRes, rosterRes] = await Promise.all([
         base44.functions.invoke('getWalletOverview', await withAuth({})),
@@ -135,72 +142,34 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
           </DialogDescription>
         </DialogHeader>
 
-        {missing.length > 0 ? (
-          <div className="space-y-4">
-            <div className="glass-soft space-y-2 rounded-2xl p-4">
-              <p className="font-display text-sm font-semibold">Complete your profile to join</p>
-              <p className="text-xs text-muted-foreground">
-                Your profile needs your Free Fire IGN, UID and WhatsApp number before you can take a
-                slot in any match.
-              </p>
-              <p className="text-xs text-destructive">Missing: {missing.join(', ')}</p>
-            </div>
-            <Button
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Your details
+            </p>
+            <button
+              type="button"
               onClick={() => {
                 onOpenChange(false);
                 navigate('/profile');
               }}
-              className="h-12 w-full rounded-full font-display font-semibold"
+              className="text-[11px] font-semibold text-primary"
             >
-              Complete my profile
-            </Button>
-          </div>
-        ) : (
-        <div className="space-y-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Your details
-          </p>
-
-          <div className="space-y-2">
-            <Label htmlFor="join-ign" className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-              Free Fire IGN
-            </Label>
-            <Input
-              id="join-ign"
-              value={ign}
-              onChange={(event) => setIgn(event.target.value)}
-              placeholder="Your in-game name"
-              className="glass-soft h-11 rounded-2xl border-white/10"
-            />
+              Edit in profile
+            </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="join-uid" className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                Free Fire UID
-              </Label>
-              <Input
-                id="join-uid"
-                value={uid}
-                onChange={(event) => setUid(event.target.value)}
-                placeholder="123456789"
-                inputMode="numeric"
-                className="glass-soft h-11 rounded-2xl border-white/10"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="join-whatsapp" className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                WhatsApp
-              </Label>
-              <Input
-                id="join-whatsapp"
-                value={whatsapp}
-                onChange={(event) => setWhatsapp(event.target.value)}
-                placeholder="10-digit number"
-                inputMode="tel"
-                className="glass-soft h-11 rounded-2xl border-white/10"
-              />
-            </div>
+          <div className="glass-soft space-y-1.5 rounded-2xl px-3.5 py-3">
+            {[
+              ['Free Fire IGN', ign],
+              ['Free Fire UID', uid],
+              ['WhatsApp', whatsapp],
+            ].map(([label, value]) => (
+              <div key={label} className="flex items-center justify-between gap-3 text-xs">
+                <span className="text-muted-foreground">{label}</span>
+                <span className="truncate font-semibold">{value}</span>
+              </div>
+            ))}
           </div>
 
           {needed > 0 && (
@@ -306,7 +275,6 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
                 : 'Confirm my slot'}
           </Button>
         </div>
-        )}
       </DialogContent>
     </Dialog>
   );

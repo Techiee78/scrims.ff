@@ -11,6 +11,7 @@ export default function PlayerDetailsForm({ user, onSaved }) {
   const [uid, setUid] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     setIgn(user?.ff_ign || '');
@@ -19,6 +20,12 @@ export default function PlayerDetailsForm({ user, onSaved }) {
   }, [user?.ff_ign, user?.ff_uid, user?.whatsapp]);
 
   const save = async () => {
+    setError('');
+    if (!ign.trim()) return setError('Free Fire IGN cannot be left empty once saved.');
+    if (!uid.trim()) return setError('Free Fire UID cannot be left empty once saved.');
+    if (whatsapp.replace(/\D/g, '').length < 10) {
+      return setError('Enter a valid 10-digit WhatsApp number.');
+    }
     setSaving(true);
     try {
       const supa = await getSupabase();
@@ -51,7 +58,8 @@ export default function PlayerDetailsForm({ user, onSaved }) {
         Your player details
       </p>
       <p className="mt-1 text-[11px] text-muted-foreground">
-        We prefill these when you join a match.
+        We prefill these when you join a match. Once saved you can change them, but not leave them
+        empty.
       </p>
 
       <div className="mt-3 space-y-3">
@@ -97,6 +105,8 @@ export default function PlayerDetailsForm({ user, onSaved }) {
           </div>
         </div>
       </div>
+
+      {error && <p className="mt-3 text-xs text-destructive">{error}</p>}
 
       <Button
         onClick={save}
