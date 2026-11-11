@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CalendarClock, Coins, RefreshCw, Radio, Swords, Trophy, Users } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { callFunction } from '@/lib/callFunction';
 import { withAuth } from '@/lib/authToken';
 import { coins } from '@/lib/format';
 import LiveMatchRow from '@/components/admin/LiveMatchRow';
@@ -30,7 +30,7 @@ export default function AdminDashboard() {
 
     const load = async () => {
       try {
-        const res = await base44.functions.invoke('getAdminStats', await withAuth({}));
+        const res = await callFunction('getAdminStats', await withAuth({}));
         if (!active) return;
         setStats(res?.data ?? res);
         setFailed(false);

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Crosshair, Swords, Trophy } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { callFunction } from '@/lib/callFunction';
 import StatTile from '@/components/tournaments/StatTile';
 import { withAuth } from '@/lib/authToken';
 
@@ -15,7 +15,7 @@ export default function PlayerStats({ user }) {
     }
     setLoading(true);
     (async () => {
-      const res = await base44.functions.invoke('getMyRegistrations', await withAuth({}));
+      const res = await callFunction('getMyRegistrations', await withAuth({}));
       setResults(((res?.data ?? res)?.registrations ?? []).filter((row) => row.played));
       setLoading(false);
     })();

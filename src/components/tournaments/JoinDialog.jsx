@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, Coins, Users } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { callFunction } from '@/lib/callFunction';
 import {
   Dialog,
   DialogContent,
@@ -61,8 +61,8 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
     setBalance(null);
     (async () => {
       const [walletRes, rosterRes] = await Promise.all([
-        base44.functions.invoke('getWalletOverview', await withAuth({})),
-        base44.functions.invoke('manageTeammates', await withAuth({ action: 'list' })),
+        callFunction('getWalletOverview', await withAuth({})),
+        callFunction('manageTeammates', await withAuth({ action: 'list' })),
       ]);
       setBalance((walletRes?.data ?? walletRes)?.wallet?.balance ?? 0);
       setRoster((rosterRes?.data ?? rosterRes)?.teammates ?? []);
@@ -107,7 +107,7 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
 
     setSubmitting(true);
     try {
-      const res = await base44.functions.invoke('joinTournament', await withAuth({
+      const res = await callFunction('joinTournament', await withAuth({
         tournament_id: tournament.id,
         ff_ign: ign,
         ff_uid: uid,

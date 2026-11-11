@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Coins, Loader2, Lock, Sparkles, X } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { callFunction } from '@/lib/callFunction';
 import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { withAuth } from '@/lib/authToken';
@@ -37,7 +37,7 @@ export default function AddCoinsDialog({ open, onClose, onSuccess }) {
     if (!selected) return;
     setLoading(true);
     try {
-      const orderRes = await base44.functions.invoke(
+      const orderRes = await callFunction(
         'createCoinOrder',
         await withAuth({ coins: selected, returnOrigin: window.location.origin })
       );

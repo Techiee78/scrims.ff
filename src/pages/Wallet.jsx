@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Coins, Plus, Trophy } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { callFunction } from '@/lib/callFunction';
 import { coins as formatCoins } from '@/lib/format';
 import TransactionHistory from '@/components/wallet/TransactionHistory';
 import AddCoinsDialog from '@/components/wallet/AddCoinsDialog';
@@ -17,7 +17,7 @@ export default function Wallet() {
   const loadWallet = useCallback(async () => {
     setLoadError(false);
     try {
-      const res = await base44.functions.invoke('getWalletOverview', await withAuth({}));
+      const res = await callFunction('getWalletOverview', await withAuth({}));
       setData(res?.data ?? res);
     } catch (_e) {
       setLoadError(true);

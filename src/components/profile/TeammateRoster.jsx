@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Pencil, Plus, Trash2, Users } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { callFunction } from '@/lib/callFunction';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -32,7 +32,7 @@ export default function TeammateRoster() {
     setLoading(true);
     setError('');
     try {
-      const res = await base44.functions.invoke('manageTeammates', await withAuth({ action: 'list' }));
+      const res = await callFunction('manageTeammates', await withAuth({ action: 'list' }));
       const data = res?.data ?? res;
       if (data?.error) {
         setError(data.error);
@@ -55,7 +55,7 @@ export default function TeammateRoster() {
     if (!removeTarget) return;
     setRemoving(true);
     try {
-      const res = await base44.functions.invoke(
+      const res = await callFunction(
         'manageTeammates',
         await withAuth({ action: 'delete', id: removeTarget.id })
       );

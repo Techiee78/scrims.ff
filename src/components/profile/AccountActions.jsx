@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, LogOut, Trash2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { callFunction } from '@/lib/callFunction';
 import { useAuth } from '@/lib/AuthContext';
 import { withAuth } from '@/lib/authToken';
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,7 @@ export default function AccountActions({ user }) {
   const deleteAccount = async () => {
     setDeleting(true);
     try {
-      const res = await base44.functions.invoke('requestAccountDeletion', await withAuth({}));
+      const res = await callFunction('requestAccountDeletion', await withAuth({}));
       const data = res?.data ?? res;
       if (data?.error) {
         toast({ title: 'Could not submit request', description: data.error, variant: 'destructive' });

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { callFunction } from '@/lib/callFunction';
 import { withAuth } from '@/lib/authToken';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -19,7 +19,7 @@ export default function AdminTournaments() {
 
   const load = () => {
     setLoading(true);
-    base44.functions.invoke('listTournaments', {}).then((res) => {
+    callFunction('listTournaments', {}).then((res) => {
       setItems((res?.data ?? res)?.tournaments ?? []);
       setLoading(false);
     });
@@ -32,7 +32,7 @@ export default function AdminTournaments() {
   const remove = async (tournament) => {
     if (!window.confirm(`Delete "${tournament.title}"? This can't be undone.`)) return;
     try {
-      const res = await base44.functions.invoke('manageTournament', await withAuth({
+      const res = await callFunction('manageTournament', await withAuth({
         action: 'delete',
         tournament_id: tournament.id,
       }));

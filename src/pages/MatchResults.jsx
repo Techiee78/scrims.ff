@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Save } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { callFunction } from '@/lib/callFunction';
 import { useAuth } from '@/lib/AuthContext';
 import { withAuth } from '@/lib/authToken';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,7 @@ export default function MatchResults() {
       setLoading(false);
       return;
     }
-    base44.functions.invoke('listTournaments', {}).then((res) => {
+    callFunction('listTournaments', {}).then((res) => {
       setTournaments((res?.data ?? res)?.tournaments ?? []);
       setLoading(false);
     });
@@ -34,7 +34,7 @@ export default function MatchResults() {
   const pick = async (tournament) => {
     setSelected(tournament);
     setDraft({});
-    const res = await base44.functions.invoke('getMatchRegistrations', await withAuth({ tournament_id: tournament.id }));
+    const res = await callFunction('getMatchRegistrations', await withAuth({ tournament_id: tournament.id }));
     const regs = (res?.data ?? res)?.registrations ?? [];
     setRows(regs);
     const next = {};
@@ -62,7 +62,7 @@ export default function MatchResults() {
         kills: Number(draft[r.id]?.kills || 0),
         placement: Number(draft[r.id]?.placement || 0),
       }));
-      const res = await base44.functions.invoke('recordMatchResults', await withAuth({
+      const res = await callFunction('recordMatchResults', await withAuth({
         tournament_id: selected.id,
         results,
       }));

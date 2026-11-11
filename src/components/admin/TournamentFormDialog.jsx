@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { callFunction } from '@/lib/callFunction';
 import {
   Dialog,
   DialogContent,
@@ -92,7 +92,7 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
       const body = tournament
         ? { action: 'update', tournament_id: tournament.id, data: payload }
         : { action: 'create', data: payload };
-      const res = await base44.functions.invoke('manageTournament', await withAuth(body));
+      const res = await callFunction('manageTournament', await withAuth(body));
       const data = res?.data ?? res;
       if (data?.error) {
         toast({ title: 'Could not save', description: data.error, variant: 'destructive' });

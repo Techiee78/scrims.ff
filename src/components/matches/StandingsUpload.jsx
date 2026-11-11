@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ImagePlus, Loader2, RefreshCw } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { callFunction } from '@/lib/callFunction';
 import { useToast } from '@/components/ui/use-toast';
 import { Image } from '@/components/ui/image';
 import { withAuth } from '@/lib/authToken';
@@ -35,7 +36,7 @@ export default function StandingsUpload({ registration, onUploaded }) {
       const up = await base44.integrations.Core.UploadPrivateFile({ file });
       const fileUri = (up?.data ?? up)?.file_uri;
       if (!fileUri) throw new Error('Upload failed');
-      const res = await base44.functions.invoke('attachStandingsScreenshot', await withAuth({
+      const res = await callFunction('attachStandingsScreenshot', await withAuth({
         registration_id: registration.id,
         file_uri: fileUri,
       }));

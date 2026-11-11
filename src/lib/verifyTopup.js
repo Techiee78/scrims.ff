@@ -1,4 +1,4 @@
-import { base44 } from '@/api/base44Client';
+import { callFunction } from '@/lib/callFunction';
 import { withAuth } from '@/lib/authToken';
 import { coins as formatCoins } from '@/lib/format';
 
@@ -6,7 +6,7 @@ import { coins as formatCoins } from '@/lib/format';
 // Returns true when the coins are (or already were) credited.
 export async function verifyTopup(orderId, toast) {
   try {
-    const res = await base44.functions.invoke('verifyCoinPayment', await withAuth({ orderId }));
+    const res = await callFunction('verifyCoinPayment', await withAuth({ orderId }));
     const data = res?.data ?? res;
     const status = String(data?.status || '').toUpperCase();
 

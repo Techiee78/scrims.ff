@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { callFunction } from '@/lib/callFunction';
 import {
   Dialog,
   DialogContent,
@@ -40,7 +40,7 @@ export default function TeammateFormDialog({ open, onOpenChange, teammate, onSav
       const payload = teammate
         ? { action: 'update', id: teammate.id, teammate: { ign, ff_uid: uid, whatsapp } }
         : { action: 'create', teammate: { ign, ff_uid: uid, whatsapp } };
-      const res = await base44.functions.invoke('manageTeammates', await withAuth(payload));
+      const res = await callFunction('manageTeammates', await withAuth(payload));
       const data = res?.data ?? res;
       if (data?.error) {
         setError(data.error);
