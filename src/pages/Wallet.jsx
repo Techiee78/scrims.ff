@@ -7,6 +7,7 @@ import AddCoinsDialog from '@/components/wallet/AddCoinsDialog';
 import StateScreen from '@/components/states/StateScreen';
 import { withAuth } from '@/lib/authToken';
 import useReturnedTopup from '@/hooks/useReturnedTopup';
+import PullToRefresh from '@/components/common/PullToRefresh';
 
 export default function Wallet() {
   const [data, setData] = useState(null);
@@ -15,7 +16,6 @@ export default function Wallet() {
 
   const loadWallet = useCallback(async () => {
     setLoadError(false);
-    setData(null);
     try {
       const res = await base44.functions.invoke('getWalletOverview', await withAuth({}));
       setData(res?.data ?? res);
@@ -44,6 +44,7 @@ export default function Wallet() {
   const { wallet, transactions = [] } = data;
 
   return (
+    <PullToRefresh onRefresh={loadWallet}>
     <div className="space-y-5">
       <div className="px-1">
         <h1 className="font-display text-2xl font-semibold">Wallet</h1>
@@ -96,5 +97,6 @@ export default function Wallet() {
         onSuccess={loadWallet}
       />
     </div>
+    </PullToRefresh>
   );
 }

@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import { Loader2, RotateCw } from 'lucide-react';
 
-const THRESHOLD = 70;
-const MAX_PULL = 110;
+const THRESHOLD = 38;
+const MAX_PULL = 76;
 
 export default function PullToRefresh({ onRefresh, children }) {
   const [pull, setPull] = useState(0);
@@ -37,7 +37,7 @@ export default function PullToRefresh({ onRefresh, children }) {
       if (pullRef.current !== 0) applyPull(0);
       return;
     }
-    applyPull(Math.min(delta * 0.5, MAX_PULL));
+    applyPull(Math.min(delta * 0.75, MAX_PULL));
   };
 
   const onTouchEnd = async () => {

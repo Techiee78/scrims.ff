@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Clock, Hash, KeyRound, Trophy } from 'lucide-react';
 import useTournamentData from '@/hooks/useTournamentData';
 import EmptyMatches from '@/components/tournaments/EmptyMatches';
+import PullToRefresh from '@/components/common/PullToRefresh';
 import StandingsUpload from '@/components/matches/StandingsUpload';
 import LiveStatus from '@/components/tournaments/LiveStatus';
 import StateScreen from '@/components/states/StateScreen';
@@ -20,6 +21,7 @@ export default function MyMatches() {
   const ordered = [...active, ...completed];
 
   return (
+    <PullToRefresh onRefresh={reload}>
     <div className="space-y-5">
       <div className="px-1">
         <h1 className="font-display text-2xl font-semibold">My Matches</h1>
@@ -107,5 +109,6 @@ export default function MyMatches() {
         Browse tournaments
       </Link>
     </div>
+    </PullToRefresh>
   );
 }

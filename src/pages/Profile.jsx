@@ -5,11 +5,13 @@ import PlayerDetailsForm from '@/components/profile/PlayerDetailsForm';
 import TeammateRoster from '@/components/profile/TeammateRoster';
 import AccountActions from '@/components/profile/AccountActions';
 import SupportCard from '@/components/profile/SupportCard';
+import PullToRefresh from '@/components/common/PullToRefresh';
 
 export default function Profile() {
   const { user, refreshUser } = useAuth();
 
   return (
+    <PullToRefresh onRefresh={refreshUser}>
     <div className="space-y-5">
       <div className="px-1">
         <h1 className="font-display text-2xl font-semibold">Profile</h1>
@@ -41,5 +43,6 @@ export default function Profile() {
 
       <AccountActions user={user} />
     </div>
+    </PullToRefresh>
   );
 }
