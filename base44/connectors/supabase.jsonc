@@ -2,6 +2,8 @@
   "type": "supabase",
   "scopes": [
     "projects:read",
-    "database:write"
+    "database:write",
+    "edge_functions:write",
+    "secrets:write"
   ]
 }
