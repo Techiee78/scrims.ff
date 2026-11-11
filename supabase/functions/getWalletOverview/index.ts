@@ -15,7 +15,17 @@ export default async function handler(req: Request): Promise<Response> {
       .order('created_at', { ascending: false })
       .limit(25);
     if (error) throw error;
-    return Response.json({ wallet, transactions: transactions || [] });
+
+    // The player's own recharge orders (read server-side; clients can only
+    // SELECT their own rows via RLS).
+    const { data: topups } = await supa
+      .from('coin_topups')
+      .select('id, order_id, coins, amount_inr, status, mode, payment_id, created_at, updated_at')
+      .eq('user_email', user.email)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    return Response.json({ wallet, transactions: transactions || [], topups: topups || [] });
   } catch (error: any) {
     return Response.json({ error: error.message }, { status: 500 });
   }

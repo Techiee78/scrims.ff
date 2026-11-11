@@ -4,6 +4,7 @@ import { callFunction } from '@/lib/callFunction';
 import { coins as formatCoins } from '@/lib/format';
 import TransactionHistory from '@/components/wallet/TransactionHistory';
 import AddCoinsDialog from '@/components/wallet/AddCoinsDialog';
+import TestRechargePanel from '@/components/wallet/TestRechargePanel';
 import StateScreen from '@/components/states/StateScreen';
 import { withAuth } from '@/lib/authToken';
 import useReturnedTopup from '@/hooks/useReturnedTopup';
@@ -41,7 +42,7 @@ export default function Wallet() {
     );
   }
 
-  const { wallet, transactions = [] } = data;
+  const { wallet, transactions = [], topups = [] } = data;
 
   return (
     <PullToRefresh onRefresh={loadWallet}>
@@ -88,6 +89,8 @@ export default function Wallet() {
           Add coins
         </button>
       </section>
+
+      <TestRechargePanel topups={topups} onChanged={loadWallet} />
 
       <TransactionHistory transactions={transactions} />
 
