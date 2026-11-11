@@ -20,7 +20,7 @@ export default async function handler(req: Request): Promise<Response> {
     // SELECT their own rows via RLS).
     const { data: topups } = await supa
       .from('coin_topups')
-      .select('id, order_id, coins, amount_inr, status, mode, payment_id, created_at, updated_at')
+      .select('id, order_id, coins, amount_inr, status, mode, created_at, updated_at')
       .eq('user_email', user.email)
       .order('created_at', { ascending: false })
       .limit(10);

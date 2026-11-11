@@ -1,19 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Coins, Plus, Trophy } from 'lucide-react';
+import { Coins, Trophy } from 'lucide-react';
 import { callFunction } from '@/lib/callFunction';
 import { coins as formatCoins } from '@/lib/format';
 import TransactionHistory from '@/components/wallet/TransactionHistory';
-import AddCoinsDialog from '@/components/wallet/AddCoinsDialog';
 import TestRechargePanel from '@/components/wallet/TestRechargePanel';
 import StateScreen from '@/components/states/StateScreen';
 import { withAuth } from '@/lib/authToken';
-import useReturnedTopup from '@/hooks/useReturnedTopup';
 import PullToRefresh from '@/components/common/PullToRefresh';
 
 export default function Wallet() {
   const [data, setData] = useState(null);
   const [loadError, setLoadError] = useState(false);
-  const [addOpen, setAddOpen] = useState(false);
 
   const loadWallet = useCallback(async () => {
     setLoadError(false);
@@ -29,9 +26,6 @@ export default function Wallet() {
   useEffect(() => {
     loadWallet();
   }, [loadWallet]);
-
-  // Cashfree sends the player back here with ?order_id=… after checkout.
-  useReturnedTopup(loadWallet);
 
   if (!data) {
     return (
@@ -80,25 +74,11 @@ export default function Wallet() {
         <p className="mt-2 text-[11px] text-muted-foreground">
           Coins are in-app credits used for entry fees.
         </p>
-        <button
-          type="button"
-          onClick={() => setAddOpen(true)}
-          className="mt-4 flex h-10 w-full items-center justify-center gap-1.5 rounded-full bg-primary font-display text-xs font-semibold text-primary-foreground shadow transition-colors hover:bg-primary/90"
-        >
-          <Plus className="h-4 w-4" />
-          Add coins
-        </button>
       </section>
 
       <TestRechargePanel topups={topups} onChanged={loadWallet} />
 
       <TransactionHistory transactions={transactions} />
-
-      <AddCoinsDialog
-        open={addOpen}
-        onClose={() => setAddOpen(false)}
-        onSuccess={loadWallet}
-      />
     </div>
     </PullToRefresh>
   );

@@ -10,7 +10,7 @@
 export type GateResult = { ok: true } | { ok: false; status: number; error: string };
 
 export function testModeGate(user: { email?: string | null }): GateResult {
-  const signals = [Deno.env.get('PAYMENTS_ENV'), Deno.env.get('CASHFREE_ENV')]
+  const signals = [Deno.env.get('PAYMENTS_ENV'), Deno.env.get('APP_ENV')]
     .filter(Boolean)
     .map((v) => String(v).trim().toLowerCase());
 
