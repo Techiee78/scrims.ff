@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ImagePlus, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { standingsUrl } from '@/lib/standingsStorage';
 import { Image } from '@/components/ui/image';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
@@ -17,9 +17,9 @@ export default function AdminStandingsPreview({ registration }) {
       return;
     }
     setLoading(true);
-    base44.integrations.Core.CreateFileSignedUrl({ file_uri: uri })
-      .then((res) => {
-        if (active) setSigned((res?.data ?? res)?.signed_url);
+    standingsUrl(uri)
+      .then((url) => {
+        if (active) setSigned(url);
       })
       .catch(() => {})
       .finally(() => {
