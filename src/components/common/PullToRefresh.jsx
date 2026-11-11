@@ -1,77 +1,98 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader2, RotateCw } from 'lucide-react';
 
 const THRESHOLD = 38;
 const MAX_PULL = 76;
 
 export default function PullToRefresh({ onRefresh, children }) {
+  const containerRef = useRef(null);
   const [pull, setPull] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [dragging, setDragging] = useState(false);
   const startY = useRef(null);
   const pullRef = useRef(0);
+  const refreshingRef = useRef(false);
+  const onRefreshRef = useRef(onRefresh);
+  onRefreshRef.current = onRefresh;
 
   const applyPull = (value) => {
     pullRef.current = value;
     setPull(value);
   };
 
-  const resetPull = () => {
-    startY.current = null;
-    setDragging(false);
-    applyPull(0);
-  };
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node) return;
 
-  const onTouchStart = (event) => {
-    if (refreshing) return;
-    if (window.scrollY > 0 || pullRef.current > 0) return;
-    startY.current = event.touches[0].clientY;
-    setDragging(true);
-  };
+    const handleStart = (event) => {
+      if (refreshingRef.current) return;
+      if (window.scrollY > 0 || pullRef.current > 0) return;
+      startY.current = event.touches[0].clientY;
+      setDragging(true);
+    };
 
-  const onTouchMove = (event) => {
-    if (startY.current === null || refreshing) return;
-    const delta = event.touches[0].clientY - startY.current;
-    // Finger moved up or the page started scrolling: drop any pull so nothing stays stuck.
-    if (delta <= 0 || window.scrollY > 0) {
-      if (pullRef.current !== 0) applyPull(0);
-      return;
-    }
-    applyPull(Math.min(delta * 0.75, MAX_PULL));
-  };
+    const handleMove = (event) => {
+      if (startY.current === null || refreshingRef.current) return;
+      const delta = event.touches[0].clientY - startY.current;
+      // Finger moved up or the page started scrolling: drop any pull so nothing stays stuck.
+      if (delta <= 0 || window.scrollY > 0) {
+        if (pullRef.current !== 0) applyPull(0);
+        return;
+      }
+      // Stop Chrome's native pull-to-refresh so ours runs first.
+      if (event.cancelable) event.preventDefault();
+      applyPull(Math.min(delta * 0.75, MAX_PULL));
+    };
 
-  const onTouchEnd = async () => {
-    const shouldRefresh = startY.current !== null && pullRef.current >= THRESHOLD && !refreshing;
-    startY.current = null;
-    setDragging(false);
+    const handleEnd = () => {
+      const shouldRefresh =
+        startY.current !== null && pullRef.current >= THRESHOLD && !refreshingRef.current;
+      startY.current = null;
+      setDragging(false);
 
-    if (!shouldRefresh) {
+      if (!shouldRefresh) {
+        applyPull(0);
+        return;
+      }
+
+      refreshingRef.current = true;
+      setRefreshing(true);
+      applyPull(THRESHOLD);
+      Promise.resolve()
+        .then(() => onRefreshRef.current?.())
+        .catch(() => {
+          // keep the page usable even if the refresh fails
+        })
+        .finally(() => {
+          refreshingRef.current = false;
+          setRefreshing(false);
+          applyPull(0);
+        });
+    };
+
+    const handleCancel = () => {
+      startY.current = null;
+      setDragging(false);
       applyPull(0);
-      return;
-    }
+    };
 
-    setRefreshing(true);
-    applyPull(THRESHOLD);
-    try {
-      await onRefresh?.();
-    } catch (_e) {
-      // keep the page usable even if the refresh fails
-    } finally {
-      setRefreshing(false);
-      applyPull(0);
-    }
-  };
+    node.addEventListener('touchstart', handleStart, { passive: true });
+    node.addEventListener('touchmove', handleMove, { passive: false });
+    node.addEventListener('touchend', handleEnd);
+    node.addEventListener('touchcancel', handleCancel);
+
+    return () => {
+      node.removeEventListener('touchstart', handleStart);
+      node.removeEventListener('touchmove', handleMove);
+      node.removeEventListener('touchend', handleEnd);
+      node.removeEventListener('touchcancel', handleCancel);
+    };
+  }, []);
 
   const progress = Math.min(pull / THRESHOLD, 1);
 
   return (
-    <div
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-      onTouchCancel={resetPull}
-      className="relative"
-    >
+    <div ref={containerRef} className="relative">
       <div
         className="pointer-events-none absolute left-0 right-0 top-0 flex items-center justify-center"
         style={{ height: pull, opacity: progress }}
