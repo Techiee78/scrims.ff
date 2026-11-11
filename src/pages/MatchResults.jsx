@@ -70,7 +70,12 @@ export default function MatchResults() {
       if (data?.error) {
         toast({ title: 'Could not save', description: data.error, variant: 'destructive' });
       } else {
-        toast({ title: 'Results saved', description: `${data.saved || results.length} entries updated.` });
+        toast({
+          title: 'Results saved',
+          description: data.paid
+            ? `${data.saved || results.length} entries updated · ₹${data.payoutTotal} coins paid to ${data.paid} player${data.paid === 1 ? '' : 's'}.`
+            : `${data.saved || results.length} entries updated.`,
+        });
       }
     } catch (err) {
       toast({

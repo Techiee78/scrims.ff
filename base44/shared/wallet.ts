@@ -49,3 +49,30 @@ export async function creditCoins(supa, email, coins, label) {
 
   return { ...current, balance: newBalance };
 }
+
+// Credits tournament winnings: adds to the balance AND to total_won, and ties
+// the transaction to the match so the same match is never paid twice.
+export async function creditWinnings(supa, email, coins, label, tournamentId) {
+  const amount = Number(coins);
+  if (!amount || amount <= 0) return null;
+
+  const current = await ensureWallet(supa, email);
+  const newBalance = Number(current.balance || 0) + amount;
+  const newWon = Number(current.total_won || 0) + amount;
+
+  await supa
+    .from('wallets')
+    .update({ balance: newBalance, total_won: newWon })
+    .eq('user_email', email);
+
+  await supa.from('wallet_transactions').insert({
+    user_email: email,
+    type: 'credit',
+    amount,
+    label: label || 'Tournament winnings',
+    balance_after: newBalance,
+    tournament_id: tournamentId,
+  });
+
+  return { ...current, balance: newBalance, total_won: newWon };
+}
