@@ -217,7 +217,7 @@ begin
     (user_email, user_id, type, amount, label, balance_after, topup_order_id)
   values
     (v_topup.user_email, p_user_id, 'credit', v_topup.coins,
-     'Test recharge · ' || v_topup.coins || ' coins', v_balance, p_order_id);
+     'Test top-up · ' || v_topup.coins || ' coins (test mode)', v_balance, p_order_id);
 
   update public.coin_topups
   set status = 'paid', payment_id = 'TEST-' || p_order_id, updated_at = now()
