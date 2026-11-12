@@ -1,6 +1,6 @@
 import { Flame } from 'lucide-react';
 import { initials } from '@/lib/format';
-import IstClock from './IstClock';
+import TopBarStatus from './TopBarStatus';
 
 export default function TopBar({ user, onProfile }) {
   return (
@@ -18,7 +18,7 @@ export default function TopBar({ user, onProfile }) {
           </span>
         </div>
 
-        <IstClock />
+        <TopBarStatus />
 
         <button
           type="button"
