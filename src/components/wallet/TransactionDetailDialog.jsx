@@ -26,8 +26,8 @@ export default function TransactionDetailDialog({ item, onOpenChange }) {
   const decision = item?.decision || null;
 
   const title = isDeposit ? 'Deposit request' : isWithdrawal ? 'Withdrawal request' : 'Transaction';
-  const amount = isDeposit || isWithdrawal ? item.coins : item.amount;
-  const credit = isDeposit ? true : isWithdrawal ? false : item.type === 'credit';
+  const amount = isDeposit || isWithdrawal ? item?.coins : item?.amount;
+  const credit = isDeposit ? true : isWithdrawal ? false : item?.type === 'credit';
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onOpenChange(null)}>
