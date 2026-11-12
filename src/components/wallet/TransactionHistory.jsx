@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ArrowDownLeft, ArrowDownToLine, ArrowUpRight, ChevronRight, Plus } from 'lucide-react';
 import { coins as formatCoins } from '@/lib/format';
+import { txnLabel } from '@/lib/txnLabel';
 import { format, isToday, isYesterday } from 'date-fns';
 import DepositStatusPill from '@/components/wallet/DepositStatusPill';
 import TransactionDetailDialog from '@/components/wallet/TransactionDetailDialog';
@@ -30,10 +31,7 @@ function category(item) {
 }
 
 function label(item) {
-  if (item.kind === 'deposit') return 'Deposit';
-  if (item.kind === 'withdrawal') return 'Withdrawal';
-  if (item.label) return item.label;
-  return item.type === 'credit' ? 'Tournament winnings' : 'Entry fee';
+  return txnLabel(item);
 }
 
 export default function TransactionHistory({ transactions = [], deposits = [], withdrawals = [] }) {

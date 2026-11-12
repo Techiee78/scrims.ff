@@ -58,8 +58,6 @@ export default async function handler(req: Request): Promise<Response> {
       const split = [tournament?.prize_1st, tournament?.prize_2nd, tournament?.prize_3rd];
       return Number(split[placement - 1] || 0);
     };
-    const rankLabel = (placement: number) =>
-      placement >= 1 && placement <= 3 ? `${placement === 1 ? '1st' : placement === 2 ? '2nd' : '3rd'} place` : '';
     let paid = 0;
     let payoutTotal = 0;
 
@@ -77,10 +75,7 @@ export default async function handler(req: Request): Promise<Response> {
           const positionPrize = podiumPrize(row.placement);
           const coins = perKill * row.kills + positionPrize;
           if (coins <= 0) continue;
-          const label =
-            positionPrize > 0
-              ? `${rankLabel(row.placement)} prize · ${tournament?.title || 'match'}`
-              : `Per-kill reward · ${tournament?.title || 'match'}`;
+          const label = `Winning · ${tournament?.title || 'match'}`;
           await creditWinnings(supa, row.email, coins, label, tournamentId);
           paid += 1;
           payoutTotal += coins;

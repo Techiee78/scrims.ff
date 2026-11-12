@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { coins as formatCoins } from '@/lib/format';
+import { txnLabel } from '@/lib/txnLabel';
 import { format } from 'date-fns';
 import DepositStatusPill from '@/components/wallet/DepositStatusPill';
 
@@ -53,7 +54,7 @@ export default function TransactionDetailDialog({ item, onOpenChange }) {
             </div>
 
             <div className="glass-soft rounded-[22px] px-4 py-1">
-              <Row label="Details" value={isDeposit ? 'Deposit' : isWithdrawal ? 'Withdrawal' : item.label || 'Entry fee'} />
+              <Row label="Details" value={txnLabel(item)} />
               <Row label="Amount paid" value={isDeposit && item.amount_inr ? `₹${formatCoins(item.amount_inr)}` : null} />
               <Row label="UPI / UTR reference" value={isDeposit ? item.reference : null} />
               <Row label="Payout UPI" value={isWithdrawal ? item.payout_upi : null} />
