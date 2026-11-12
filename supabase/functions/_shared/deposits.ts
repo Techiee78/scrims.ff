@@ -9,13 +9,15 @@ export const UPI_KEY = 'upi_payment';
 
 export type UpiSettings = { upiId: string; payeeName: string; active: boolean };
 
-// UPI references are stored without spaces, upper-case, so the same payment
-// can never be submitted twice under two spellings.
+// A UPI reference (UTR) is always exactly 12 digits: everything else the player
+// types (spaces, dashes) is dropped so one payment can never be submitted twice.
+export const REFERENCE_LENGTH = 12;
+
 export function normalizeReference(raw: unknown): string {
-  return String(raw ?? '').replace(/\s+/g, '').toUpperCase();
+  return String(raw ?? '').replace(/\D/g, '');
 }
 
-export const REFERENCE_RE = /^[A-Z0-9-]{4,64}$/;
+export const REFERENCE_RE = /^\d{12}$/;
 export const UPI_ID_RE = /^[a-zA-Z0-9.\-_]{2,}@[a-zA-Z]{2,}$/;
 
 // The admin's collection account, read from app_settings (service role only).
@@ -44,7 +46,7 @@ export function mapDepositError(message: string): { status: number; error: strin
   if (m.includes('invalid_amount'))
     return { status: 400, error: `Enter a whole number between ${COINS_MIN} and ${COINS_MAX} coins.` };
   if (m.includes('invalid_reference'))
-    return { status: 400, error: 'Enter the UPI reference (UTR) from your payment — 4 to 64 letters/digits.' };
+    return { status: 400, error: 'Enter the 12-digit UTR from your payment app.' };
   if (m.includes('too_many_pending'))
     return { status: 429, error: `You already have ${MAX_PENDING} requests waiting for approval.` };
   if (m.includes('request_not_found'))

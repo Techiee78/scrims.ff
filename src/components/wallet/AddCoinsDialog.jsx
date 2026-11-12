@@ -47,13 +47,14 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
 
   const send = async () => {
     setError('');
-    if (reference.trim().length < 4) {
-      setError('Enter the UPI reference (UTR) shown in your payment app.');
+    const utr = reference.replace(/\D/g, '');
+    if (utr.length !== 12) {
+      setError('Enter the 12-digit UTR shown in your payment app.');
       return;
     }
     setBusy(true);
     try {
-      await submitDepositRequest({ coins: chosen, reference: reference.trim(), note: note.trim() });
+      await submitDepositRequest({ coins: chosen, reference: utr, note: note.trim() });
       setStep('done');
       onSubmitted?.();
     } catch (err) {
@@ -170,8 +171,10 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
               </span>
               <input
                 type="text"
+                inputMode="numeric"
+                maxLength={12}
                 value={reference}
-                onChange={(e) => setReference(e.target.value)}
+                onChange={(e) => setReference(e.target.value.replace(/\D/g, '').slice(0, 12))}
                 placeholder="12-digit reference from your UPI app"
                 className="h-10 w-full rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm uppercase outline-none focus:border-primary/60"
               />

@@ -12,7 +12,7 @@ export default async function handler(req: Request): Promise<Response> {
     const profileMissing = [
       String(user.ff_ign || '').trim() ? '' : 'Free Fire IGN',
       String(user.ff_uid || '').trim() ? '' : 'Free Fire UID',
-      String(user.whatsapp || '').replace(/\D/g, '').length >= 10 ? '' : 'WhatsApp number',
+      String(user.whatsapp || '').replace(/\D/g, '').length === 10 ? '' : 'WhatsApp number',
     ].filter(Boolean);
     if (profileMissing.length) {
       return Response.json(

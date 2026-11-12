@@ -27,7 +27,7 @@ export default async function handler(req: Request): Promise<Response> {
     const reference = normalizeReference(body?.reference);
     if (!REFERENCE_RE.test(reference)) {
       return Response.json(
-        { error: 'Enter the UPI reference (UTR) from your payment — 4 to 64 letters/digits.' },
+        { error: 'Enter the 12-digit UTR from your payment app.' },
         { status: 400 },
       );
     }

@@ -23,7 +23,7 @@ export default function PlayerDetailsForm({ user, onSaved }) {
     setError('');
     if (!ign.trim()) return setError('Free Fire IGN cannot be left empty once saved.');
     if (!uid.trim()) return setError('Free Fire UID cannot be left empty once saved.');
-    if (whatsapp.replace(/\D/g, '').length < 10) {
+    if (whatsapp.length !== 10) {
       return setError('Enter a valid 10-digit WhatsApp number.');
     }
     setSaving(true);
@@ -38,7 +38,7 @@ export default function PlayerDetailsForm({ user, onSaved }) {
         .update({
           ff_ign: ign.trim(),
           ff_uid: uid.trim(),
-          whatsapp: whatsapp.replace(/\D/g, ''),
+          whatsapp,
         })
         .eq('id', userId);
       if (updateError) throw updateError;
@@ -97,9 +97,10 @@ export default function PlayerDetailsForm({ user, onSaved }) {
             <Input
               id="profile-whatsapp"
               value={whatsapp}
-              onChange={(event) => setWhatsapp(event.target.value)}
+              onChange={(event) => setWhatsapp(event.target.value.replace(/\D/g, '').slice(0, 10))}
               placeholder="10-digit number"
               inputMode="tel"
+              maxLength={10}
               className="glass-soft h-11 rounded-2xl border-white/10"
             />
           </div>

@@ -33,7 +33,7 @@ export default function TeammateFormDialog({ open, onOpenChange, teammate, onSav
     setError('');
     if (!ign.trim()) return setError('Teammate IGN is required.');
     if (!uid.trim()) return setError('Teammate Free Fire UID is required.');
-    if (whatsapp.replace(/\D/g, '').length < 10) return setError('Enter a valid WhatsApp number.');
+    if (whatsapp.length !== 10) return setError('Enter a valid 10-digit WhatsApp number.');
 
     setSaving(true);
     try {
@@ -103,9 +103,10 @@ export default function TeammateFormDialog({ open, onOpenChange, teammate, onSav
               <Input
                 id="mate-whatsapp"
                 value={whatsapp}
-                onChange={(event) => setWhatsapp(event.target.value)}
+                onChange={(event) => setWhatsapp(event.target.value.replace(/\D/g, '').slice(0, 10))}
                 placeholder="10-digit number"
                 inputMode="tel"
+                maxLength={10}
                 className="glass-soft h-11 rounded-2xl border-white/10"
               />
             </div>

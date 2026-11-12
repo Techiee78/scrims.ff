@@ -88,7 +88,7 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
     setError('');
     if (!ign.trim()) return setError('Enter your Free Fire IGN.');
     if (!uid.trim()) return setError('Enter your Free Fire UID.');
-    if (digits(whatsapp).length < 10) return setError('Enter your WhatsApp number.');
+    if (digits(whatsapp).length !== 10) return setError('Enter your 10-digit WhatsApp number.');
     if (needed > 0 && picked.length !== needed) {
       return setError(
         `Pick ${needed} teammate${needed > 1 ? 's' : ''} saved in your profile for this ${tournament.team_type} match.`

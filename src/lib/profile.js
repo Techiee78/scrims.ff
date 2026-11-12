@@ -6,7 +6,7 @@ export function missingProfileFields(user) {
   const missing = [];
   if (!String(user?.ff_ign || '').trim()) missing.push('Free Fire IGN');
   if (!String(user?.ff_uid || '').trim()) missing.push('Free Fire UID');
-  if (digits(user?.whatsapp).length < 10) missing.push('WhatsApp number');
+  if (digits(user?.whatsapp).length !== 10) missing.push('WhatsApp number');
   return missing;
 }
 
