@@ -26,3 +26,42 @@ export function matchPayout(tournament, kills = 0, placement = 0) {
   const perKill = Number(tournament?.per_kill || 0);
   return Math.max(0, Number(kills) || 0) * perKill + podiumPrize(tournament, placement);
 }
+
+// Coins left for per-kill rewards once the podium prizes are taken out of the
+// same pool.
+export function perKillBudget(tournament) {
+  const pool = Number(tournament?.prize_pool || 0);
+  const podium = podiumTotal(tournament);
+  if (pool <= 0) return Infinity;
+  return Math.max(0, pool - podium);
+}
+
+// Full payout plan for a match. Per-kill rewards can never push the match past
+// its prize pool: the per-kill budget is shared across all kills in the match,
+// so the per-kill rate drops when the pool runs out.
+export function payoutPlan(tournament, entries = []) {
+  const perKill = Number(tournament?.per_kill || 0);
+  const budget = perKillBudget(tournament);
+  const killsOf = (entry) => Math.max(0, Number(entry?.kills) || 0);
+  const totalKills = entries.reduce((sum, entry) => sum + killsOf(entry), 0);
+  const rawKillCoins = totalKills * perKill;
+  const killCoins = Number.isFinite(budget) ? Math.min(rawKillCoins, budget) : rawKillCoins;
+  const rate = totalKills > 0 ? killCoins / totalKills : 0;
+
+  const rows = entries.map((entry) => {
+    const kills = killsOf(entry);
+    const podium = podiumPrize(tournament, entry?.placement);
+    const killShare = Math.floor(kills * rate);
+    return { kills, podium, killShare, total: killShare + podium };
+  });
+
+  return {
+    budget,
+    totalKills,
+    rawKillCoins,
+    killCoins,
+    rate,
+    rows,
+    payable: rows.reduce((sum, row) => sum + row.total, 0),
+  };
+}

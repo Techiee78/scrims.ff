@@ -11,7 +11,7 @@ import PayoutPreview from '@/components/results/PayoutPreview';
 import StateScreen from '@/components/states/StateScreen';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { coins as formatCoins } from '@/lib/format';
-import { matchPayout, podiumSplit } from '@/lib/prizes';
+import { payoutPlan, podiumSplit } from '@/lib/prizes';
 
 export default function MatchResults() {
   const { toast } = useToast();
@@ -114,14 +114,18 @@ export default function MatchResults() {
   const prizePool = Number(selected?.prize_pool || 0);
   const split = podiumSplit(selected);
 
-  const payoutFor = (reg) =>
-    matchPayout(
-      selected,
-      Number(draft[reg.id]?.kills || 0),
-      Number(draft[reg.id]?.placement || 0)
-    );
-  const payable = rows.reduce((sum, reg) => sum + payoutFor(reg), 0);
+  const plan = payoutPlan(
+    selected,
+    rows.map((reg) => ({
+      kills: Number(draft[reg.id]?.kills || 0),
+      placement: Number(draft[reg.id]?.placement || 0),
+    }))
+  );
+  const payouts = new Map(rows.map((reg, index) => [reg.id, plan.rows[index]?.total || 0]));
+  const payoutFor = (reg) => payouts.get(reg.id) || 0;
+  const payable = plan.payable;
   const payableCount = rows.filter((reg) => payoutFor(reg) > 0).length;
+  const killCapped = plan.killCoins < plan.rawKillCoins;
 
   return (
     <div className="space-y-4">
@@ -181,6 +185,8 @@ export default function MatchResults() {
               perKill={perKill}
               payable={payable}
               players={payableCount}
+              killCoins={plan.killCoins}
+              killCapped={killCapped}
             />
           )}
           {rows.length === 0 ? (
@@ -221,7 +227,9 @@ export default function MatchResults() {
                   {payableCount} player{payableCount === 1 ? '' : 's'} will get coins in their wallet from
                   the {formatCoins(prizePool)} prize pool — 1st {formatCoins(split.first)}, 2nd{' '}
                   {formatCoins(split.second)}, 3rd {formatCoins(split.third)} — plus{' '}
-                  {formatCoins(perKill)} per kill. Each match is paid out only once.
+                  {formatCoins(perKill)} per kill
+                  {killCapped ? ` (capped at ${formatCoins(plan.killCoins)} by the pool)` : ''}. Each match is
+                  paid out only once.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

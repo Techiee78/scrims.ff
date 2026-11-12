@@ -58,6 +58,15 @@ export default async function handler(req: Request): Promise<Response> {
       const split = [tournament?.prize_1st, tournament?.prize_2nd, tournament?.prize_3rd];
       return Number(split[placement - 1] || 0);
     };
+    // Per-kill rewards share what is left of the pool after the podium prizes,
+    // so a match can never pay out more than its prize pool.
+    const podiumReserved = splitTotal > 0 ? splitTotal : prizePool;
+    const killBudget = prizePool > 0 ? Math.max(0, prizePool - podiumReserved) : Infinity;
+    const totalKills = cleaned.reduce((sum, row) => sum + row.kills, 0);
+    const rawKillCoins = totalKills * perKill;
+    const killCoins = Number.isFinite(killBudget) ? Math.min(rawKillCoins, killBudget) : rawKillCoins;
+    const killRate = totalKills > 0 ? killCoins / totalKills : 0;
+
     let paid = 0;
     let payoutTotal = 0;
 
@@ -73,7 +82,7 @@ export default async function handler(req: Request): Promise<Response> {
         for (const row of cleaned) {
           if (!row.email) continue;
           const positionPrize = podiumPrize(row.placement);
-          const coins = perKill * row.kills + positionPrize;
+          const coins = Math.floor(row.kills * killRate) + positionPrize;
           if (coins <= 0) continue;
           const label = `Winning · ${tournament?.title || 'match'}`;
           await creditWinnings(supa, row.email, coins, label, tournamentId);

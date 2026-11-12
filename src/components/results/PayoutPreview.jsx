@@ -15,6 +15,8 @@ export default function PayoutPreview({
   payable = 0,
   players = 0,
   prizePool = 0,
+  killCoins = null,
+  killCapped = false,
 }) {
   const values = { first: prize1, second: prize2, third: prize3 };
   const remaining = Math.max(0, prizePool - (prize1 + prize2 + prize3));
@@ -53,7 +55,9 @@ export default function PayoutPreview({
         {over
           ? `Podium prizes are more than the ${formatCoins(prizePool)} coin pool.`
           : prizePool > 0
-            ? `${formatCoins(remaining)} coins of the ${formatCoins(prizePool)} pool left for per-kill rewards.`
+            ? killCapped
+              ? `Per-kill rewards capped at ${formatCoins(killCoins ?? 0)} coins — the pool's remaining ${formatCoins(remaining)} coins after podium prizes.`
+              : `${formatCoins(remaining)} coins of the ${formatCoins(prizePool)} pool left for per-kill rewards.`
             : 'Per-kill rewards are paid from the prize pool.'}
       </p>
       <p className="mt-1 text-[10px] text-muted-foreground">
