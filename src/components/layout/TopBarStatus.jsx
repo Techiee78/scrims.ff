@@ -22,6 +22,10 @@ export default function TopBarStatus() {
 
   return (
     <div className="flex items-center gap-1">
+      <div className="glass flex items-center rounded-full px-2 py-2">
+        <IstClock compact />
+      </div>
+
       <Link
         to="/wallet"
         aria-label="Coin balance"
@@ -32,10 +36,6 @@ export default function TopBarStatus() {
           {balance == null ? '···' : formatCoins(balance)}
         </span>
       </Link>
-
-      <div className="glass flex items-center rounded-full px-2 py-2">
-        <IstClock compact />
-      </div>
     </div>
   );
 }
