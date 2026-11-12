@@ -5,6 +5,7 @@ import PlayerDetailsForm from '@/components/profile/PlayerDetailsForm';
 import TeammateRoster from '@/components/profile/TeammateRoster';
 import AccountActions from '@/components/profile/AccountActions';
 import SupportCard from '@/components/profile/SupportCard';
+import ProfileAddCoins from '@/components/profile/ProfileAddCoins';
 import PullToRefresh from '@/components/common/PullToRefresh';
 
 export default function Profile() {
@@ -21,6 +22,9 @@ export default function Profile() {
       </div>
 
       <section className="glass rounded-[26px] p-4">
+        <div className="mb-3 flex justify-start">
+          <ProfileAddCoins />
+        </div>
         <div className="flex items-center gap-4">
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent font-display text-xl font-semibold text-primary-foreground">
             {initials(user)}
