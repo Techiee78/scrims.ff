@@ -21,11 +21,11 @@ export default function TopBarStatus() {
   const balance = data?.wallet?.balance;
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1">
       <Link
         to="/wallet"
         aria-label="Coin balance"
-        className="glass flex items-center gap-1 rounded-full px-2.5 py-2 transition-opacity hover:opacity-80"
+        className="glass flex items-center gap-1 rounded-full px-2 py-2 transition-opacity hover:opacity-80"
       >
         <Coins className="h-3.5 w-3.5 text-primary" />
         <span className="font-display text-xs font-semibold tabular-nums tracking-tight text-foreground">
@@ -33,7 +33,7 @@ export default function TopBarStatus() {
         </span>
       </Link>
 
-      <div className="glass flex items-center rounded-full px-2.5 py-2">
+      <div className="glass flex items-center rounded-full px-2 py-2">
         <IstClock compact />
       </div>
     </div>

@@ -8,13 +8,6 @@ const IST_TIME = new Intl.DateTimeFormat('en-IN', {
   hour12: true,
 });
 
-const IST_SHORT = new Intl.DateTimeFormat('en-IN', {
-  timeZone: 'Asia/Kolkata',
-  hour: 'numeric',
-  minute: '2-digit',
-  hour12: true,
-});
-
 export default function IstClock({ compact = false }) {
   const [now, setNow] = useState(() => new Date());
 
@@ -25,12 +18,12 @@ export default function IstClock({ compact = false }) {
 
   if (compact) {
     return (
-      <div className="flex items-center gap-1.5" aria-label="Live Indian Standard Time">
+      <div className="flex items-center gap-1" aria-label="Live Indian Standard Time">
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-        <span className="font-display text-xs font-semibold tabular-nums tracking-tight text-foreground">
-          {IST_SHORT.format(now)}
+        <span className="font-display text-[11px] font-semibold tabular-nums tracking-tight text-foreground">
+          {IST_TIME.format(now)}
         </span>
-        <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        <span className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
           IST
         </span>
       </div>
