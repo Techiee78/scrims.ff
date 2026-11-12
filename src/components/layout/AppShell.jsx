@@ -6,6 +6,7 @@ import TopBar from './TopBar';
 import GlassNav from './GlassNav';
 import FloatingSupport from './FloatingSupport';
 import ConnectionBanner from '@/components/states/ConnectionBanner';
+import ShellErrorBoundary from './ShellErrorBoundary';
 
 export default function AppShell() {
   const { user } = useAuth();
@@ -27,7 +28,7 @@ export default function AppShell() {
             transition={{ duration: 0.25, ease: 'easeOut' }}
           >
             <ConnectionBanner />
-            {outlet}
+            <ShellErrorBoundary key={location.pathname}>{outlet}</ShellErrorBoundary>
           </motion.div>
         </AnimatePresence>
       </main>

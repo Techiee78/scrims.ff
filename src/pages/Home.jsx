@@ -6,20 +6,33 @@ import TournamentCard from '@/components/tournaments/TournamentCard';
 import EmptyMatches from '@/components/tournaments/EmptyMatches';
 import JoinDialog from '@/components/tournaments/JoinDialog';
 import PullToRefresh from '@/components/common/PullToRefresh';
+import StateScreen from '@/components/states/StateScreen';
+import { Loader2 } from 'lucide-react';
 import { getTimeStatus } from '@/lib/tournamentTime';
 
 export default function Home() {
-  const { loading, user, tournaments, registrations, reload } = useTournamentData();
+  const { loading, error, user, tournaments, registrations, reload } = useTournamentData();
   const [mode, setMode] = useState('Full Map');
   const [target, setTarget] = useState(null);
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="h-72 animate-pulse rounded-[30px] bg-white/5" />
-        <div className="h-16 animate-pulse rounded-[26px] bg-white/5" />
-        <div className="h-44 animate-pulse rounded-[26px] bg-white/5" />
+      <div className="glass flex flex-col items-center gap-3 rounded-[26px] px-6 py-12 text-center">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        <p className="text-xs font-medium text-muted-foreground">Loading matches…</p>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <StateScreen
+        variant="error"
+        title="Couldn't load matches"
+        hint="Check your connection and try again."
+        showRetry
+        onRetry={reload}
+      />
     );
   }
 
