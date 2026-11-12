@@ -16,4 +16,6 @@ export default async function handler(_req: Request): Promise<Response> {
   }
 }
 
-Deno.serve(handler);
+import { withCors } from '../_shared/cors.ts';
+
+Deno.serve(withCors(handler));
