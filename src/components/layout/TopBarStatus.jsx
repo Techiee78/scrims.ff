@@ -6,7 +6,8 @@ import { withAuth } from '@/lib/authToken';
 import { coins as formatCoins } from '@/lib/format';
 import IstClock from './IstClock';
 
-// Hero status chip: live coin balance (tap to open the wallet) next to the IST clock.
+// Hero status: coin balance (tap to open the wallet) and the IST clock as two
+// separate chips.
 export default function TopBarStatus() {
   const { data } = useQuery({
     queryKey: ['topbar-wallet'],
@@ -20,19 +21,21 @@ export default function TopBarStatus() {
   const balance = data?.wallet?.balance;
 
   return (
-    <div className="glass flex items-center gap-2 rounded-full py-2 pl-3 pr-3">
+    <div className="flex items-center gap-1.5">
       <Link
         to="/wallet"
         aria-label="Coin balance"
-        className="flex items-center gap-1 transition-opacity hover:opacity-80"
+        className="glass flex items-center gap-1 rounded-full px-2.5 py-2 transition-opacity hover:opacity-80"
       >
         <Coins className="h-3.5 w-3.5 text-primary" />
         <span className="font-display text-xs font-semibold tabular-nums tracking-tight text-foreground">
           {balance == null ? '···' : formatCoins(balance)}
         </span>
       </Link>
-      <span className="h-3.5 w-px bg-white/15" />
-      <IstClock compact />
+
+      <div className="glass flex items-center rounded-full px-2.5 py-2">
+        <IstClock compact />
+      </div>
     </div>
   );
 }

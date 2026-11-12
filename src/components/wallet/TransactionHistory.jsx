@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { ArrowDownLeft, ArrowDownToLine, ArrowUpRight, Plus } from 'lucide-react';
 import { coins as formatCoins } from '@/lib/format';
 import { format, isToday, isYesterday } from 'date-fns';
+import DepositStatusPill from '@/components/wallet/DepositStatusPill';
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -10,19 +11,6 @@ const FILTERS = [
   { key: 'withdraw', label: 'Withdrawals' },
   { key: 'debit', label: 'Entry fees' },
 ];
-
-function isTopup(item) {
-  return item.type === 'credit' && /top-?up/i.test(item.label || '');
-}
-
-function isWithdrawal(item) {
-  return item.type === 'debit' && /withdraw/i.test(item.label || '');
-}
-
-function formatLabel(item) {
-  if (item.label) return item.label;
-  return item.type === 'credit' ? 'Tournament winnings' : 'Entry fee';
-}
 
 function formatWhen(value) {
   if (!value) return '';
@@ -33,25 +21,46 @@ function formatWhen(value) {
   return format(date, 'd MMM yyyy · h:mm a');
 }
 
-export default function TransactionHistory({ transactions = [] }) {
+function category(item) {
+  if (item.kind === 'deposit') return 'topup';
+  if (item.kind === 'withdrawal') return 'withdraw';
+  if (item.type === 'credit') return /top-?up/i.test(item.label || '') ? 'topup' : 'winnings';
+  return /withdraw/i.test(item.label || '') ? 'withdraw' : 'debit';
+}
+
+function label(item) {
+  if (item.kind === 'deposit') return 'Deposit request';
+  if (item.kind === 'withdrawal') return 'Withdrawal request';
+  if (item.label) return item.label;
+  return item.type === 'credit' ? 'Tournament winnings' : 'Entry fee';
+}
+
+export default function TransactionHistory({ transactions = [], deposits = [], withdrawals = [] }) {
   const [filter, setFilter] = useState('all');
 
-  const counts = useMemo(() => ({
-    all: transactions.length,
-    winnings: transactions.filter((t) => t.type === 'credit' && !isTopup(t)).length,
-    topup: transactions.filter((t) => isTopup(t)).length,
-    withdraw: transactions.filter((t) => isWithdrawal(t)).length,
-    debit: transactions.filter((t) => t.type === 'debit' && !isWithdrawal(t)).length,
-  }), [transactions]);
+  // One single stream: wallet transactions plus pending/decided deposit and
+  // withdrawal requests, newest first.
+  const items = useMemo(() => {
+    const rows = [
+      ...transactions.map((row) => ({ ...row, at: row.created_date || row.created_at })),
+      ...deposits.map((row) => ({ ...row, kind: 'deposit', at: row.created_at })),
+      ...withdrawals.map((row) => ({ ...row, kind: 'withdrawal', at: row.created_at })),
+    ];
+    return rows.sort((a, b) => new Date(b.at || 0) - new Date(a.at || 0));
+  }, [transactions, deposits, withdrawals]);
 
-  const visible = useMemo(() => {
-    if (filter === 'all') return transactions;
-    if (filter === 'winnings') return transactions.filter((t) => t.type === 'credit' && !isTopup(t));
-    if (filter === 'topup') return transactions.filter((t) => isTopup(t));
-    if (filter === 'withdraw') return transactions.filter((t) => isWithdrawal(t));
-    if (filter === 'debit') return transactions.filter((t) => t.type === 'debit' && !isWithdrawal(t));
-    return transactions.filter((t) => t.type === filter);
-  }, [transactions, filter]);
+  const counts = useMemo(() => {
+    const base = { all: items.length, winnings: 0, topup: 0, withdraw: 0, debit: 0 };
+    items.forEach((item) => {
+      base[category(item)] += 1;
+    });
+    return base;
+  }, [items]);
+
+  const visible = useMemo(
+    () => (filter === 'all' ? items : items.filter((item) => category(item) === filter)),
+    [items, filter]
+  );
 
   return (
     <section className="space-y-3">
@@ -85,41 +94,63 @@ export default function TransactionHistory({ transactions = [] }) {
 
       {visible.length === 0 ? (
         <div className="glass rounded-[26px] px-6 py-8 text-center text-xs text-muted-foreground">
-          {transactions.length === 0
+          {items.length === 0
             ? 'No transactions yet. Join a tournament to get started.'
             : 'Nothing in this filter yet.'}
         </div>
       ) : (
         <div className="space-y-2.5">
           {visible.map((item) => {
-            const topup = isTopup(item);
-            const isCredit = item.type === 'credit';
-            const Icon = isCredit ? ArrowDownLeft : ArrowUpRight;
-            const when = formatWhen(item.created_date || item.created_at);
+            const isRequest = item.kind === 'deposit' || item.kind === 'withdrawal';
+            const isDeposit = item.kind === 'deposit';
+            const isCredit = isRequest ? isDeposit : item.type === 'credit';
+            const Icon = isRequest ? (isDeposit ? Plus : ArrowDownToLine) : isCredit ? ArrowDownLeft : ArrowUpRight;
+            const amountClass = isRequest
+              ? item.status === 'rejected'
+                ? 'text-destructive line-through'
+                : item.status === 'pending'
+                  ? 'text-muted-foreground'
+                  : isDeposit
+                    ? 'text-emerald-300'
+                    : 'text-accent'
+              : isCredit && /top-?up/i.test(item.label || '')
+                ? 'text-primary'
+                : isCredit
+                  ? 'text-accent'
+                  : 'text-foreground';
+
             return (
-              <div key={item.id} className="glass flex items-center gap-3 rounded-[22px] px-4 py-3">
+              <div key={`${item.kind || 'tx'}-${item.id}`} className="glass flex items-center gap-3 rounded-[22px] px-4 py-3">
                 <span className="glass-soft flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
-                  <Icon className={topup ? 'h-4 w-4 text-primary' : isCredit ? 'h-4 w-4 text-accent' : 'h-4 w-4 text-primary'} />
+                  <Icon className={isCredit ? 'h-4 w-4 text-primary' : 'h-4 w-4 text-foreground'} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{formatLabel(item)}</p>
-                  {when && <p className="text-[11px] text-muted-foreground">{when}</p>}
-                </div>
-                <div className="text-right">
-                  <p
-                    className={
-                      topup
-                        ? 'font-display text-sm font-semibold text-primary'
-                        : isCredit
-                          ? 'font-display text-sm font-semibold text-accent'
-                          : 'font-display text-sm font-semibold text-foreground'
-                    }
-                  >
-                    {isCredit ? '+' : '−'}
-                    {formatCoins(item.amount)}
+                  <p className="truncate text-sm font-medium">{label(item)}</p>
+                  <p className="truncate text-[11px] text-muted-foreground">
+                    {formatWhen(item.at)}
+                    {isRequest &&
+                      (isDeposit
+                        ? item.reference
+                          ? ` · Ref ${item.reference}`
+                          : ''
+                        : item.payout_upi
+                          ? ` · To ${item.payout_upi}`
+                          : '')}
                   </p>
-                  {item.balance_after !== undefined && (
-                    <p className="text-[10px] text-muted-foreground">Bal {formatCoins(item.balance_after)}</p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className={`font-display text-sm font-semibold ${amountClass}`}>
+                    {isCredit ? '+' : '−'}
+                    {formatCoins(isRequest ? item.coins : item.amount)}
+                  </p>
+                  {isRequest ? (
+                    <div className="mt-0.5 flex justify-end">
+                      <DepositStatusPill status={item.status} />
+                    </div>
+                  ) : (
+                    item.balance_after !== undefined && (
+                      <p className="text-[10px] text-muted-foreground">Bal {formatCoins(item.balance_after)}</p>
+                    )
                   )}
                 </div>
               </div>

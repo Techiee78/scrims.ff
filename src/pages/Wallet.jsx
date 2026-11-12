@@ -3,7 +3,6 @@ import { ArrowDownToLine, Coins, Plus, Trophy } from 'lucide-react';
 import { callFunction } from '@/lib/callFunction';
 import { coins as formatCoins } from '@/lib/format';
 import TransactionHistory from '@/components/wallet/TransactionHistory';
-import RequestHistory from '@/components/wallet/RequestHistory';
 import AddCoinsDialog from '@/components/wallet/AddCoinsDialog';
 import WithdrawDialog from '@/components/wallet/WithdrawDialog';
 import { fetchMyDeposits } from '@/lib/deposits';
@@ -117,9 +116,11 @@ export default function Wallet() {
           </p>
         </section>
 
-        <RequestHistory deposits={deposits.requests} withdrawals={withdrawals.requests} />
-
-        <TransactionHistory transactions={transactions} />
+        <TransactionHistory
+          transactions={transactions}
+          deposits={deposits.requests}
+          withdrawals={withdrawals.requests}
+        />
       </div>
 
       <AddCoinsDialog
