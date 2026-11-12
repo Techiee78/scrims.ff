@@ -14,7 +14,17 @@ export default async function handler(req: Request): Promise<Response> {
       .order('created_at', { ascending: false })
       .limit(60);
     if (error) throw error;
-    return Response.json({ registrations: data || [] });
+
+    // What each match actually paid this player, so a finished match can show
+    // the prize won right on the card.
+    const { data: winnings } = await supa
+      .from('wallet_transactions')
+      .select('tournament_id, amount')
+      .eq('user_email', user.email)
+      .eq('type', 'credit')
+      .not('tournament_id', 'is', null);
+
+    return Response.json({ registrations: data || [], winnings: winnings || [] });
   } catch (error: any) {
     return Response.json({ error: error.message }, { status: 500 });
   }

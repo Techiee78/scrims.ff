@@ -19,7 +19,6 @@ export default function PayoutPreview({
   killCapped = false,
 }) {
   const values = { first: prize1, second: prize2, third: prize3 };
-  const remaining = Math.max(0, prizePool - (prize1 + prize2 + prize3));
   const over = prize1 + prize2 + prize3 > prizePool && prizePool > 0;
 
   return (
@@ -51,20 +50,11 @@ export default function PayoutPreview({
         <span className="font-display text-xs font-semibold">{formatCoins(perKill)} coins</span>
       </div>
 
-      <p className={`mt-2 text-[10px] ${over ? 'text-destructive' : 'text-muted-foreground'}`}>
-        {over
-          ? `Podium prizes are more than the ${formatCoins(prizePool)} coin pool.`
-          : prizePool > 0
-            ? killCapped
-              ? `Per-kill rewards capped at ${formatCoins(killCoins ?? 0)} coins — the pool's remaining ${formatCoins(remaining)} coins after podium prizes.`
-              : `${formatCoins(remaining)} coins of the ${formatCoins(prizePool)} pool left for per-kill rewards.`
-            : 'Per-kill rewards are paid from the prize pool.'}
-      </p>
-      <p className="mt-1 text-[10px] text-muted-foreground">
-        {players > 0
-          ? `${players} player${players === 1 ? '' : 's'} will get these coins in their wallet, credited once per match.`
-          : 'Add kills or a placement to preview the distribution.'}
-      </p>
+      {over && (
+        <p className="mt-2 text-[10px] text-destructive">
+          Podium prizes are more than the {formatCoins(prizePool)} coin pool.
+        </p>
+      )}
     </div>
   );
 }

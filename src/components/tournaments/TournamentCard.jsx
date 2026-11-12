@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import SlotBar from './SlotBar';
 import StatTile from './StatTile';
 import LiveStatus from './LiveStatus';
-import StandingsUpload from '@/components/matches/StandingsUpload';
 import { coins, matchTime } from '@/lib/format';
 import { podiumSplit } from '@/lib/prizes';
 import { slotCapacity } from '@/lib/slots';
@@ -63,15 +62,10 @@ export default function TournamentCard({ tournament, joined, registration, onJoi
       </div>
 
       {joined ? (
-        <>
-          <div className="glass-soft mt-3.5 flex items-center gap-2 rounded-2xl px-3 py-2.5">
-            <Check className="h-4 w-4 text-accent" />
-            <span className="text-xs font-medium">Slot booked — room details are in My Matches</span>
-          </div>
-          {timeStatus === 'completed' && registration && (
-            <StandingsUpload registration={registration} onUploaded={onUploaded} />
-          )}
-        </>
+        <div className="glass-soft mt-3.5 flex items-center gap-2 rounded-2xl px-3 py-2.5">
+          <Check className="h-4 w-4 text-accent" />
+          <span className="text-xs font-medium">Slot booked — room details are in My Matches</span>
+        </div>
       ) : timeStatus === 'live' ? (
         <div className="glass-soft mt-3.5 flex items-center gap-2 rounded-2xl px-3 py-2.5 text-destructive">
           <Zap className="h-4 w-4" />

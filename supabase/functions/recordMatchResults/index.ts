@@ -99,6 +99,10 @@ export default async function handler(req: Request): Promise<Response> {
       }
     }
 
+    // Saving the results is what finishes a match — it stays live until the
+    // admin distributes the winnings.
+    await supa.from('tournaments').update({ status: 'completed' }).eq('id', tournamentId);
+
     return Response.json({ success: true, saved: updates.length, paid, adjusted, payoutTotal });
   } catch (error: any) {
     return Response.json({ error: error.message }, { status: 500 });

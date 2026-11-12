@@ -3,15 +3,15 @@ import { Clock, Hash, KeyRound, Trophy } from 'lucide-react';
 import useTournamentData from '@/hooks/useTournamentData';
 import EmptyMatches from '@/components/tournaments/EmptyMatches';
 import PullToRefresh from '@/components/common/PullToRefresh';
-import StandingsUpload from '@/components/matches/StandingsUpload';
 import LiveStatus from '@/components/tournaments/LiveStatus';
 import StateScreen from '@/components/states/StateScreen';
-import { matchTime } from '@/lib/format';
+import { coins, matchTime } from '@/lib/format';
 import { getTimeStatus } from '@/lib/tournamentTime';
 
 export default function MyMatches() {
-  const { loading, error, tournaments, registrations, reload } = useTournamentData();
+  const { loading, error, tournaments, registrations, winnings, reload } = useTournamentData();
   const byId = new Map(tournaments.map((item) => [item.id, item]));
+  const prizeBy = new Map(winnings.map((row) => [row.tournament_id, Number(row.amount || 0)]));
   const isCompleted = (registration) => {
     const match = byId.get(registration.tournament_id);
     return !!match && getTimeStatus(match) === 'completed';
@@ -43,6 +43,7 @@ export default function MyMatches() {
         {!loading && !error &&
           ordered.map((registration) => {
             const match = byId.get(registration.tournament_id);
+            const prize = prizeBy.get(registration.tournament_id) || 0;
             return (
               <article key={registration.id} className="glass rounded-[26px] p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -88,7 +89,28 @@ export default function MyMatches() {
                 </div>
 
                 {match && getTimeStatus(match) === 'completed' && (
-                  <StandingsUpload registration={registration} onUploaded={reload} />
+                  <div className="glass-soft mt-3.5 grid grid-cols-3 gap-2 rounded-2xl px-3.5 py-3">
+                    <div>
+                      <p className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Standing</p>
+                      <p className="font-display text-sm font-semibold">
+                        {registration.placement > 0 ? `#${registration.placement}` : '—'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Kills</p>
+                      <p className="font-display text-sm font-semibold">{registration.kills || 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Prize</p>
+                      <p
+                        className={`font-display text-sm font-semibold ${
+                          prize > 0 ? 'text-primary' : 'text-muted-foreground'
+                        }`}
+                      >
+                        {prize > 0 ? coins(prize) : '—'}
+                      </p>
+                    </div>
+                  </div>
                 )}
               </article>
             );

@@ -13,7 +13,8 @@ async function fetchTournaments() {
 
 async function fetchRegistrations() {
   const res = await callFunction('getMyRegistrations', await withAuth({}));
-  return (res?.data ?? res)?.registrations ?? [];
+  const data = res?.data ?? res;
+  return { registrations: data?.registrations ?? [], winnings: data?.winnings ?? [] };
 }
 
 export default function useTournamentData() {
@@ -34,7 +35,8 @@ export default function useTournamentData() {
   const loading = tournamentsQuery.isLoading || registrationsQuery.isLoading;
   const error = tournamentsQuery.isError || registrationsQuery.isError;
   const tournaments = tournamentsQuery.data ?? [];
-  const registrations = registrationsQuery.data ?? [];
+  const registrations = registrationsQuery.data?.registrations ?? [];
+  const winnings = registrationsQuery.data?.winnings ?? [];
 
   const reload = async () => {
     await Promise.all([
@@ -44,5 +46,5 @@ export default function useTournamentData() {
     ]);
   };
 
-  return { loading, error, user, tournaments, registrations, reload };
+  return { loading, error, user, tournaments, registrations, winnings, reload };
 }
