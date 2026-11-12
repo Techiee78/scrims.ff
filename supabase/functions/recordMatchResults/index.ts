@@ -16,7 +16,7 @@ export default async function handler(req: Request): Promise<Response> {
     const supa = serviceClient();
     const { data: tournament } = await supa
       .from('tournaments')
-      .select('id, title, prize_pool, per_kill')
+      .select('id, title, prize_pool, prize_1st, prize_2nd, prize_3rd, per_kill')
       .eq('id', tournamentId)
       .maybeSingle();
 
@@ -41,15 +41,29 @@ export default async function handler(req: Request): Promise<Response> {
     }
     await Promise.all(updates);
 
-    // Payout, matching what the match card promises: the whole prize pool to
-    // 1st place, plus per-kill coins to every player. Paid once per match —
-    // saving the results again never pays a second time.
+    // Payout, matching what the match card promises: the prize pool is split
+    // into 1st / 2nd / 3rd place prizes and per-kill coins are paid from that
+    // same pool. Matches created before the split existed still pay the whole
+    // pool to 1st place. Paid once per match — saving the results again never
+    // pays a second time.
     const perKill = Number(tournament?.per_kill || 0);
     const prizePool = Number(tournament?.prize_pool || 0);
+    const splitTotal =
+      Number(tournament?.prize_1st || 0) +
+      Number(tournament?.prize_2nd || 0) +
+      Number(tournament?.prize_3rd || 0);
+    const podiumPrize = (placement: number) => {
+      if (placement < 1 || placement > 3) return 0;
+      if (splitTotal <= 0) return placement === 1 ? prizePool : 0;
+      const split = [tournament?.prize_1st, tournament?.prize_2nd, tournament?.prize_3rd];
+      return Number(split[placement - 1] || 0);
+    };
+    const rankLabel = (placement: number) =>
+      placement >= 1 && placement <= 3 ? `${placement === 1 ? '1st' : placement === 2 ? '2nd' : '3rd'} place` : '';
     let paid = 0;
     let payoutTotal = 0;
 
-    if (perKill > 0 || prizePool > 0) {
+    if (perKill > 0 || prizePool > 0 || splitTotal > 0) {
       const { data: alreadyPaid } = await supa
         .from('wallet_transactions')
         .select('id')
@@ -60,11 +74,12 @@ export default async function handler(req: Request): Promise<Response> {
       if (!alreadyPaid?.length) {
         for (const row of cleaned) {
           if (!row.email) continue;
-          const coins = perKill * row.kills + (row.placement === 1 ? prizePool : 0);
+          const positionPrize = podiumPrize(row.placement);
+          const coins = perKill * row.kills + positionPrize;
           if (coins <= 0) continue;
           const label =
-            row.placement === 1
-              ? `Winner · ${tournament?.title || 'match'}`
+            positionPrize > 0
+              ? `${rankLabel(row.placement)} prize · ${tournament?.title || 'match'}`
               : `Per-kill reward · ${tournament?.title || 'match'}`;
           await creditWinnings(supa, row.email, coins, label, tournamentId);
           paid += 1;

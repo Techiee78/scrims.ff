@@ -34,6 +34,9 @@ export default async function handler(req: Request): Promise<Response> {
       team_type: ['Solo', 'Duo', 'Squad'].includes(data.team_type) ? data.team_type : 'Solo',
       entry_fee: Math.max(0, Number(data.entry_fee) || 0),
       prize_pool: Math.max(0, Number(data.prize_pool) || 0),
+      prize_1st: Math.max(0, Number(data.prize_1st) || 0),
+      prize_2nd: Math.max(0, Number(data.prize_2nd) || 0),
+      prize_3rd: Math.max(0, Number(data.prize_3rd) || 0),
       per_kill: Math.max(0, Number(data.per_kill) || 0),
       total_slots: Math.max(1, Number(data.total_slots) || slotCapacity(data.mode, data.team_type)),
       featured: !!data.featured,
@@ -44,6 +47,11 @@ export default async function handler(req: Request): Promise<Response> {
     if (data.banner_url !== undefined) payload.banner_url = data.banner_url ? String(data.banner_url) : null;
     if (data.room_id !== undefined) payload.room_id = data.room_id ? String(data.room_id) : null;
     if (data.room_password !== undefined) payload.room_password = data.room_password ? String(data.room_password) : null;
+
+    // A pool with no split set keeps paying the whole amount to 1st place.
+    if (payload.prize_1st + payload.prize_2nd + payload.prize_3rd === 0 && payload.prize_pool > 0) {
+      payload.prize_1st = payload.prize_pool;
+    }
 
     // legacy columns still present in the table — keep them in sync
     payload.max_slots = payload.total_slots;

@@ -1,7 +1,25 @@
 import { Coins, Trophy } from 'lucide-react';
 import { coins as formatCoins } from '@/lib/format';
 
-export default function PayoutPreview({ prizePool = 0, perKill = 0, payable = 0, players = 0 }) {
+const PLACES = [
+  { key: 'first', label: '1st', medal: '🥇' },
+  { key: 'second', label: '2nd', medal: '🥈' },
+  { key: 'third', label: '3rd', medal: '🥉' },
+];
+
+export default function PayoutPreview({
+  prize1 = 0,
+  prize2 = 0,
+  prize3 = 0,
+  perKill = 0,
+  payable = 0,
+  players = 0,
+  prizePool = 0,
+}) {
+  const values = { first: prize1, second: prize2, third: prize3 };
+  const remaining = Math.max(0, prizePool - (prize1 + prize2 + prize3));
+  const over = prize1 + prize2 + prize3 > prizePool && prizePool > 0;
+
   return (
     <div className="glass rounded-[22px] px-4 py-3">
       <div className="flex items-center justify-between">
@@ -15,21 +33,33 @@ export default function PayoutPreview({ prizePool = 0, perKill = 0, payable = 0,
         </span>
       </div>
 
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        <div className="rounded-xl bg-white/[0.03] px-3 py-2">
-          <p className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground">1st place</p>
-          <p className="font-display text-xs font-semibold">{formatCoins(prizePool)} coins</p>
-        </div>
-        <div className="rounded-xl bg-white/[0.03] px-3 py-2">
-          <p className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Per kill</p>
-          <p className="font-display text-xs font-semibold">{formatCoins(perKill)} coins</p>
-        </div>
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        {PLACES.map((place) => (
+          <div key={place.key} className="rounded-xl bg-white/[0.03] px-2.5 py-2">
+            <p className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
+              {place.medal} {place.label}
+            </p>
+            <p className="font-display text-xs font-semibold">{formatCoins(values[place.key])} coins</p>
+          </div>
+        ))}
       </div>
 
-      <p className="mt-2 text-[10px] text-muted-foreground">
+      <div className="mt-2 flex items-center justify-between rounded-xl bg-white/[0.03] px-3 py-2">
+        <span className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Per kill</span>
+        <span className="font-display text-xs font-semibold">{formatCoins(perKill)} coins</span>
+      </div>
+
+      <p className={`mt-2 text-[10px] ${over ? 'text-destructive' : 'text-muted-foreground'}`}>
+        {over
+          ? `Podium prizes are more than the ${formatCoins(prizePool)} coin pool.`
+          : prizePool > 0
+            ? `${formatCoins(remaining)} coins of the ${formatCoins(prizePool)} pool left for per-kill rewards.`
+            : 'Per-kill rewards are paid from the prize pool.'}
+      </p>
+      <p className="mt-1 text-[10px] text-muted-foreground">
         {players > 0
           ? `${players} player${players === 1 ? '' : 's'} will get these coins in their wallet, credited once per match.`
-          : 'Add kills or a 1st place to preview the distribution.'}
+          : 'Add kills or a placement to preview the distribution.'}
       </p>
     </div>
   );

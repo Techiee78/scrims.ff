@@ -23,6 +23,9 @@ const blank = {
   map: '',
   entry_fee: 0,
   prize_pool: 0,
+  prize_1st: 0,
+  prize_2nd: 0,
+  prize_3rd: 0,
   per_kill: 0,
   match_time: '',
   banner_url: '',
@@ -65,6 +68,11 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
   const capacity = slotCapacity(form.mode, form.team_type);
+  const pool = Number(form.prize_pool) || 0;
+  const splitTotal =
+    (Number(form.prize_1st) || 0) + (Number(form.prize_2nd) || 0) + (Number(form.prize_3rd) || 0);
+  const splitOver = splitTotal > pool;
+  const leftForKills = Math.max(0, pool - splitTotal);
 
   const save = async () => {
     if (!form.title.trim()) {
@@ -80,6 +88,9 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
         map: form.map,
         entry_fee: Number(form.entry_fee) || 0,
         prize_pool: Number(form.prize_pool) || 0,
+        prize_1st: Number(form.prize_1st) || 0,
+        prize_2nd: Number(form.prize_2nd) || 0,
+        prize_3rd: Number(form.prize_3rd) || 0,
         per_kill: Number(form.per_kill) || 0,
         match_time: istInputToIso(form.match_time),
         total_slots: capacity,
@@ -177,7 +188,7 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
             />
           </Field>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <Field label="Entry fee">
               <Input
                 type="number"
@@ -186,7 +197,7 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
                 className="glass-soft h-11 rounded-2xl border-white/10"
               />
             </Field>
-            <Field label="Prize pool">
+            <Field label="Prize pool (total)">
               <Input
                 type="number"
                 value={form.prize_pool}
@@ -194,15 +205,52 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
                 className="glass-soft h-11 rounded-2xl border-white/10"
               />
             </Field>
-            <Field label="Per kill">
-              <Input
-                type="number"
-                value={form.per_kill}
-                onChange={(event) => set('per_kill', event.target.value)}
-                className="glass-soft h-11 rounded-2xl border-white/10"
-              />
-            </Field>
           </div>
+
+          <div className="space-y-1.5">
+            <div className="grid grid-cols-3 gap-3">
+              <Field label="1st prize">
+                <Input
+                  type="number"
+                  value={form.prize_1st}
+                  onChange={(event) => set('prize_1st', event.target.value)}
+                  className="glass-soft h-11 rounded-2xl border-white/10"
+                />
+              </Field>
+              <Field label="2nd prize">
+                <Input
+                  type="number"
+                  value={form.prize_2nd}
+                  onChange={(event) => set('prize_2nd', event.target.value)}
+                  className="glass-soft h-11 rounded-2xl border-white/10"
+                />
+              </Field>
+              <Field label="3rd prize">
+                <Input
+                  type="number"
+                  value={form.prize_3rd}
+                  onChange={(event) => set('prize_3rd', event.target.value)}
+                  className="glass-soft h-11 rounded-2xl border-white/10"
+                />
+              </Field>
+            </div>
+            <p
+              className={`text-[10px] ${splitOver ? 'text-destructive' : 'text-muted-foreground'}`}
+            >
+              {splitOver
+                ? `1st + 2nd + 3rd (${splitTotal}) is more than the ${pool} coin prize pool.`
+                : `${splitTotal} of ${pool} coins goes to the podium · ${leftForKills} left for per-kill rewards.`}
+            </p>
+          </div>
+
+          <Field label="Per kill (paid from prize pool)">
+            <Input
+              type="number"
+              value={form.per_kill}
+              onChange={(event) => set('per_kill', event.target.value)}
+              className="glass-soft h-11 rounded-2xl border-white/10"
+            />
+          </Field>
 
           <Field label="Banner URL">
             <Input

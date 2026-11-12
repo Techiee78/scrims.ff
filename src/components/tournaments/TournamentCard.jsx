@@ -6,6 +6,7 @@ import StatTile from './StatTile';
 import LiveStatus from './LiveStatus';
 import StandingsUpload from '@/components/matches/StandingsUpload';
 import { coins, matchTime } from '@/lib/format';
+import { podiumSplit } from '@/lib/prizes';
 import { slotCapacity } from '@/lib/slots';
 import { getTimeStatus } from '@/lib/tournamentTime';
 
@@ -54,7 +55,7 @@ export default function TournamentCard({ tournament, joined, registration, onJoi
       <div className="mt-3 grid grid-cols-3 gap-2">
         <StatTile icon={Coins} label="Entry" value={tournament.entry_fee ? coins(tournament.entry_fee) : 'Free'} />
         <StatTile icon={Zap} label="Per kill" value={coins(tournament.per_kill)} />
-        <StatTile icon={Trophy} label="Winner" value={coins(tournament.prize_pool)} />
+        <StatTile icon={Trophy} label="1st prize" value={coins(podiumSplit(tournament).first)} />
       </div>
 
       <div className="mt-3.5">

@@ -11,6 +11,7 @@ import PayoutPreview from '@/components/results/PayoutPreview';
 import StateScreen from '@/components/states/StateScreen';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { coins as formatCoins } from '@/lib/format';
+import { matchPayout, podiumSplit } from '@/lib/prizes';
 
 export default function MatchResults() {
   const { toast } = useToast();
@@ -111,12 +112,14 @@ export default function MatchResults() {
 
   const perKill = Number(selected?.per_kill || 0);
   const prizePool = Number(selected?.prize_pool || 0);
+  const split = podiumSplit(selected);
 
-  const payoutFor = (reg) => {
-    const kills = Number(draft[reg.id]?.kills || 0);
-    const placement = Number(draft[reg.id]?.placement || 0);
-    return kills * perKill + (placement === 1 ? prizePool : 0);
-  };
+  const payoutFor = (reg) =>
+    matchPayout(
+      selected,
+      Number(draft[reg.id]?.kills || 0),
+      Number(draft[reg.id]?.placement || 0)
+    );
   const payable = rows.reduce((sum, reg) => sum + payoutFor(reg), 0);
   const payableCount = rows.filter((reg) => payoutFor(reg) > 0).length;
 
@@ -172,6 +175,9 @@ export default function MatchResults() {
           {(perKill > 0 || prizePool > 0) && (
             <PayoutPreview
               prizePool={prizePool}
+              prize1={split.first}
+              prize2={split.second}
+              prize3={split.third}
               perKill={perKill}
               payable={payable}
               players={payableCount}
@@ -212,8 +218,9 @@ export default function MatchResults() {
                   Distribute {formatCoins(payable)} coins?
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-[11px]">
-                  {payableCount} player{payableCount === 1 ? '' : 's'} will get coins in their wallet:
-                  1st place gets the {formatCoins(prizePool)} prize pool, and everyone gets{' '}
+                  {payableCount} player{payableCount === 1 ? '' : 's'} will get coins in their wallet from
+                  the {formatCoins(prizePool)} prize pool — 1st {formatCoins(split.first)}, 2nd{' '}
+                  {formatCoins(split.second)}, 3rd {formatCoins(split.third)} — plus{' '}
                   {formatCoins(perKill)} per kill. Each match is paid out only once.
                 </AlertDialogDescription>
               </AlertDialogHeader>
