@@ -6,6 +6,8 @@ const LABELS = {
   'deposit.approve': 'Approved deposit',
   'deposit.reject': 'Rejected deposit',
   'settings.update': 'Updated UPI settings',
+  'withdrawal.approve': 'Approved withdrawal',
+  'withdrawal.reject': 'Rejected withdrawal',
 };
 
 export default function AuditTrail({ entries = [] }) {

@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Coins, Plus, Trophy } from 'lucide-react';
+import { ArrowDownToLine, Coins, Plus, Trophy } from 'lucide-react';
 import { callFunction } from '@/lib/callFunction';
 import { coins as formatCoins } from '@/lib/format';
 import TransactionHistory from '@/components/wallet/TransactionHistory';
 import DepositRequestsList from '@/components/wallet/DepositRequestsList';
 import AddCoinsDialog from '@/components/wallet/AddCoinsDialog';
+import WithdrawalRequestsList from '@/components/wallet/WithdrawalRequestsList';
+import WithdrawDialog from '@/components/wallet/WithdrawDialog';
 import { fetchMyDeposits } from '@/lib/deposits';
+import { fetchMyWithdrawals } from '@/lib/withdrawals';
 import StateScreen from '@/components/states/StateScreen';
 import { withAuth } from '@/lib/authToken';
 import PullToRefresh from '@/components/common/PullToRefresh';
@@ -13,18 +16,25 @@ import PullToRefresh from '@/components/common/PullToRefresh';
 export default function Wallet() {
   const [data, setData] = useState(null);
   const [deposits, setDeposits] = useState({ requests: [], settings: null });
+  const [withdrawals, setWithdrawals] = useState({ requests: [], available: 0 });
   const [loadError, setLoadError] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
 
   const loadWallet = useCallback(async () => {
     setLoadError(false);
     try {
-      const [res, mine] = await Promise.all([
+      const [res, mine, payouts] = await Promise.all([
         callFunction('getWalletOverview', await withAuth({})),
         fetchMyDeposits(),
+        fetchMyWithdrawals(),
       ]);
       setData(res?.data ?? res);
       setDeposits({ requests: mine?.requests || [], settings: mine?.settings || null });
+      setWithdrawals({
+        requests: payouts?.requests || [],
+        available: Number(payouts?.available || 0),
+      });
     } catch (_e) {
       setLoadError(true);
       setData({ wallet: { balance: 0, total_won: 0 }, transactions: [] });
@@ -52,7 +62,7 @@ export default function Wallet() {
       <div className="space-y-5">
         <div className="px-1">
           <h1 className="font-display text-2xl font-semibold">Wallet</h1>
-          <p className="text-xs text-muted-foreground">Entry fees and winnings, all in one place.</p>
+          <p className="text-xs text-muted-foreground">Entry fees, winnings and payouts, all in one place.</p>
         </div>
 
         {loadError && (
@@ -84,18 +94,33 @@ export default function Wallet() {
             Coins are in-app credits used for entry fees.
           </p>
 
-          <button
-            type="button"
-            onClick={() => setAddOpen(true)}
-            disabled={!settings?.active}
-            className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary font-display text-xs font-semibold text-primary-foreground shadow transition-colors hover:bg-primary/90 disabled:opacity-40"
-          >
-            <Plus className="h-4 w-4" />
-            {settings?.active ? 'Add coins via UPI' : 'Payments not set up yet'}
-          </button>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setAddOpen(true)}
+              disabled={!settings?.active}
+              className="flex h-11 items-center justify-center gap-2 rounded-full bg-primary font-display text-xs font-semibold text-primary-foreground shadow transition-colors hover:bg-primary/90 disabled:opacity-40"
+            >
+              <Plus className="h-4 w-4" />
+              {settings?.active ? 'Add coins' : 'Payments not set up'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setWithdrawOpen(true)}
+              className="glass-soft flex h-11 items-center justify-center gap-2 rounded-full font-display text-xs font-semibold text-foreground"
+            >
+              <ArrowDownToLine className="h-4 w-4 text-primary" />
+              Withdraw
+            </button>
+          </div>
+          <p className="mt-2 text-center text-[10px] text-muted-foreground">
+            {formatCoins(withdrawals.available)} coins withdrawable
+          </p>
         </section>
 
         <DepositRequestsList requests={deposits.requests} />
+
+        <WithdrawalRequestsList requests={withdrawals.requests} />
 
         <TransactionHistory transactions={transactions} />
       </div>
@@ -104,6 +129,13 @@ export default function Wallet() {
         open={addOpen}
         onOpenChange={setAddOpen}
         settings={settings}
+        onSubmitted={loadWallet}
+      />
+
+      <WithdrawDialog
+        open={withdrawOpen}
+        onOpenChange={setWithdrawOpen}
+        available={withdrawals.available}
         onSubmitted={loadWallet}
       />
     </PullToRefresh>

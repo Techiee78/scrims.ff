@@ -23,6 +23,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminTournaments from './pages/admin/AdminTournaments';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminRequests from './pages/admin/AdminRequests';
+import AdminWithdrawals from './pages/admin/AdminWithdrawals';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -62,6 +63,7 @@ const AuthenticatedApp = () => {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/tournaments" element={<AdminTournaments />} />
           <Route path="/admin/requests" element={<AdminRequests />} />
+          <Route path="/admin/withdrawals" element={<AdminWithdrawals />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/results" element={<MatchResults />} />
         </Route>

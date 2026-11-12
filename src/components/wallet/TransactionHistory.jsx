@@ -7,11 +7,16 @@ const FILTERS = [
   { key: 'all', label: 'All' },
   { key: 'winnings', label: 'Winnings' },
   { key: 'topup', label: 'Top-ups' },
+  { key: 'withdraw', label: 'Withdrawals' },
   { key: 'debit', label: 'Entry fees' },
 ];
 
 function isTopup(item) {
   return item.type === 'credit' && /top-?up/i.test(item.label || '');
+}
+
+function isWithdrawal(item) {
+  return item.type === 'debit' && /withdraw/i.test(item.label || '');
 }
 
 function formatLabel(item) {
@@ -35,13 +40,16 @@ export default function TransactionHistory({ transactions = [] }) {
     all: transactions.length,
     winnings: transactions.filter((t) => t.type === 'credit' && !isTopup(t)).length,
     topup: transactions.filter((t) => isTopup(t)).length,
-    debit: transactions.filter((t) => t.type === 'debit').length,
+    withdraw: transactions.filter((t) => isWithdrawal(t)).length,
+    debit: transactions.filter((t) => t.type === 'debit' && !isWithdrawal(t)).length,
   }), [transactions]);
 
   const visible = useMemo(() => {
     if (filter === 'all') return transactions;
     if (filter === 'winnings') return transactions.filter((t) => t.type === 'credit' && !isTopup(t));
     if (filter === 'topup') return transactions.filter((t) => isTopup(t));
+    if (filter === 'withdraw') return transactions.filter((t) => isWithdrawal(t));
+    if (filter === 'debit') return transactions.filter((t) => t.type === 'debit' && !isWithdrawal(t));
     return transactions.filter((t) => t.type === filter);
   }, [transactions, filter]);
 
