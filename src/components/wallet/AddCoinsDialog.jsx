@@ -226,7 +226,7 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
             </div>
             <p className="text-[11px] text-muted-foreground">
               {formatCoins(chosen)} coins will be added to your wallet once the admin verifies your ₹
-              {formatCoins(chosen)} payment. You can track it under “Deposit requests”.
+              {formatCoins(chosen)} payment. You can track it under “Deposits”.
             </p>
             <button
               type="button"

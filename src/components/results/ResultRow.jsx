@@ -1,7 +1,8 @@
 import { Input } from '@/components/ui/input';
+import { coins as formatCoins } from '@/lib/format';
 import AdminStandingsPreview from '@/components/results/AdminStandingsPreview';
 
-export default function ResultRow({ registration, kills, placement, onKills, onPlacement }) {
+export default function ResultRow({ registration, kills, placement, onKills, onPlacement, payout = 0 }) {
   return (
     <div className="glass-soft rounded-2xl px-3 py-2.5">
       <div className="flex items-center gap-3">
@@ -35,6 +36,11 @@ export default function ResultRow({ registration, kills, placement, onKills, onP
           />
         </div>
       </div>
+      {payout > 0 && (
+        <p className="mt-1.5 text-right text-[10px] font-semibold text-primary">
+          +{formatCoins(payout)} coins winnings
+        </p>
+      )}
       {registration.standings_screenshot && (
         <AdminStandingsPreview registration={registration} />
       )}

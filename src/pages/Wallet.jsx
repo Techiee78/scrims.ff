@@ -55,6 +55,16 @@ export default function Wallet() {
   const { wallet, transactions = [] } = data;
   const settings = deposits.settings;
 
+  // Only winnings can be cashed out: balance (entry fees spend coins) capped by
+  // total winnings, minus every withdrawal already pending or approved.
+  const winningsUsed = withdrawals.requests
+    .filter((r) => r.status === 'pending' || r.status === 'approved')
+    .reduce((sum, r) => sum + Number(r.coins || 0), 0);
+  const withdrawable = Math.max(
+    0,
+    Math.min(Number(wallet?.balance || 0), Number(wallet?.total_won || 0)) - winningsUsed
+  );
+
   return (
     <PullToRefresh onRefresh={loadWallet}>
       <div className="space-y-5">
@@ -112,7 +122,7 @@ export default function Wallet() {
             </button>
           </div>
           <p className="mt-2 text-center text-[10px] text-muted-foreground">
-            {formatCoins(withdrawals.available)} coins withdrawable
+            {formatCoins(withdrawable)} coins withdrawable · winnings only
           </p>
         </section>
 
@@ -133,7 +143,7 @@ export default function Wallet() {
       <WithdrawDialog
         open={withdrawOpen}
         onOpenChange={setWithdrawOpen}
-        available={withdrawals.available}
+        available={withdrawable}
         onSubmitted={loadWallet}
       />
     </PullToRefresh>

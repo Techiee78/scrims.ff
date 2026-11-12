@@ -8,7 +8,7 @@ import TransactionDetailDialog from '@/components/wallet/TransactionDetailDialog
 const FILTERS = [
   { key: 'all', label: 'All' },
   { key: 'winnings', label: 'Winnings' },
-  { key: 'topup', label: 'Top-ups' },
+  { key: 'topup', label: 'Deposits' },
   { key: 'withdraw', label: 'Withdrawals' },
   { key: 'debit', label: 'Entry fees' },
 ];
@@ -30,8 +30,8 @@ function category(item) {
 }
 
 function label(item) {
-  if (item.kind === 'deposit') return 'Deposit request';
-  if (item.kind === 'withdrawal') return 'Withdrawal request';
+  if (item.kind === 'deposit') return 'Deposit';
+  if (item.kind === 'withdrawal') return 'Withdrawal';
   if (item.label) return item.label;
   return item.type === 'credit' ? 'Tournament winnings' : 'Entry fee';
 }

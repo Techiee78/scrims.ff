@@ -7,7 +7,10 @@ import { withAuth } from '@/lib/authToken';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import ResultRow from '@/components/results/ResultRow';
+import PayoutPreview from '@/components/results/PayoutPreview';
 import StateScreen from '@/components/states/StateScreen';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { coins as formatCoins } from '@/lib/format';
 
 export default function MatchResults() {
   const { toast } = useToast();
@@ -19,6 +22,7 @@ export default function MatchResults() {
   const [draft, setDraft] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (user?.role !== 'admin') {
@@ -34,6 +38,7 @@ export default function MatchResults() {
   const pick = async (tournament) => {
     setSelected(tournament);
     setDraft({});
+    setConfirmOpen(false);
     const res = await callFunction('getMatchRegistrations', await withAuth({ tournament_id: tournament.id }));
     const regs = (res?.data ?? res)?.registrations ?? [];
     setRows(regs);
@@ -104,6 +109,17 @@ export default function MatchResults() {
     );
   }
 
+  const perKill = Number(selected?.per_kill || 0);
+  const prizePool = Number(selected?.prize_pool || 0);
+
+  const payoutFor = (reg) => {
+    const kills = Number(draft[reg.id]?.kills || 0);
+    const placement = Number(draft[reg.id]?.placement || 0);
+    return kills * perKill + (placement === 1 ? prizePool : 0);
+  };
+  const payable = rows.reduce((sum, reg) => sum + payoutFor(reg), 0);
+  const payableCount = rows.filter((reg) => payoutFor(reg) > 0).length;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
@@ -153,6 +169,14 @@ export default function MatchResults() {
               {selected.mode} · {rows.length} joined
             </p>
           </div>
+          {(perKill > 0 || prizePool > 0) && (
+            <PayoutPreview
+              prizePool={prizePool}
+              perKill={perKill}
+              payable={payable}
+              players={payableCount}
+            />
+          )}
           {rows.length === 0 ? (
             <p className="glass-soft rounded-2xl px-4 py-6 text-center text-xs text-muted-foreground">
               No players joined this match.
@@ -167,18 +191,40 @@ export default function MatchResults() {
                   placement={draft[r.id]?.placement ?? ''}
                   onKills={(v) => update(r.id, 'kills', v)}
                   onPlacement={(v) => update(r.id, 'placement', v)}
+                  payout={payoutFor(r)}
                 />
               ))}
             </div>
           )}
           <Button
-            onClick={save}
+            onClick={() => (payable > 0 ? setConfirmOpen(true) : save())}
             disabled={saving || rows.length === 0}
             className="h-12 w-full rounded-full font-display font-semibold"
           >
             <Save className="mr-2 h-4 w-4" />
-            {saving ? 'Saving…' : 'Save results'}
+            {saving ? 'Saving…' : payable > 0 ? 'Save & distribute winnings' : 'Save results'}
           </Button>
+
+          <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+            <AlertDialogContent className="glass-strong w-[calc(100%-1.5rem)] max-w-md rounded-[26px] border-white/10">
+              <AlertDialogHeader className="text-left">
+                <AlertDialogTitle className="font-display text-base">
+                  Distribute {formatCoins(payable)} coins?
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-[11px]">
+                  {payableCount} player{payableCount === 1 ? '' : 's'} will get coins in their wallet:
+                  1st place gets the {formatCoins(prizePool)} prize pool, and everyone gets{' '}
+                  {formatCoins(perKill)} per kill. Each match is paid out only once.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={save} className="rounded-full">
+                  Distribute winnings
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </>
       )}
     </div>

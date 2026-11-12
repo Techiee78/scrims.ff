@@ -25,7 +25,7 @@ export default function TransactionDetailDialog({ item, onOpenChange }) {
   const isWithdrawal = item?.kind === 'withdrawal';
   const decision = item?.decision || null;
 
-  const title = isDeposit ? 'Deposit request' : isWithdrawal ? 'Withdrawal request' : 'Transaction';
+  const title = isDeposit ? 'Deposit' : isWithdrawal ? 'Withdrawal' : 'Transaction';
   const amount = isDeposit || isWithdrawal ? item?.coins : item?.amount;
   const credit = isDeposit ? true : isWithdrawal ? false : item?.type === 'credit';
 
@@ -53,7 +53,7 @@ export default function TransactionDetailDialog({ item, onOpenChange }) {
             </div>
 
             <div className="glass-soft rounded-[22px] px-4 py-1">
-              <Row label="Details" value={isDeposit ? 'UPI top-up' : isWithdrawal ? 'Withdrawal to UPI' : item.label || 'Entry fee'} />
+              <Row label="Details" value={isDeposit ? 'Deposit' : isWithdrawal ? 'Withdrawal' : item.label || 'Entry fee'} />
               <Row label="Amount paid" value={isDeposit && item.amount_inr ? `₹${formatCoins(item.amount_inr)}` : null} />
               <Row label="UPI / UTR reference" value={isDeposit ? item.reference : null} />
               <Row label="Payout UPI" value={isWithdrawal ? item.payout_upi : null} />

@@ -35,7 +35,7 @@ export default function WithdrawDialog({ open, onOpenChange, available = 0, onSu
   const send = async () => {
     setError('');
     if (!withinBalance) {
-      setError(`You can withdraw up to ${formatCoins(available)} coins right now.`);
+      setError(`You can withdraw up to ${formatCoins(available)} coins of winnings right now.`);
       return;
     }
     if (upiId.trim().length < 5 || !upiId.includes('@')) {
@@ -69,7 +69,7 @@ export default function WithdrawDialog({ open, onOpenChange, available = 0, onSu
         <DialogHeader className="text-left">
           <DialogTitle className="font-display text-base">Withdraw coins</DialogTitle>
           <DialogDescription className="text-[11px]">
-            {step === 'form' && '₹1 = 1 coin. The admin pays your UPI by hand after checking.'}
+            {step === 'form' && 'Only your tournament winnings can be withdrawn. ₹1 = 1 coin, paid by hand to your UPI.'}
             {step === 'done' && 'Sent. The admin will review your request.'}
           </DialogDescription>
         </DialogHeader>
@@ -77,7 +77,7 @@ export default function WithdrawDialog({ open, onOpenChange, available = 0, onSu
         {step === 'form' && (
           <div className="space-y-3">
             <div className="flex items-center justify-between rounded-2xl bg-white/[0.03] px-3 py-2">
-              <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Withdrawable</span>
+              <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Winnings withdrawable</span>
               <span className="font-display text-sm font-semibold">{formatCoins(available)} coins</span>
             </div>
 
@@ -165,7 +165,7 @@ export default function WithdrawDialog({ open, onOpenChange, available = 0, onSu
             )}
             {amountOk && !withinBalance && (
               <p className="text-[10px] text-destructive">
-                Only {formatCoins(available)} coins are withdrawable right now.
+                Only {formatCoins(available)} coins of winnings are withdrawable right now.
               </p>
             )}
             {error && <p className="text-[11px] text-destructive">{error}</p>}
