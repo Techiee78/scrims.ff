@@ -25,7 +25,7 @@ export default async function handler(req: Request): Promise<Response> {
     if (ids.length > 0) {
       const { data } = await supa
         .from('deposit_decisions')
-        .select('request_id, action, reason, admin_email, coins, balance_after, created_at')
+        .select('request_id, action, reason, admin_email, coins, balance_after, wallet_txn_id, created_at')
         .in('request_id', ids);
       decisions = data || [];
     }

@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import { ArrowDownLeft, ArrowDownToLine, ArrowUpRight, Plus } from 'lucide-react';
+import { ArrowDownLeft, ArrowDownToLine, ArrowUpRight, ChevronRight, Plus } from 'lucide-react';
 import { coins as formatCoins } from '@/lib/format';
 import { format, isToday, isYesterday } from 'date-fns';
 import DepositStatusPill from '@/components/wallet/DepositStatusPill';
+import TransactionDetailDialog from '@/components/wallet/TransactionDetailDialog';
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -37,12 +38,25 @@ function label(item) {
 
 export default function TransactionHistory({ transactions = [], deposits = [], withdrawals = [] }) {
   const [filter, setFilter] = useState('all');
+  const [selected, setSelected] = useState(null);
 
-  // One single stream: wallet transactions plus pending/decided deposit and
-  // withdrawal requests, newest first.
+  // One single stream: wallet transactions plus deposit and withdrawal
+  // requests. A request's own wallet entry is hidden, so an approved request
+  // never shows twice.
   const items = useMemo(() => {
+    const linked = new Set(
+      [...deposits, ...withdrawals]
+        .map((row) => row.decision?.wallet_txn_id)
+        .filter(Boolean)
+    );
+    const refs = deposits
+      .filter((row) => row.reference && row.status !== 'pending')
+      .map((row) => String(row.reference));
     const rows = [
-      ...transactions.map((row) => ({ ...row, at: row.created_date || row.created_at })),
+      ...transactions
+        .filter((row) => !linked.has(row.id))
+        .filter((row) => !refs.some((ref) => (row.label || '').includes(ref)))
+        .map((row) => ({ ...row, at: row.created_date || row.created_at })),
       ...deposits.map((row) => ({ ...row, kind: 'deposit', at: row.created_at })),
       ...withdrawals.map((row) => ({ ...row, kind: 'withdrawal', at: row.created_at })),
     ];
@@ -120,23 +134,18 @@ export default function TransactionHistory({ transactions = [], deposits = [], w
                   : 'text-foreground';
 
             return (
-              <div key={`${item.kind || 'tx'}-${item.id}`} className="glass flex items-center gap-3 rounded-[22px] px-4 py-3">
+              <button
+                key={`${item.kind || 'tx'}-${item.id}`}
+                type="button"
+                onClick={() => setSelected(item)}
+                className="glass flex w-full items-center gap-3 rounded-[22px] px-4 py-3 text-left transition-opacity active:opacity-70"
+              >
                 <span className="glass-soft flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
                   <Icon className={isCredit ? 'h-4 w-4 text-primary' : 'h-4 w-4 text-foreground'} />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{label(item)}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">
-                    {formatWhen(item.at)}
-                    {isRequest &&
-                      (isDeposit
-                        ? item.reference
-                          ? ` · Ref ${item.reference}`
-                          : ''
-                        : item.payout_upi
-                          ? ` · To ${item.payout_upi}`
-                          : '')}
-                  </p>
+                  <p className="truncate text-[11px] text-muted-foreground">{formatWhen(item.at)}</p>
                 </div>
                 <div className="shrink-0 text-right">
                   <p className={`font-display text-sm font-semibold ${amountClass}`}>
@@ -153,11 +162,14 @@ export default function TransactionHistory({ transactions = [], deposits = [], w
                     )
                   )}
                 </div>
-              </div>
+                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              </button>
             );
           })}
         </div>
       )}
+
+      <TransactionDetailDialog item={selected} onOpenChange={setSelected} />
     </section>
   );
 }
