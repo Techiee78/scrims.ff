@@ -55,6 +55,8 @@ export default function TransactionHistory({ transactions = [], deposits = [], w
     const rows = [
       ...transactions
         .filter((row) => !linked.has(row.id))
+        // A payout's own wallet debit is always represented by its request row.
+        .filter((row) => !/withdraw/i.test(row.label || ''))
         .filter((row) => !refs.some((ref) => (row.label || '').includes(ref)))
         .map((row) => ({ ...row, at: row.created_date || row.created_at })),
       ...deposits.map((row) => ({ ...row, kind: 'deposit', at: row.created_at })),
