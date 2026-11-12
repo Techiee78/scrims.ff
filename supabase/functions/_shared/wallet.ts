@@ -75,3 +75,37 @@ export async function creditWinnings(
 
   return { ...current, balance: newBalance, total_won: newWon };
 }
+
+// Re-pays a match's winnings when the admin changes the results: tops up an
+// under-payment, takes back an over-payment (never below a zero balance) and
+// removes the entry entirely when the player is no longer owed anything.
+export async function adjustWinnings(
+  supa: any,
+  email: string,
+  coins: number,
+  label: string,
+  tournamentId: number | string,
+  existing?: any
+) {
+  const amount = Number(coins) || 0;
+  if (!existing) return creditWinnings(supa, email, amount, label, tournamentId);
+
+  const current = await ensureWallet(supa, email);
+  const previous = Number(existing.amount || 0);
+  const delta = amount - previous;
+  const balance = Math.max(0, Number(current.balance || 0) + delta);
+  const totalWon = Math.max(0, Number(current.total_won || 0) + delta);
+
+  await supa.from('wallets').update({ balance, total_won: totalWon }).eq('user_email', email);
+
+  if (amount <= 0) {
+    await supa.from('wallet_transactions').delete().eq('id', existing.id);
+  } else {
+    await supa
+      .from('wallet_transactions')
+      .update({ amount, balance_after: balance, label: label || 'Tournament winnings' })
+      .eq('id', existing.id);
+  }
+
+  return { ...current, balance, total_won: totalWon };
+}

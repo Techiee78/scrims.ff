@@ -1,5 +1,5 @@
 import { getUserFromRequest, serviceClient } from '../_shared/supabase.ts';
-import { creditWinnings } from '../_shared/wallet.ts';
+import { adjustWinnings } from '../_shared/wallet.ts';
 
 export default async function handler(req: Request): Promise<Response> {
   try {
@@ -68,31 +68,38 @@ export default async function handler(req: Request): Promise<Response> {
     const killRate = totalKills > 0 ? killCoins / totalKills : 0;
 
     let paid = 0;
+    let adjusted = 0;
     let payoutTotal = 0;
 
     if (perKill > 0 || prizePool > 0 || splitTotal > 0) {
-      const { data: alreadyPaid } = await supa
+      // A match is paid once, but if the admin edits the results afterwards the
+      // already-paid "Winning" entries are corrected to the new amounts.
+      const { data: existing } = await supa
         .from('wallet_transactions')
-        .select('id')
+        .select('id, user_email, amount')
         .eq('tournament_id', tournamentId)
-        .eq('type', 'credit')
-        .limit(1);
+        .eq('type', 'credit');
+      const paidBy = new Map((existing || []).map((row: any) => [row.user_email, row]));
+      const label = `Winning · ${tournament?.title || 'match'}`;
 
-      if (!alreadyPaid?.length) {
-        for (const row of cleaned) {
-          if (!row.email) continue;
-          const positionPrize = podiumPrize(row.placement);
-          const coins = Math.floor(row.kills * killRate) + positionPrize;
-          if (coins <= 0) continue;
-          const label = `Winning · ${tournament?.title || 'match'}`;
-          await creditWinnings(supa, row.email, coins, label, tournamentId);
-          paid += 1;
+      for (const row of cleaned) {
+        if (!row.email) continue;
+        const coins = Math.floor(row.kills * killRate) + podiumPrize(row.placement);
+        const previous = paidBy.get(row.email);
+        const previousAmount = Number(previous?.amount || 0);
+        if (coins === previousAmount) {
           payoutTotal += coins;
+          continue;
         }
+        if (!previous && coins <= 0) continue;
+        await adjustWinnings(supa, row.email, coins, label, tournamentId, previous);
+        if (previous) adjusted += 1;
+        else paid += 1;
+        payoutTotal += Math.max(0, coins);
       }
     }
 
-    return Response.json({ success: true, saved: updates.length, paid, payoutTotal });
+    return Response.json({ success: true, saved: updates.length, paid, adjusted, payoutTotal });
   } catch (error: any) {
     return Response.json({ error: error.message }, { status: 500 });
   }

@@ -76,10 +76,11 @@ export default function MatchResults() {
       if (data?.error) {
         toast({ title: 'Could not save', description: data.error, variant: 'destructive' });
       } else {
+        const won = Number(data.payoutTotal || 0);
         toast({
-          title: 'Results saved',
-          description: data.paid
-            ? `${data.saved || results.length} entries updated · ₹${data.payoutTotal} coins paid to ${data.paid} player${data.paid === 1 ? '' : 's'}.`
+          title: data.adjusted ? 'Results saved & winnings corrected' : 'Results saved',
+          description: won > 0
+            ? `${data.saved || results.length} entries updated · ₹${won} coins in winnings${data.adjusted ? ' (updated in players\u2019 wallets)' : data.paid ? ` to ${data.paid} player${data.paid === 1 ? '' : 's'}` : ''}.`
             : `${data.saved || results.length} entries updated.`,
         });
       }
