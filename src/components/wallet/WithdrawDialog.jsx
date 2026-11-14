@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, CheckCircle2, Loader2, Wallet } from 'lucide-react';
+import { ArrowLeft, Loader2, Wallet } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { coins as formatCoins } from '@/lib/format';
 import { WITHDRAW_MAX, WITHDRAW_MIN, submitWithdrawal } from '@/lib/withdrawals';

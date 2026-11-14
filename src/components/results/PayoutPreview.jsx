@@ -13,10 +13,7 @@ export default function PayoutPreview({
   prize3 = 0,
   perKill = 0,
   payable = 0,
-  players = 0,
   prizePool = 0,
-  killCoins = null,
-  killCapped = false,
 }) {
   const values = { first: prize1, second: prize2, third: prize3 };
   const over = prize1 + prize2 + prize3 > prizePool && prizePool > 0;

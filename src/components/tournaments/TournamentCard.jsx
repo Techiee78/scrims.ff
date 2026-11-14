@@ -10,7 +10,7 @@ import { podiumSplit } from '@/lib/prizes';
 import { slotCapacity } from '@/lib/slots';
 import { getTimeStatus } from '@/lib/tournamentTime';
 
-function TournamentCard({ tournament, joined, registration, onJoin, onUploaded }) {
+function TournamentCard({ tournament, joined, onJoin }) {
   // Shared clock: one timer for the whole list instead of one per card.
   const now = useNow();
 
