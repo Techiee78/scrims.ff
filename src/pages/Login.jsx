@@ -8,7 +8,6 @@ import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import { safeReturnTo } from "@/lib/authReturnTo";
 import GoogleButton, { AuthDivider } from "@/components/auth/SocialAuth";
-import PhoneLogin from "@/components/auth/PhoneLogin";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -16,7 +15,6 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [tab, setTab] = useState("email");
   const returnTo = safeReturnTo();
 
   const handleSubmit = async (e) => {
@@ -76,26 +74,6 @@ export default function Login() {
       <GoogleButton onClick={handleGoogle} loading={googleLoading} />
       <AuthDivider />
 
-      <div className="flex gap-1 p-1 mb-4 rounded-lg bg-white/5 border border-white/10">
-        <button
-          type="button"
-          onClick={() => setTab("email")}
-          className={`flex-1 h-9 rounded-md text-xs font-medium transition-colors ${tab === "email" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-        >
-          Email
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("mobile")}
-          className={`flex-1 h-9 rounded-md text-xs font-medium transition-colors ${tab === "mobile" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-        >
-          Mobile
-        </button>
-      </div>
-
-      {tab === "mobile" ? (
-        <PhoneLogin returnTo={returnTo} onBack={() => { setTab("email"); setError(""); }} />
-      ) : (
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
@@ -146,7 +124,6 @@ export default function Login() {
           )}
         </Button>
       </form>
-      )}
     </AuthLayout>
   );
 }
