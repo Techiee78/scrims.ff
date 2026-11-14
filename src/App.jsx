@@ -15,6 +15,7 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import AdminLayout from '@/components/admin/AdminLayout';
+import StateScreen from '@/components/states/StateScreen';
 
 // Every screen except the first and the sign-in flow is split into its own
 // chunk, so the phone only downloads what it is about to show.
@@ -36,7 +37,7 @@ const RouteFallback = () => (
 );
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -48,10 +49,22 @@ const AuthenticatedApp = () => {
   }
 
   // Handle authentication errors (Supabase flow doesn't emit
-  // user_not_registered; unknown/auth errors send the user to login.)
+  // user_not_registered). Never render nothing here — a silent redirect used
+  // to leave a blank screen; show the failure with a way out instead.
   if (authError) {
-    navigateToLogin();
-    return null;
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <StateScreen
+          variant="error"
+          title="Couldn't load your account"
+          hint="Check your connection and try again."
+          showRetry
+          onRetry={() => window.location.reload()}
+          actionLabel="Log in"
+          actionTo="/login"
+        />
+      </div>
+    );
   }
 
   // Render the main app
