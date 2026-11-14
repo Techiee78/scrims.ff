@@ -1,5 +1,4 @@
 import { getUserFromRequest, serviceClient } from '../_shared/supabase.ts';
-import { adjustWinnings } from '../_shared/wallet.ts';
 
 export default async function handler(req: Request): Promise<Response> {
   try {
@@ -19,6 +18,7 @@ export default async function handler(req: Request): Promise<Response> {
       .select('id, title, prize_pool, prize_1st, prize_2nd, prize_3rd, per_kill')
       .eq('id', tournamentId)
       .maybeSingle();
+    if (!tournament) return Response.json({ error: 'Match not found' }, { status: 404 });
 
     const { data: regs } = await supa
       .from('registrations')
@@ -27,35 +27,33 @@ export default async function handler(req: Request): Promise<Response> {
       .eq('status', 'joined');
     const byId = new Map((regs || []).map((r: any) => [r.id, r]));
 
-    const cleaned: Array<{ id: number | string; email: string; kills: number; placement: number }> = [];
-    const updates: Promise<any>[] = [];
+    const cleaned: Array<{ registration_id: number | string; email: string; kills: number; placement: number }> = [];
     for (const entry of results) {
       const reg = byId.get(entry.registration_id);
       if (!reg) continue;
-      const kills = Math.max(0, Math.floor(Number(entry.kills) || 0));
-      const placement = Math.max(0, Math.floor(Number(entry.placement) || 0));
-      cleaned.push({ id: reg.id, email: reg.user_email, kills, placement });
-      updates.push(
-        supa.from('registrations').update({ kills, placement, played: placement > 0 }).eq('id', reg.id)
-      );
+      cleaned.push({
+        registration_id: reg.id,
+        email: reg.user_email,
+        kills: Math.max(0, Math.floor(Number(entry.kills) || 0)),
+        placement: Math.max(0, Math.floor(Number(entry.placement) || 0)),
+      });
     }
-    await Promise.all(updates);
+    if (!cleaned.length) return Response.json({ error: 'No results to save' }, { status: 400 });
 
     // Payout, matching what the match card promises: the prize pool is split
     // into 1st / 2nd / 3rd place prizes and per-kill coins are paid from that
     // same pool. Matches created before the split existed still pay the whole
-    // pool to 1st place. Paid once per match — saving the results again never
-    // pays a second time.
-    const perKill = Number(tournament?.per_kill || 0);
-    const prizePool = Number(tournament?.prize_pool || 0);
+    // pool to 1st place.
+    const perKill = Number(tournament.per_kill || 0);
+    const prizePool = Number(tournament.prize_pool || 0);
     const splitTotal =
-      Number(tournament?.prize_1st || 0) +
-      Number(tournament?.prize_2nd || 0) +
-      Number(tournament?.prize_3rd || 0);
+      Number(tournament.prize_1st || 0) +
+      Number(tournament.prize_2nd || 0) +
+      Number(tournament.prize_3rd || 0);
     const podiumPrize = (placement: number) => {
       if (placement < 1 || placement > 3) return 0;
       if (splitTotal <= 0) return placement === 1 ? prizePool : 0;
-      const split = [tournament?.prize_1st, tournament?.prize_2nd, tournament?.prize_3rd];
+      const split = [tournament.prize_1st, tournament.prize_2nd, tournament.prize_3rd];
       return Number(split[placement - 1] || 0);
     };
     // Per-kill rewards share what is left of the pool after the podium prizes,
@@ -67,43 +65,33 @@ export default async function handler(req: Request): Promise<Response> {
     const killCoins = Number.isFinite(killBudget) ? Math.min(rawKillCoins, killBudget) : rawKillCoins;
     const killRate = totalKills > 0 ? killCoins / totalKills : 0;
 
-    let paid = 0;
-    let adjusted = 0;
-    let payoutTotal = 0;
-
+    // One payout row per player (a player never holds two slots in a match).
+    const payoutBy = new Map<string, number>();
     if (perKill > 0 || prizePool > 0 || splitTotal > 0) {
-      // A match is paid once, but if the admin edits the results afterwards the
-      // already-paid "Winning" entries are corrected to the new amounts.
-      const { data: existing } = await supa
-        .from('wallet_transactions')
-        .select('id, user_email, amount')
-        .eq('tournament_id', tournamentId)
-        .eq('type', 'credit');
-      const paidBy = new Map((existing || []).map((row: any) => [row.user_email, row]));
-      const label = `Winning · ${tournament?.title || 'match'}`;
-
       for (const row of cleaned) {
         if (!row.email) continue;
-        const coins = Math.floor(row.kills * killRate) + podiumPrize(row.placement);
-        const previous = paidBy.get(row.email);
-        const previousAmount = Number(previous?.amount || 0);
-        if (coins === previousAmount) {
-          payoutTotal += coins;
-          continue;
-        }
-        if (!previous && coins <= 0) continue;
-        await adjustWinnings(supa, row.email, coins, label, tournamentId, previous);
-        if (previous) adjusted += 1;
-        else paid += 1;
-        payoutTotal += Math.max(0, coins);
+        const amount = Math.floor(row.kills * killRate) + podiumPrize(row.placement);
+        payoutBy.set(row.email, (payoutBy.get(row.email) || 0) + Math.max(0, amount));
       }
     }
+    const payouts = Array.from(payoutBy, ([email, amount]) => ({ email, amount }));
 
-    // Saving the results is what finishes a match — it stays live until the
-    // admin distributes the winnings.
-    await supa.from('tournaments').update({ status: 'completed' }).eq('id', tournamentId);
+    // Results, winnings and the completed status land in one transaction — an
+    // interruption can no longer leave the match half paid.
+    const { data, error } = await supa.rpc('record_match_results', {
+      p_tournament_id: tournamentId,
+      p_results: cleaned.map((row) => ({
+        registration_id: row.registration_id,
+        kills: row.kills,
+        placement: row.placement,
+      })),
+      p_payouts: payouts,
+      p_label: `Winning · ${tournament.title || 'match'}`,
+    });
+    if (error) return Response.json({ error: error.message }, { status: 500 });
+    if (data?.error) return Response.json({ error: data.error }, { status: data.status || 400 });
 
-    return Response.json({ success: true, saved: updates.length, paid, adjusted, payoutTotal });
+    return Response.json({ success: true, ...data });
   } catch (error: any) {
     return Response.json({ error: error.message }, { status: 500 });
   }
