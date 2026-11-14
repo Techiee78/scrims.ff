@@ -1,8 +1,14 @@
 import { getUserFromRequest, serviceClient } from '../_shared/supabase.ts';
-import { ensureWallet } from '../_shared/wallet.ts';
-import { slotCapacity } from '../_shared/slots.ts';
 import { normalizePlayer, teamSizeOf } from '../_shared/players.ts';
 
+// Books a slot for the signed-in player.
+//
+// The player identity always comes from the verified Supabase token — never
+// from the request body. All checks that touch slots or coins (capacity, one
+// slot per player, balance, the debit, the counter bump) run inside the
+// join_tournament database function in a single locked transaction, so two
+// people joining at the same moment cannot overfill a match, and a double tap
+// cannot debit the entry fee twice.
 export default async function handler(req: Request): Promise<Response> {
   try {
     const user = await getUserFromRequest(req);
@@ -22,8 +28,10 @@ export default async function handler(req: Request): Promise<Response> {
     }
 
     const body = await req.json().catch(() => ({}));
-    const tournamentId = body.tournament_id;
-    if (!tournamentId) return Response.json({ error: 'Missing tournament' }, { status: 400 });
+    const tournamentId = Number(body.tournament_id);
+    if (!Number.isFinite(tournamentId)) {
+      return Response.json({ error: 'Missing tournament' }, { status: 400 });
+    }
 
     const self = normalizePlayer({ ign: body.ff_ign, whatsapp: body.whatsapp, ff_uid: body.ff_uid });
     if (self.error) return Response.json({ error: self.error }, { status: 400 });
@@ -32,7 +40,7 @@ export default async function handler(req: Request): Promise<Response> {
     const supa = serviceClient();
     const { data: tournament } = await supa
       .from('tournaments')
-      .select('*')
+      .select('id, title, mode, team_type, status, match_time, entry_fee')
       .eq('id', tournamentId)
       .maybeSingle();
     if (!tournament) return Response.json({ error: 'Match not found' }, { status: 404 });
@@ -69,67 +77,28 @@ export default async function handler(req: Request): Promise<Response> {
       );
     }
 
-    const { data: already } = await supa
-      .from('registrations')
-      .select('id')
-      .eq('tournament_id', tournamentId)
-      .eq('user_email', user.email)
-      .eq('status', 'joined')
-      .maybeSingle();
-    if (already) return Response.json({ error: 'You already hold a slot in this match' }, { status: 400 });
+    const { data, error } = await supa.rpc('join_tournament', {
+      p_user_id: user.id,
+      p_user_email: user.email,
+      p_user_name: user.full_name || user.email,
+      p_tournament_id: tournamentId,
+      p_ff_ign: me.ign,
+      p_ff_uid: me.ff_uid,
+      p_whatsapp: me.whatsapp,
+      p_teammates: details.map((item) => item.ign),
+      p_teammate_details: details,
+    });
 
-    const filled = tournament.filled_slots || 0;
-    const capacity = slotCapacity(tournament.mode, tournament.team_type);
-    if (filled >= capacity) return Response.json({ error: 'All slots for this match are full' }, { status: 400 });
-
-    const wallet = await ensureWallet(supa, user.email);
-    const fee = tournament.entry_fee || 0;
-    if ((wallet.balance || 0) < fee) {
-      return Response.json({ error: 'Not enough coins — top up your wallet to join' }, { status: 400 });
+    if (error) {
+      return Response.json({ error: 'Could not book your slot. Please try again.' }, { status: 500 });
+    }
+    if (data?.error) {
+      return Response.json({ error: data.error }, { status: Number(data.status) || 400 });
     }
 
-    const newBalance = (wallet.balance || 0) - fee;
-
-    if (fee > 0) {
-      await supa.from('wallets').update({ balance: newBalance }).eq('id', wallet.id);
-      await supa.from('wallet_transactions').insert({
-        user_email: user.email,
-        type: 'debit',
-        amount: fee,
-        label: 'Entry fee · ' + tournament.title,
-        balance_after: newBalance,
-        tournament_id: tournamentId,
-      });
-    }
-
-    const { data: registration } = await supa
-      .from('registrations')
-      .insert({
-        tournament_id: tournamentId,
-        tournament_title: tournament.title,
-        mode: tournament.mode,
-        user_email: user.email,
-        user_name: user.full_name || user.email,
-        ff_ign: me.ign,
-        ff_uid: me.ff_uid,
-        whatsapp: me.whatsapp,
-        teammates: details.map((item) => item.ign),
-        teammate_details: details,
-        slot_number: filled + 1,
-        entry_fee: fee,
-        status: 'joined',
-      })
-      .select()
-      .single();
-
-    await supa
-      .from('tournaments')
-      .update({ filled_slots: filled + 1, total_slots: capacity })
-      .eq('id', tournamentId);
-
-    return Response.json({ success: true, balance: newBalance, registration });
-  } catch (error: any) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ success: true, balance: data?.balance, registration: data?.registration });
+  } catch (_error: any) {
+    return Response.json({ error: 'Could not book your slot. Please try again.' }, { status: 500 });
   }
 }
 

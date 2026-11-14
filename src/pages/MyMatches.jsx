@@ -10,8 +10,9 @@ import { matchTime } from '@/lib/format';
 import { getTimeStatus } from '@/lib/tournamentTime';
 
 export default function MyMatches() {
-  const { loading, error, tournaments, registrations, winnings, reload } = useTournamentData();
+  const { loading, error, tournaments, registrations, winnings, rooms, reload } = useTournamentData();
   const byId = new Map(tournaments.map((item) => [item.id, item]));
+  const roomBy = new Map(rooms.map((row) => [row.tournament_id, row]));
   const prizeBy = new Map(winnings.map((row) => [row.tournament_id, Number(row.amount || 0)]));
   const isCompleted = (registration) => {
     const match = byId.get(registration.tournament_id);
@@ -44,6 +45,7 @@ export default function MyMatches() {
         {!loading && !error &&
           ordered.map((registration) => {
             const match = byId.get(registration.tournament_id);
+            const room = roomBy.get(registration.tournament_id);
             const prize = prizeBy.get(registration.tournament_id) || 0;
             return (
               <article key={registration.id} className="glass rounded-[26px] p-4">
@@ -85,14 +87,14 @@ export default function MyMatches() {
                   <div className="glass-soft mt-3.5 grid grid-cols-2 gap-2 rounded-2xl px-3.5 py-3">
                     <div>
                       <p className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Room ID</p>
-                      <p className="font-display text-sm font-semibold">{match?.room_id || '—'}</p>
+                      <p className="font-display text-sm font-semibold">{room?.room_id || '—'}</p>
                     </div>
                     <div>
                       <p className="flex items-center gap-1 text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
                         <KeyRound className="h-2.5 w-2.5" />
                         Password
                       </p>
-                      <p className="font-display text-sm font-semibold">{match?.room_password || '—'}</p>
+                      <p className="font-display text-sm font-semibold">{room?.room_password || '—'}</p>
                     </div>
                   </div>
                 )}

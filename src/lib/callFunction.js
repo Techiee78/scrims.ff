@@ -14,6 +14,23 @@ export async function callFunction(name, payload = {}) {
     } catch (_e) {
       body = null;
     }
+    // An expired or revoked sign-in — drop the stale session and send the
+    // player back to the login screen with a clear reason instead of a
+    // generic failed request.
+    if (error.context?.status === 401) {
+      try {
+        await supabase.auth.signOut();
+      } catch (_e) {
+        // ignore
+      }
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.replace('/login');
+      }
+      const expired = new Error('Your session expired — please log in again.');
+      expired.code = 'session_expired';
+      throw expired;
+    }
+
     const message = body?.error || error.message || 'Something went wrong';
     const err = new Error(message);
     err.response = { data: body || { error: message } };

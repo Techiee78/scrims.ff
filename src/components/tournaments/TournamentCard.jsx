@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { memo } from 'react';
 import { Check, Clock, Coins, Lock, MapPin, Trophy, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import useNow from '@/hooks/useNow';
 import SlotBar from './SlotBar';
 import StatTile from './StatTile';
 import LiveStatus from './LiveStatus';
@@ -9,12 +10,9 @@ import { podiumSplit } from '@/lib/prizes';
 import { slotCapacity } from '@/lib/slots';
 import { getTimeStatus } from '@/lib/tournamentTime';
 
-export default function TournamentCard({ tournament, joined, registration, onJoin, onUploaded }) {
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, []);
+function TournamentCard({ tournament, joined, registration, onJoin, onUploaded }) {
+  // Shared clock: one timer for the whole list instead of one per card.
+  const now = useNow();
 
   const capacity = slotCapacity(tournament.mode, tournament.team_type);
   const full = (tournament.filled_slots || 0) >= capacity;
@@ -92,3 +90,5 @@ export default function TournamentCard({ tournament, joined, registration, onJoi
     </article>
   );
 }
+
+export default memo(TournamentCard);

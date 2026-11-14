@@ -1,6 +1,26 @@
 import { getUserFromRequest, serviceClient } from '../_shared/supabase.ts';
 import { slotCapacity } from '../_shared/slots.ts';
 
+// Every tournament change by an admin leaves a trail in admin_audit_log.
+async function logAdminAction(
+  supa: any,
+  user: { id: string; email: string },
+  action: string,
+  details: Record<string, any>
+) {
+  try {
+    await supa.from('admin_audit_log').insert({
+      actor_id: user.id,
+      actor_email: user.email,
+      action,
+      entity: 'tournament',
+      details,
+    });
+  } catch (_e) {
+    // Logging must never block the admin action itself.
+  }
+}
+
 export default async function handler(req: Request): Promise<Response> {
   try {
     const user = await getUserFromRequest(req);
@@ -20,6 +40,7 @@ export default async function handler(req: Request): Promise<Response> {
       if (!id) return Response.json({ error: 'Missing tournament' }, { status: 400 });
       const { error } = await supa.from('tournaments').delete().eq('id', id);
       if (error) return Response.json({ error: error.message }, { status: 500 });
+      await logAdminAction(supa, user, 'tournament.delete', { tournament_id: id });
       return Response.json({ success: true });
     }
 
@@ -60,6 +81,12 @@ export default async function handler(req: Request): Promise<Response> {
     if (action === 'create') {
       const { data: created, error } = await supa.from('tournaments').insert(payload).select().single();
       if (error) return Response.json({ error: error.message }, { status: 500 });
+      await logAdminAction(supa, user, 'tournament.create', {
+        tournament_id: created?.id,
+        title: created?.title,
+        mode: created?.mode,
+        team_type: created?.team_type,
+      });
       return Response.json({ success: true, tournament: created });
     }
 
@@ -67,6 +94,13 @@ export default async function handler(req: Request): Promise<Response> {
     if (!id) return Response.json({ error: 'Missing tournament' }, { status: 400 });
     const { data: updated, error } = await supa.from('tournaments').update(payload).eq('id', id).select().single();
     if (error) return Response.json({ error: error.message }, { status: 500 });
+    await logAdminAction(supa, user, 'tournament.update', {
+      tournament_id: id,
+      title: updated?.title,
+      status: updated?.status,
+      prize_pool: updated?.prize_pool,
+      entry_fee: updated?.entry_fee,
+    });
     return Response.json({ success: true, tournament: updated });
   } catch (error: any) {
     return Response.json({ error: error.message }, { status: 500 });

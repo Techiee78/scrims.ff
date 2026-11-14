@@ -14,7 +14,11 @@ async function fetchTournaments() {
 async function fetchRegistrations() {
   const res = await callFunction('getMyRegistrations', await withAuth({}));
   const data = res?.data ?? res;
-  return { registrations: data?.registrations ?? [], winnings: data?.winnings ?? [] };
+  return {
+    registrations: data?.registrations ?? [],
+    winnings: data?.winnings ?? [],
+    rooms: data?.rooms ?? [],
+  };
 }
 
 export default function useTournamentData() {
@@ -40,6 +44,9 @@ export default function useTournamentData() {
   const tournaments = tournamentsQuery.data ?? [];
   const registrations = registrationsQuery.data?.registrations ?? [];
   const winnings = registrationsQuery.data?.winnings ?? [];
+  // Room ID / password for the matches this player joined — the public board
+  // does not carry them.
+  const rooms = registrationsQuery.data?.rooms ?? [];
 
   const reload = async () => {
     await Promise.all([
@@ -49,5 +56,5 @@ export default function useTournamentData() {
     ]);
   };
 
-  return { loading, error, user, tournaments, registrations, winnings, reload };
+  return { loading, error, user, tournaments, registrations, winnings, rooms, reload };
 }

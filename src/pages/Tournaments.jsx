@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import useTournamentData from '@/hooks/useTournamentData';
 import ModeTabs, { ALL_MODES, MATCH_MODES } from '@/components/tournaments/ModeTabs';
@@ -10,12 +10,14 @@ import StateScreen from '@/components/states/StateScreen';
 import { getTimeStatus } from '@/lib/tournamentTime';
 
 const FILTERS = [...ALL_MODES, ...MATCH_MODES];
+const PAGE_SIZE = 8;
 
 export default function Tournaments() {
   const { loading, error, user, tournaments, registrations, reload } = useTournamentData();
   const [filter, setFilter] = useState('All');
   const [target, setTarget] = useState(null);
   const [query, setQuery] = useState('');
+  const [visible, setVisible] = useState(PAGE_SIZE);
 
   const joinedIds = new Set(registrations.map((item) => item.tournament_id));
   const regByTournament = new Map(registrations.map((r) => [r.tournament_id, r]));
@@ -26,6 +28,10 @@ export default function Tournaments() {
     const queryOk = !q || (item.title || '').toLowerCase().includes(q) || (item.map || '').toLowerCase().includes(q);
     return modeOk && queryOk;
   });
+
+  // Cards render in small batches so a long list stays smooth on phones.
+  useEffect(() => setVisible(PAGE_SIZE), [filter, query]);
+  const shown = list.slice(0, visible);
 
   return (
     <PullToRefresh onRefresh={reload}>
@@ -44,7 +50,12 @@ export default function Tournaments() {
           className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />
         {query && (
-          <button type="button" onClick={() => setQuery('')} className="text-muted-foreground hover:text-foreground">
+          <button
+            type="button"
+            onClick={() => setQuery('')}
+            aria-label="Clear search"
+            className="text-muted-foreground hover:text-foreground"
+          >
             <X className="h-4 w-4" />
           </button>
         )}
@@ -64,7 +75,7 @@ export default function Tournaments() {
           />
         )}
         {!loading && !error &&
-          list.map((tournament) => (
+          shown.map((tournament) => (
             <TournamentCard
               key={tournament.id}
               tournament={tournament}
@@ -85,6 +96,15 @@ export default function Tournaments() {
         )}
         {!loading && !error && list.length === 0 && !query.trim() && (
           <EmptyMatches title="Nothing here yet" hint="Try another format — new rooms drop daily." />
+        )}
+        {!loading && !error && list.length > shown.length && (
+          <button
+            type="button"
+            onClick={() => setVisible((count) => count + PAGE_SIZE)}
+            className="glass-soft w-full rounded-full py-3 text-xs font-semibold text-primary"
+          >
+            Load more rooms ({list.length - shown.length} left)
+          </button>
         )}
       </div>
 

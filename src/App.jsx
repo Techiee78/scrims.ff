@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -9,21 +10,30 @@ import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AppShell from '@/components/layout/AppShell';
 import Home from './pages/Home';
-import Tournaments from './pages/Tournaments';
-import MyMatches from './pages/MyMatches';
-import WalletPage from './pages/Wallet';
-import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import MatchResults from './pages/MatchResults';
 import AdminLayout from '@/components/admin/AdminLayout';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminTournaments from './pages/admin/AdminTournaments';
-import AdminUsers from './pages/admin/AdminUsers';
-import AdminRequests from './pages/admin/AdminRequests';
-import AdminWithdrawals from './pages/admin/AdminWithdrawals';
+
+// Every screen except the first and the sign-in flow is split into its own
+// chunk, so the phone only downloads what it is about to show.
+const Tournaments = lazy(() => import('./pages/Tournaments'));
+const MyMatches = lazy(() => import('./pages/MyMatches'));
+const WalletPage = lazy(() => import('./pages/Wallet'));
+const Profile = lazy(() => import('./pages/Profile'));
+const MatchResults = lazy(() => import('./pages/MatchResults'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminTournaments = lazy(() => import('./pages/admin/AdminTournaments'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminRequests = lazy(() => import('./pages/admin/AdminRequests'));
+const AdminWithdrawals = lazy(() => import('./pages/admin/AdminWithdrawals'));
+
+const RouteFallback = () => (
+  <div className="glass flex items-center justify-center rounded-[26px] px-6 py-12">
+    <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-primary" />
+  </div>
+);
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -46,6 +56,7 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
+    <Suspense fallback={<RouteFallback />}>
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
@@ -70,6 +81,7 @@ const AuthenticatedApp = () => {
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
+    </Suspense>
   );
 };
 

@@ -24,7 +24,23 @@ export default async function handler(req: Request): Promise<Response> {
       .eq('type', 'credit')
       .not('tournament_id', 'is', null);
 
-    return Response.json({ registrations: data || [], winnings: winnings || [] });
+    // Room details are only handed to the players who hold a slot, never on
+    // the public match board.
+    const ids = (data || []).map((row: any) => row.tournament_id).filter(Boolean);
+    let rooms: any[] = [];
+    if (ids.length > 0) {
+      const { data: roomRows } = await supa
+        .from('tournaments')
+        .select('id, room_id, room_password')
+        .in('id', ids);
+      rooms = (roomRows || []).map((row: any) => ({
+        tournament_id: row.id,
+        room_id: row.room_id || '',
+        room_password: row.room_password || '',
+      }));
+    }
+
+    return Response.json({ registrations: data || [], winnings: winnings || [], rooms });
   } catch (error: any) {
     return Response.json({ error: error.message }, { status: 500 });
   }
