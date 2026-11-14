@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2, Save } from 'lucide-react';
 import { adminSaveUpiSettings } from '@/lib/deposits';
 import { useToast } from '@/components/ui/use-toast';
@@ -8,8 +8,16 @@ export default function UpiSettingsForm({ settings, onSaved }) {
   const [payeeName, setPayeeName] = useState(settings?.payeeName || 'Scrims.ff');
   const [active, setActive] = useState(Boolean(settings?.active));
   const [busy, setBusy] = useState(false);
+  const [toggling, setToggling] = useState(false);
   const [error, setError] = useState('');
   const { toast } = useToast();
+
+  // The settings arrive after the first render, so follow them once loaded.
+  useEffect(() => {
+    setUpiId(settings?.upiId || '');
+    setPayeeName(settings?.payeeName || 'Scrims.ff');
+    setActive(Boolean(settings?.active));
+  }, [settings?.upiId, settings?.payeeName, settings?.active]);
 
   const save = async () => {
     setBusy(true);
@@ -23,6 +31,37 @@ export default function UpiSettingsForm({ settings, onSaved }) {
       setError(err.message || 'Could not save the UPI settings.');
     } finally {
       setBusy(false);
+    }
+  };
+
+  // The switch applies immediately — no Save needed for on/off.
+  const toggle = async () => {
+    if (toggling) return;
+    const next = !active;
+    if (next && !upiId.trim()) {
+      setError('Add your UPI ID before turning payments on.');
+      return;
+    }
+    setError('');
+    setActive(next);
+    setToggling(true);
+    try {
+      const saved = await adminSaveUpiSettings({
+        upiId: upiId.trim(),
+        payeeName: payeeName.trim(),
+        active: next,
+      });
+      setActive(Boolean(saved?.settings?.active));
+      onSaved?.();
+      toast({
+        title: next ? 'Coin payments on' : 'Coin payments off',
+        description: next ? 'Players can pay and send deposit requests.' : 'Players cannot send deposits right now.',
+      });
+    } catch (err) {
+      setActive(!next);
+      setError(err.message || 'Could not change the payment switch.');
+    } finally {
+      setToggling(false);
     }
   };
 
@@ -60,16 +99,24 @@ export default function UpiSettingsForm({ settings, onSaved }) {
       <div className="flex items-center justify-between rounded-2xl bg-white/[0.03] px-3 py-2">
         <div>
           <p className="text-xs font-medium">Accept coin payments</p>
-          <p className="text-[10px] text-muted-foreground">{active ? 'QR is live for players' : 'Players cannot pay right now'}</p>
+          <p className="text-[10px] text-muted-foreground">
+            {toggling ? 'Saving…' : active ? 'QR is live for players' : 'Players cannot pay right now'}
+          </p>
         </div>
         <button
           type="button"
-          onClick={() => setActive((v) => !v)}
-          className={`h-7 w-12 rounded-full p-0.5 transition-colors ${active ? 'bg-primary' : 'bg-white/15'}`}
+          onClick={toggle}
+          disabled={toggling}
+          className={`h-7 w-12 shrink-0 rounded-full p-0.5 transition-colors disabled:opacity-60 ${
+            active ? 'bg-primary' : 'bg-white/15'
+          }`}
           aria-pressed={active}
+          aria-label={active ? 'Turn coin payments off' : 'Turn coin payments on'}
         >
           <span
-            className={`block h-6 w-6 rounded-full bg-background transition-transform ${active ? 'translate-x-5' : 'translate-x-0'}`}
+            className={`block h-6 w-6 rounded-full bg-background transition-transform ${
+              active ? 'translate-x-5' : 'translate-x-0'
+            }`}
           />
         </button>
       </div>

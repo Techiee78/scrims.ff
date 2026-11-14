@@ -56,7 +56,7 @@ export default function AdminRequests() {
     <div className="space-y-4">
       <div className="flex items-end justify-between gap-2">
         <div>
-          <h1 className="font-display text-lg font-semibold">Coin deposits</h1>
+          <h1 className="font-display text-lg font-semibold">Deposit requests</h1>
           <p className="text-[11px] text-muted-foreground">
             Verify each UPI payment in your bank account, then approve or reject it.
           </p>

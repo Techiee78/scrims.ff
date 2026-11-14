@@ -8,7 +8,7 @@ const items = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/tournaments', label: 'Tournaments', icon: Trophy },
   { to: '/admin/results', label: 'Results', icon: ClipboardList },
-  { to: '/admin/requests', label: 'Requests', icon: IndianRupee },
+  { to: '/admin/requests', label: 'Deposit Requests', icon: IndianRupee },
   { to: '/admin/withdrawals', label: 'Withdrawals', icon: ArrowDownToLine },
   { to: '/admin/users', label: 'Users', icon: Users },
 ];
