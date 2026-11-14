@@ -29,7 +29,10 @@ export default function useTournamentData() {
   const registrationsQuery = useQuery({
     queryKey: REGISTRATIONS_KEY,
     queryFn: fetchRegistrations,
-    staleTime: 60 * 1000,
+    // Results and prizes change the moment an admin saves a match, so always
+    // re-read them when a page opens instead of serving a minute-old cache.
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 
   const loading = tournamentsQuery.isLoading || registrationsQuery.isLoading;

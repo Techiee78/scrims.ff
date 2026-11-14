@@ -5,7 +5,8 @@ import EmptyMatches from '@/components/tournaments/EmptyMatches';
 import PullToRefresh from '@/components/common/PullToRefresh';
 import LiveStatus from '@/components/tournaments/LiveStatus';
 import StateScreen from '@/components/states/StateScreen';
-import { coins, matchTime } from '@/lib/format';
+import MatchResultSummary from '@/components/matches/MatchResultSummary';
+import { matchTime } from '@/lib/format';
 import { getTimeStatus } from '@/lib/tournamentTime';
 
 export default function MyMatches() {
@@ -74,41 +75,24 @@ export default function MyMatches() {
                   </span>
                 </div>
 
-                <div className="glass-soft mt-3.5 grid grid-cols-2 gap-2 rounded-2xl px-3.5 py-3">
-                  <div>
-                    <p className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Room ID</p>
-                    <p className="font-display text-sm font-semibold">{match?.room_id || '—'}</p>
-                  </div>
-                  <div>
-                    <p className="flex items-center gap-1 text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
-                      <KeyRound className="h-2.5 w-2.5" />
-                      Password
-                    </p>
-                    <p className="font-display text-sm font-semibold">{match?.room_password || '—'}</p>
-                  </div>
-                </div>
-
-                {match && getTimeStatus(match) === 'completed' && (
-                  <div className="glass-soft mt-3.5 grid grid-cols-3 gap-2 rounded-2xl px-3.5 py-3">
+                {isCompleted(registration) ? (
+                  <MatchResultSummary
+                    placement={registration.placement}
+                    kills={registration.kills}
+                    prize={prize}
+                  />
+                ) : (
+                  <div className="glass-soft mt-3.5 grid grid-cols-2 gap-2 rounded-2xl px-3.5 py-3">
                     <div>
-                      <p className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Standing</p>
-                      <p className="font-display text-sm font-semibold">
-                        {registration.placement > 0 ? `#${registration.placement}` : '—'}
-                      </p>
+                      <p className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Room ID</p>
+                      <p className="font-display text-sm font-semibold">{match?.room_id || '—'}</p>
                     </div>
                     <div>
-                      <p className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Kills</p>
-                      <p className="font-display text-sm font-semibold">{registration.kills || 0}</p>
-                    </div>
-                    <div>
-                      <p className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Prize</p>
-                      <p
-                        className={`font-display text-sm font-semibold ${
-                          prize > 0 ? 'text-primary' : 'text-muted-foreground'
-                        }`}
-                      >
-                        {prize > 0 ? coins(prize) : '—'}
+                      <p className="flex items-center gap-1 text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
+                        <KeyRound className="h-2.5 w-2.5" />
+                        Password
                       </p>
+                      <p className="font-display text-sm font-semibold">{match?.room_password || '—'}</p>
                     </div>
                   </div>
                 )}
