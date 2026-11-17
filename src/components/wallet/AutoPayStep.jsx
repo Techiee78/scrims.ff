@@ -4,8 +4,8 @@ import { coins as formatCoins } from '@/lib/format';
 import { checkInstantPayment, startInstantPayment } from '@/lib/payments';
 
 const POLL_MS = 6000;
-// NexUPI orders expire after 30 minutes.
-const WINDOW_MS = 30 * 60 * 1000;
+// The UPI payment page stays valid for 5 minutes.
+const WINDOW_MS = 5 * 60 * 1000;
 
 export default function AutoPayStep({ coins, onPaid, onDone, onBack }) {
   const [phase, setPhase] = useState('starting'); // starting | waiting | paid | failed | error
