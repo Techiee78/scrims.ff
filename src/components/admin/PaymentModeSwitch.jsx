@@ -27,7 +27,7 @@ export default function PaymentModeSwitch({ mode, nexupiReady, onSaved }) {
   const pick = async (next) => {
     if (busy || next === current) return;
     if (next === 'automatic' && !nexupiReady) {
-      setError('Add your NexUPI API token and both endpoint URLs below before switching to Automatic.');
+      setError('Add your NexUPI API token and both endpoint URLs in the Automatic tab first.');
       return;
     }
     setError('');
