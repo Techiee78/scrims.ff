@@ -8,6 +8,13 @@ import {
   settleOrder,
 } from '../_shared/nexupi.ts';
 
+// Where the hosted payment page sends the player once it is done. Only a plain
+// http(s) address is accepted so the gateway link can never be hijacked.
+function safeReturnUrl(raw: unknown): string {
+  const value = String(raw ?? '').trim();
+  return /^https?:\/\/[^\s"'<>]{4,300}$/.test(value) ? value : '';
+}
+
 // Automatic mode: the player asks for coins and gets a NexUPI payment page.
 // Coins are never credited here — only the status check / webhook does that.
 export default async function handler(req: Request): Promise<Response> {
@@ -74,7 +81,12 @@ export default async function handler(req: Request): Promise<Response> {
     }
 
     try {
-      const paymentUrl = await createProviderOrder(settings, orderId, coins);
+      const paymentUrl = await createProviderOrder(
+        settings,
+        orderId,
+        coins,
+        safeReturnUrl(body?.return_url)
+      );
       return Response.json({ orderId, coins, paymentUrl });
     } catch (_e) {
       await settleOrder(supa, orderId, 'failure', 'The UPI gateway did not return a payment page.');

@@ -30,7 +30,7 @@ export default async function handler(req: Request): Promise<Response> {
 
     const { data: order } = await supa
       .from('deposit_requests')
-      .select('id, user_id, coins, status')
+      .select('id, user_id, coins, status, created_at')
       .eq('provider_order_id', orderId)
       .eq('user_id', user.id)
       .maybeSingle();
@@ -64,6 +64,14 @@ export default async function handler(req: Request): Promise<Response> {
 
     if (result.state === 'failed') {
       await settleOrder(supa, orderId, 'failure', `NexUPI reported ${result.providerStatus || 'a failed payment'}.`);
+      return Response.json({ status: 'rejected', coins: order.coins, balance: null });
+    }
+
+    // Abandoned orders expire at NexUPI after 30 minutes; closing them here
+    // keeps them from filling the player's open-order limit.
+    const ageMs = Date.now() - new Date(order.created_at).getTime();
+    if (ageMs > 30 * 60 * 1000) {
+      await settleOrder(supa, orderId, 'failure', 'The payment order expired before it completed.');
       return Response.json({ status: 'rejected', coins: order.coins, balance: null });
     }
 

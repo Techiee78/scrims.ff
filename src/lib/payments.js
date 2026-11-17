@@ -11,8 +11,8 @@ async function call(name, payload) {
   return data;
 }
 
-export function startInstantPayment(coins) {
-  return call('createNexupiOrder', { coins });
+export function startInstantPayment(coins, returnUrl) {
+  return call('createNexupiOrder', { coins, return_url: returnUrl });
 }
 
 export function checkInstantPayment(orderId) {

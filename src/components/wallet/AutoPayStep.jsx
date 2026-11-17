@@ -37,7 +37,7 @@ export default function AutoPayStep({ coins, onPaid, onDone, onBack }) {
     let alive = true;
     (async () => {
       try {
-        const res = await startInstantPayment(coins);
+        const res = await startInstantPayment(coins, `${window.location.origin}/wallet`);
         if (!alive) return;
         orderRef.current = res.orderId;
         setPaymentUrl(res.paymentUrl);
@@ -57,9 +57,18 @@ export default function AutoPayStep({ coins, onPaid, onDone, onBack }) {
     if (phase !== 'waiting') return undefined;
     const poll = setInterval(check, POLL_MS);
     const tick = setInterval(() => setLeft((value) => Math.max(0, value - 1000)), 1000);
+    // The player pays in the other tab and comes back — check at once instead
+    // of waiting for the next tick, so the coins are there on arrival.
+    const onWake = () => {
+      if (document.visibilityState === 'visible') check();
+    };
+    document.addEventListener('visibilitychange', onWake);
+    window.addEventListener('focus', onWake);
     return () => {
       clearInterval(poll);
       clearInterval(tick);
+      document.removeEventListener('visibilitychange', onWake);
+      window.removeEventListener('focus', onWake);
     };
   }, [phase, check]);
 

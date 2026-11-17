@@ -99,13 +99,19 @@ function pickPaymentUrl(json: any): string {
 export async function createProviderOrder(
   settings: NexupiSettings,
   orderId: string,
-  amount: number
+  amount: number,
+  redirectUrl?: string
 ): Promise<string> {
-  const { ok, json } = await postForm(settings.createUrl, {
+  const fields: Record<string, string> = {
     user_token: settings.token,
     order_id: orderId,
     amount: String(amount),
-  });
+  };
+  // NexUPI appends this to the hosted page, so the player lands back in the app
+  // after paying instead of being left on the gateway's own screen.
+  if (redirectUrl) fields.redirect_url = redirectUrl;
+
+  const { ok, json } = await postForm(settings.createUrl, fields);
 
   const paymentUrl = pickPaymentUrl(json);
   if (!ok || !paymentUrl) {
@@ -127,15 +133,22 @@ export async function fetchProviderOrder(settings: NexupiSettings, orderId: stri
 
   if (!ok || !json) return { state: 'unknown', providerStatus: '' };
 
-  const orderStatus = String(json.status ?? '').toUpperCase();
+  // Real replies look like:
+  //   paid      { status: "COMPLETED", result: { txnStatus: "COMPLETED", status: "SUCCESS" } }
+  //   in flight { status: "FAILURE",   result: { txnStatus: "FAILURE",   status: "PENDING" } }
+  // The top-level status is FAILURE even while a payment is still settling, so
+  // only a final failed *result* code may close an order — everything else
+  // keeps waiting, and a late success still credits.
+  const topStatus = String(json.status ?? '').toUpperCase();
+  const txnStatus = String(json.result?.txnStatus ?? json.data?.txnStatus ?? '').toUpperCase();
   const resultStatus = String(json.result?.status ?? json.data?.status ?? '').toUpperCase();
-  const providerStatus = resultStatus || orderStatus;
+  const providerStatus = resultStatus || txnStatus || topStatus;
 
-  if (FAILED_CODES.includes(resultStatus) || FAILED_CODES.includes(orderStatus)) {
-    return { state: 'failed', providerStatus };
-  }
-  if (PAID_CODES.includes(resultStatus) || PAID_CODES.includes(orderStatus)) {
+  if ([topStatus, txnStatus, resultStatus].some((code) => PAID_CODES.includes(code))) {
     return { state: 'paid', providerStatus };
+  }
+  if (FAILED_CODES.includes(resultStatus) || (!resultStatus && FAILED_CODES.includes(txnStatus))) {
+    return { state: 'failed', providerStatus };
   }
   return { state: 'pending', providerStatus };
 }
