@@ -37,7 +37,7 @@ export default function AutoPayStep({ coins, onPaid, onDone, onBack }) {
     let alive = true;
     (async () => {
       try {
-        const res = await startInstantPayment(coins, `${window.location.origin}/wallet`);
+        const res = await startInstantPayment(coins, `${window.location.origin}/payment-return`);
         if (!alive) return;
         orderRef.current = res.orderId;
         setPaymentUrl(res.paymentUrl);
@@ -62,13 +62,20 @@ export default function AutoPayStep({ coins, onPaid, onDone, onBack }) {
     const onWake = () => {
       if (document.visibilityState === 'visible') check();
     };
+    // The payment tab reports back before it closes itself.
+    const onMessage = (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === 'nexupi:paid') check();
+    };
     document.addEventListener('visibilitychange', onWake);
     window.addEventListener('focus', onWake);
+    window.addEventListener('message', onMessage);
     return () => {
       clearInterval(poll);
       clearInterval(tick);
       document.removeEventListener('visibilitychange', onWake);
       window.removeEventListener('focus', onWake);
+      window.removeEventListener('message', onMessage);
     };
   }, [phase, check]);
 
