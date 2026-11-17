@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, CheckCircle2, ExternalLink, Loader2, RefreshCw, XCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Loader2, RefreshCw, XCircle } from 'lucide-react';
 import { coins as formatCoins } from '@/lib/format';
 import { checkInstantPayment, startInstantPayment } from '@/lib/payments';
 
@@ -62,10 +62,10 @@ export default function AutoPayStep({ coins, onPaid, onDone, onBack }) {
     const onWake = () => {
       if (document.visibilityState === 'visible') check();
     };
-    // The payment tab reports back before it closes itself.
+    // The embedded payment page reports back once it is done.
     const onMessage = (event) => {
       if (event.origin !== window.location.origin) return;
-      if (event.data?.type === 'nexupi:paid') check();
+      if (event.data?.type === 'nexupi:check') check();
     };
     document.addEventListener('visibilitychange', onWake);
     window.addEventListener('focus', onWake);
@@ -132,21 +132,22 @@ export default function AutoPayStep({ coins, onPaid, onDone, onBack }) {
 
   return (
     <div className="space-y-3">
-      <div className="glass-soft space-y-2 rounded-[22px] p-4 text-center">
-        <p className="font-display text-lg font-semibold">₹{formatCoins(coins)}</p>
-        <p className="text-[10px] text-muted-foreground">
-          {formatCoins(coins)} coins · pay on the UPI page
+      <div className="flex items-center justify-between px-1">
+        <p className="font-display text-sm font-semibold">
+          ₹{formatCoins(coins)}
+          <span className="ml-1 text-[10px] font-medium text-muted-foreground">
+            · {formatCoins(coins)} coins
+          </span>
         </p>
-        <p className="text-[10px] text-muted-foreground">Order valid for {minutes}:{seconds}</p>
-        <a
-          href={paymentUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-1 inline-flex h-10 w-full items-center justify-center gap-2 rounded-full bg-primary font-display text-xs font-semibold text-primary-foreground"
-        >
-          Open UPI payment page
-          <ExternalLink className="h-3.5 w-3.5" />
-        </a>
+        <p className="text-[10px] text-muted-foreground">Valid {minutes}:{seconds}</p>
+      </div>
+
+      <div className="overflow-hidden rounded-[22px] border border-white/10 bg-white">
+        <iframe
+          title="UPI payment"
+          src={paymentUrl}
+          className="h-[60vh] max-h-[520px] min-h-[360px] w-full border-0"
+        />
       </div>
 
       <p className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
