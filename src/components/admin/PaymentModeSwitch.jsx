@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2, QrCode, Zap } from 'lucide-react';
 import { adminSavePaymentMode } from '@/lib/payments';
 import { useToast } from '@/components/ui/use-toast';
@@ -23,6 +23,12 @@ export default function PaymentModeSwitch({ mode, nexupiReady, onSaved }) {
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const { toast } = useToast();
+
+  // The saved mode arrives after the first render — follow it so the live
+  // option is the one shown as selected.
+  useEffect(() => {
+    if (mode) setCurrent(mode);
+  }, [mode]);
 
   const pick = async (next) => {
     if (busy || next === current) return;

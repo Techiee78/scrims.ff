@@ -12,10 +12,11 @@ const TABS = [
 // automatic NexUPI fields never sit mixed together on the page.
 export default function PaymentSetupTabs({ settings, nexupi, webhookUrl, onSaved }) {
   const live = settings?.mode === 'automatic' ? 'automatic' : 'manual';
-  const [tab, setTab] = useState(live);
+  const [picked, setPicked] = useState(null);
+  const tab = picked ?? live;
 
   // Switching the live mode brings that mode's setup forward.
-  useEffect(() => setTab(live), [live]);
+  useEffect(() => setPicked(null), [live]);
 
   return (
     <div className="space-y-3">
@@ -26,7 +27,7 @@ export default function PaymentSetupTabs({ settings, nexupi, webhookUrl, onSaved
             <button
               key={key}
               type="button"
-              onClick={() => setTab(key)}
+              onClick={() => setPicked(key)}
               className={`flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-[11px] font-medium transition-colors ${
                 active ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:text-foreground'
               }`}
