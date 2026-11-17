@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { adminDecideDeposit, adminFetchAudit, adminFetchDeposits } from '@/lib/deposits';
 import UpiSettingsForm from '@/components/admin/UpiSettingsForm';
+import PaymentModeSwitch from '@/components/admin/PaymentModeSwitch';
+import NexupiSettingsForm from '@/components/admin/NexupiSettingsForm';
 import DepositRequestCard from '@/components/admin/DepositRequestCard';
 import AuditTrail from '@/components/admin/AuditTrail';
 import { useToast } from '@/components/ui/use-toast';
@@ -71,7 +73,15 @@ export default function AdminRequests() {
         </button>
       </div>
 
+      <PaymentModeSwitch
+        mode={data?.settings?.mode}
+        nexupiReady={Boolean(data?.settings?.nexupiReady)}
+        onSaved={load}
+      />
+
       <UpiSettingsForm settings={data?.settings} onSaved={load} />
+
+      <NexupiSettingsForm settings={data?.nexupi} webhookUrl={data?.webhookUrl} onSaved={load} />
 
       {error && <div className="rounded-2xl bg-destructive/10 px-3 py-2 text-[11px] text-destructive">{error}</div>}
 

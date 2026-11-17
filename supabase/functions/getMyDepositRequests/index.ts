@@ -1,5 +1,6 @@
 import { getUserFromRequest, serviceClient } from '../_shared/supabase.ts';
 import { loadUpiSettings } from '../_shared/deposits.ts';
+import { loadNexupiSettings, loadPaymentMode } from '../_shared/nexupi.ts';
 
 // The signed-in player's own deposit requests, each with the admin decision
 // (if any) so the status and reason are always visible in the app.
@@ -10,6 +11,8 @@ export default async function handler(req: Request): Promise<Response> {
 
     const supa = serviceClient();
     const settings = await loadUpiSettings(supa);
+    const mode = await loadPaymentMode(supa);
+    const nexupi = await loadNexupiSettings(supa);
 
     const { data: requests, error } = await supa
       .from('deposit_requests')
@@ -34,7 +37,12 @@ export default async function handler(req: Request): Promise<Response> {
     for (const d of decisions) byRequest[d.request_id] = d;
 
     return Response.json({
-      settings,
+      settings: {
+        ...settings,
+        mode,
+        nexupiReady: nexupi.ready,
+        paymentsLive: mode === 'automatic' ? nexupi.ready : settings.active,
+      },
       requests: (requests || []).map((r: any) => ({
         ...r,
         decision: byRequest[r.id] || null,

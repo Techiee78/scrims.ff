@@ -1,5 +1,6 @@
 import { getAdminFromRequest, serviceClient } from '../_shared/supabase.ts';
 import { loadUpiSettings, mapDepositError, UPI_ID_RE, UPI_KEY } from '../_shared/deposits.ts';
+import { loadNexupiSettings, loadPaymentMode, MODE_KEY, NEXUPI_KEY } from '../_shared/nexupi.ts';
 
 // Admin side of the manual UPI deposits.
 //   { action: 'list' }                          -> queue + decided history + UPI settings
@@ -24,10 +25,13 @@ export default async function handler(req: Request): Promise<Response> {
 
     if (action === 'list') {
       const settings = await loadUpiSettings(supa);
+      const mode = await loadPaymentMode(supa);
+      const nexupi = await loadNexupiSettings(supa);
+      const webhookUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/nexupiWebhook`;
 
       const { data: pending, error: pendingError } = await supa
         .from('deposit_requests')
-        .select('id, user_id, user_email, coins, amount_inr, reference, payer_note, status, created_at')
+        .select('id, user_id, user_email, coins, amount_inr, reference, payer_note, provider, status, created_at')
         .eq('status', 'pending')
         .order('created_at', { ascending: true })
         .limit(200);
@@ -35,7 +39,7 @@ export default async function handler(req: Request): Promise<Response> {
 
       const { data: decided, error: decidedError } = await supa
         .from('deposit_requests')
-        .select('id, user_id, user_email, coins, amount_inr, reference, status, created_at')
+        .select('id, user_id, user_email, coins, amount_inr, reference, provider, status, created_at')
         .neq('status', 'pending')
         .order('created_at', { ascending: false })
         .limit(40);
@@ -72,7 +76,14 @@ export default async function handler(req: Request): Promise<Response> {
       });
 
       return Response.json({
-        settings,
+        settings: { ...settings, mode, nexupiReady: nexupi.ready },
+        nexupi: {
+          tokenSet: nexupi.token !== '',
+          createUrl: nexupi.createUrl,
+          statusUrl: nexupi.statusUrl,
+          ready: nexupi.ready,
+        },
+        webhookUrl,
         pending: (pending || []).map(decorate),
         decided: (decided || []).map(decorate),
       });
@@ -137,6 +148,81 @@ export default async function handler(req: Request): Promise<Response> {
       });
 
       return Response.json({ settings: { upiId, payeeName, active: active && upiId !== '' } });
+    }
+
+    if (action === 'save_mode') {
+      const mode = body?.mode === 'automatic' ? 'automatic' : body?.mode === 'manual' ? 'manual' : '';
+      if (mode === '') {
+        return Response.json({ error: 'Choose Manual or Automatic.' }, { status: 400 });
+      }
+      if (mode === 'automatic') {
+        const nexupi = await loadNexupiSettings(supa);
+        if (!nexupi.ready) {
+          return Response.json(
+            { error: 'Add your NexUPI API token and both endpoint URLs before switching to Automatic.' },
+            { status: 400 },
+          );
+        }
+      }
+
+      const { error } = await supa
+        .from('app_settings')
+        .upsert({ key: MODE_KEY, value: { mode } }, { onConflict: 'key' });
+      if (error) return Response.json({ error: error.message }, { status: 500 });
+
+      await supa.from('admin_audit_log').insert({
+        actor_id: admin.id,
+        actor_email: admin.email,
+        action: 'settings.update',
+        entity: 'app_settings',
+        details: { key: MODE_KEY, mode },
+      });
+
+      return Response.json({ mode });
+    }
+
+    if (action === 'save_nexupi') {
+      const existing = await loadNexupiSettings(supa);
+      const typedToken = String(body?.token || '').trim();
+      const token = typedToken || existing.token;
+      const createUrl = String(body?.create_url || '').trim();
+      const statusUrl = String(body?.status_url || '').trim();
+
+      for (const [label, url] of [
+        ['Create order URL', createUrl],
+        ['Check order status URL', statusUrl],
+      ]) {
+        if (url !== '' && !/^https:\/\/[^\s]+$/i.test(url)) {
+          return Response.json({ error: `${label} must be a full https:// link.` }, { status: 400 });
+        }
+      }
+
+      const ready = token !== '' && createUrl !== '' && statusUrl !== '';
+
+      const { error } = await supa
+        .from('app_settings')
+        .upsert(
+          { key: NEXUPI_KEY, value: { token, create_url: createUrl, status_url: statusUrl } },
+          { onConflict: 'key' },
+        );
+      if (error) return Response.json({ error: error.message }, { status: 500 });
+
+      await supa.from('admin_audit_log').insert({
+        actor_id: admin.id,
+        actor_email: admin.email,
+        action: 'settings.update',
+        entity: 'app_settings',
+        details: {
+          key: NEXUPI_KEY,
+          token_set: token !== '',
+          create_url: createUrl,
+          status_url: statusUrl,
+        },
+      });
+
+      return Response.json({
+        nexupi: { tokenSet: token !== '', createUrl, statusUrl, ready },
+      });
     }
 
     return Response.json({ error: 'Unknown action' }, { status: 400 });

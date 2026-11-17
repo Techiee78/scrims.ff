@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowUpRight, CheckCircle2, Copy, Loader2, QrCode } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, CheckCircle2, Copy, Loader2, QrCode, Zap } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Image } from '@/components/ui/image';
 import { useToast } from '@/components/ui/use-toast';
 import { coins as formatCoins } from '@/lib/format';
 import { COINS_MAX, COINS_MIN, buildUpiLink, submitDepositRequest, upiQrUrl } from '@/lib/deposits';
 import DepositStatusPill from '@/components/wallet/DepositStatusPill';
+import AutoPayStep from '@/components/wallet/AutoPayStep';
 
 const PRESETS = [100, 500, 1500];
 
@@ -21,7 +22,11 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
 
   const chosen = custom.trim() === '' ? preset : Number(custom);
   const amountOk = Number.isInteger(chosen) && chosen >= COINS_MIN && chosen <= COINS_MAX;
+  // The admin chooses one mode for the whole app: manual UPI QR + approval, or
+  // the automatic NexUPI page where the payment confirms itself.
+  const auto = settings?.mode === 'automatic';
   const upiId = settings?.upiId || '';
+  const ready = auto ? Boolean(settings?.nexupiReady) : Boolean(upiId);
   const link = upiId ? buildUpiLink({ upiId, payeeName: settings?.payeeName, amount: chosen }) : '';
 
   const handleOpen = (next) => {
@@ -71,7 +76,10 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
           <DialogTitle className="font-display text-base">Add coins</DialogTitle>
           <DialogDescription className="text-[11px]">
             {step === 'amount' && '₹1 = 1 coin. Pick an amount to pay.'}
-            {step === 'pay' && 'Pay on the UPI QR, then send the reference for verification.'}
+            {step === 'pay' &&
+              (auto
+                ? 'Pay on the UPI page — coins are added the moment it confirms.'
+                : 'Pay on the UPI QR, then send the reference for verification.')}
             {step === 'done' && 'Sent. The admin will verify your payment.'}
           </DialogDescription>
         </DialogHeader>
@@ -121,7 +129,7 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
                 Enter a whole number between {COINS_MIN} and {COINS_MAX} coins.
               </p>
             )}
-            {!upiId && (
+            {!ready && (
               <p className="rounded-2xl border border-amber-300/40 bg-amber-300/10 px-3 py-2 text-[11px] text-amber-200">
                 Coin payments are not set up yet. Please try again later.
               </p>
@@ -129,17 +137,25 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
 
             <button
               type="button"
-              disabled={!amountOk || !upiId}
+              disabled={!amountOk || !ready}
               onClick={() => setStep('pay')}
               className="flex h-10 w-full items-center justify-center gap-2 rounded-full bg-primary font-display text-xs font-semibold text-primary-foreground disabled:opacity-40"
             >
-              <QrCode className="h-4 w-4" />
-              Pay ₹{formatCoins(Number.isFinite(chosen) ? chosen : 0)} · show UPI QR
+              {auto ? <Zap className="h-4 w-4" /> : <QrCode className="h-4 w-4" />}
+              Pay ₹{formatCoins(Number.isFinite(chosen) ? chosen : 0)}
+              {auto ? ' · instant UPI' : ' · show UPI QR'}
             </button>
           </div>
         )}
 
-        {step === 'pay' && (
+        {step === 'pay' && (auto ? (
+          <AutoPayStep
+            coins={chosen}
+            onPaid={onSubmitted}
+            onDone={() => handleOpen(false)}
+            onBack={() => setStep('amount')}
+          />
+        ) : (
           <div className="space-y-3">
             <div className="glass-soft flex flex-col items-center gap-2 rounded-[22px] p-4">
               <Image
@@ -217,7 +233,7 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
               Change amount
             </button>
           </div>
-        )}
+        ))}
 
         {step === 'done' && (
           <div className="space-y-3 text-center">

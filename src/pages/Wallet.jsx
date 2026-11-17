@@ -106,11 +106,11 @@ export default function Wallet() {
             <button
               type="button"
               onClick={() => setAddOpen(true)}
-              disabled={!settings?.active}
+              disabled={!settings?.paymentsLive}
               className="flex h-11 items-center justify-center gap-2 rounded-full bg-primary font-display text-xs font-semibold text-primary-foreground shadow transition-colors hover:bg-primary/90 disabled:opacity-40"
             >
               <Plus className="h-4 w-4" />
-              {settings?.active ? 'Add coins' : 'Payments not set up'}
+              {settings?.paymentsLive ? 'Add coins' : 'Payments not set up'}
             </button>
             <button
               type="button"
