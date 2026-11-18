@@ -2,7 +2,7 @@
 // player submits a request -> admin verifies the bank payment -> approve/reject.
 // Used by createDepositRequest, getMyDepositRequests and manageDeposits.
 
-export const COINS_MIN = 10;
+export const COINS_MIN = 1;
 export const COINS_MAX = 10000;
 export const MAX_PENDING = 3;
 export const UPI_KEY = 'upi_payment';
