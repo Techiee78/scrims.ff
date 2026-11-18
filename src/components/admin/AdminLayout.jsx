@@ -19,7 +19,7 @@ export default function AdminLayout() {
 
   if (!user?.role) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-xs text-muted-foreground">
+      <div className="flex min-h-[100dvh] items-center justify-center text-xs text-muted-foreground">
         Loading…
       </div>
     );
@@ -27,7 +27,7 @@ export default function AdminLayout() {
 
   if (user?.role !== 'admin') {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 p-6 text-center">
+      <div className="flex min-h-[100dvh] flex-col items-center justify-center gap-3 p-6 text-center">
         <p className="font-display text-lg font-semibold">Admins only</p>
         <p className="max-w-xs text-xs text-muted-foreground">
           You don't have access to the admin panel.
@@ -40,9 +40,12 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen pb-16">
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+    <div className="min-h-[100dvh] pb-16" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 4rem)' }}>
+      <header
+        className="sticky top-0 z-30 border-b border-white/10 bg-background/80 backdrop-blur-xl"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-3">
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/20 text-primary">
               <Trophy className="h-4 w-4" />

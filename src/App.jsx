@@ -54,7 +54,7 @@ const AuthenticatedApp = () => {
   // to leave a blank screen; show the failure with a way out instead.
   if (authError) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4">
+      <div className="flex min-h-[100dvh] items-center justify-center px-4">
         <StateScreen
           variant="error"
           title="Couldn't load your account"

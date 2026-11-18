@@ -58,7 +58,7 @@ export default function TeammateFormDialog({ open, onOpenChange, teammate, onSav
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-strong rounded-[28px] border-white/10 sm:max-w-md">
+      <DialogContent className="glass-strong max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] overflow-y-auto rounded-[28px] border-white/10 sm:max-w-md">
         <DialogHeader className="text-left">
           <DialogTitle className="font-display text-lg">
             {teammate ? 'Edit teammate' : 'Add teammate'}

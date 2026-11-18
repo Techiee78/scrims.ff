@@ -71,7 +71,7 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
 
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
-      <DialogContent className="glass-strong max-h-[92vh] w-[calc(100%-1.5rem)] max-w-md overflow-y-auto rounded-[26px] border-white/10 p-5">
+      <DialogContent className="glass-strong max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-md overflow-y-auto rounded-[26px] border-white/10 p-5">
         <DialogHeader className="text-left">
           <DialogTitle className="font-display text-base">Add coins</DialogTitle>
           <DialogDescription className="text-[11px]">

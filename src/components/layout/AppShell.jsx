@@ -15,7 +15,7 @@ export default function AppShell() {
   const outlet = useOutlet();
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-[100dvh]">
       <AppBackground />
       <TopBar user={user} onProfile={() => navigate('/profile')} />
       <main className="mx-auto w-full max-w-md overflow-x-hidden px-4 pb-32 pt-24 md:max-w-2xl">

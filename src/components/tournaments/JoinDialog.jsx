@@ -133,7 +133,7 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-strong max-h-[90vh] overflow-y-auto rounded-[28px] border-white/10 sm:max-w-md">
+      <DialogContent className="glass-strong max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] overflow-y-auto rounded-[28px] border-white/10 sm:max-w-md">
         <DialogHeader className="text-left">
           <DialogTitle className="font-display text-lg">{tournament.title}</DialogTitle>
           <DialogDescription className="text-xs">

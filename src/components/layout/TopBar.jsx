@@ -13,7 +13,7 @@ export default function TopBar({ user, onProfile }) {
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
             <Flame className="h-3.5 w-3.5" />
           </span>
-          <span className="font-display text-sm font-semibold tracking-tight">
+          <span className="hidden font-display text-sm font-semibold tracking-tight min-[400px]:inline">
             Scrims<span className="text-primary">.ff</span>
           </span>
         </div>

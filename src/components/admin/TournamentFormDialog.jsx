@@ -124,7 +124,7 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-strong max-h-[90vh] overflow-y-auto rounded-[28px] border-white/10 sm:max-w-lg">
+      <DialogContent className="glass-strong max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] overflow-y-auto rounded-[28px] border-white/10 sm:max-w-lg">
         <DialogHeader className="text-left">
           <DialogTitle className="font-display text-lg">
             {tournament ? 'Edit tournament' : 'New tournament'}
