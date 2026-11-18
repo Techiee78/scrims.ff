@@ -1,7 +1,8 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowDownToLine, ClipboardList, IndianRupee, LayoutDashboard, Trophy, Users } from 'lucide-react';
+import { ArrowDownToLine, ClipboardList, IndianRupee, LayoutDashboard, Trophy, Users } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
+import ScreenHeader from '@/components/layout/ScreenHeader';
 import { cn } from '@/lib/utils';
 
 const items = [
@@ -45,24 +46,12 @@ export default function AdminLayout() {
         className="sticky top-0 z-30 border-b border-white/10 bg-background/80 backdrop-blur-xl"
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-3">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/20 text-primary">
-              <Trophy className="h-4 w-4" />
-            </span>
-            <div>
-              <p className="font-display text-sm font-semibold leading-none">Scrims.ff Admin</p>
-              <p className="text-[10px] text-muted-foreground">Tournament control</p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/')}
-            className="rounded-full text-xs"
-          >
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Back to app
-          </Button>
+        <div className="mx-auto max-w-5xl px-4 py-3">
+          <ScreenHeader
+            icon={Trophy}
+            title="Scrims.ff Admin"
+            subtitle="Tournament control"
+          />
         </div>
         <nav className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 pb-2 no-scrollbar">
           {items.map(({ to, label, icon: Icon, end }) => (

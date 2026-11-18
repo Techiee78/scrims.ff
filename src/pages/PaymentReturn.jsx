@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
+import ScreenHeader from '@/components/layout/ScreenHeader';
 
 /**
  * Where the UPI payment page lands when it finishes (success, failure or
@@ -26,22 +27,29 @@ export default function PaymentReturn() {
   }, []);
 
   return (
-    <div className="flex min-h-full items-center justify-center bg-background px-4 py-10">
-      <div className="glass-strong w-full max-w-sm rounded-[26px] p-6 text-center">
-        <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-300" />
-        <p className="mt-3 font-display text-sm font-semibold">Checking your payment…</p>
-        <p className="mt-1 text-[11px] text-muted-foreground">
-          Your coins appear in the wallet the moment the payment confirms.
-        </p>
-        {standalone && (
-          <button
-            type="button"
-            onClick={() => navigate('/wallet', { replace: true })}
-            className="mt-4 h-10 w-full rounded-full bg-primary font-display text-xs font-semibold text-primary-foreground"
-          >
-            Back to wallet
-          </button>
-        )}
+    <div
+      className="min-h-full bg-background px-4 pb-10"
+      style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.75rem)' }}
+    >
+      <div className="mx-auto w-full max-w-md">
+        <ScreenHeader title="Payment" subtitle="Coin top-up" />
+
+        <div className="glass-strong mt-4 rounded-[26px] p-6 text-center">
+          <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-300" />
+          <p className="mt-3 font-display text-sm font-semibold">Checking your payment…</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Your coins appear in the wallet the moment the payment confirms.
+          </p>
+          {standalone && (
+            <button
+              type="button"
+              onClick={() => navigate('/wallet', { replace: true })}
+              className="mt-4 h-11 w-full rounded-full bg-primary font-display text-sm font-semibold text-primary-foreground"
+            >
+              Back to wallet
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

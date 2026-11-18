@@ -7,12 +7,23 @@ import { coins as formatCoins } from '@/lib/format';
 import { COINS_MAX, COINS_MIN, buildUpiLink, submitDepositRequest, upiQrUrl } from '@/lib/deposits';
 import DepositStatusPill from '@/components/wallet/DepositStatusPill';
 import AutoPayStep from '@/components/wallet/AutoPayStep';
+import FormSelect from '@/components/admin/FormSelect';
 
 const PRESETS = [100, 500, 1500];
 
+// Preset amounts plus a custom entry, in the same glass select the admin forms
+// use instead of a button grid followed by a bare number field.
+const AMOUNT_OPTIONS = [
+  ...PRESETS.map((value) => ({
+    value: String(value),
+    label: `${formatCoins(value)} coins · ₹${formatCoins(value)}`,
+  })),
+  { value: 'custom', label: 'Other amount' },
+];
+
 export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitted }) {
   const [step, setStep] = useState('amount');
-  const [preset, setPreset] = useState(500);
+  const [choice, setChoice] = useState('500');
   const [custom, setCustom] = useState('');
   const [reference, setReference] = useState('');
   const [note, setNote] = useState('');
@@ -20,7 +31,7 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
   const [error, setError] = useState('');
   const { toast } = useToast();
 
-  const chosen = custom.trim() === '' ? preset : Number(custom);
+  const chosen = choice === 'custom' ? Number(custom) : Number(choice);
   const amountOk = Number.isInteger(chosen) && chosen >= COINS_MIN && chosen <= COINS_MAX;
   // The admin chooses one mode for the whole app: manual UPI QR + approval, or
   // the automatic NexUPI page where the payment confirms itself.
@@ -36,7 +47,7 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
       setNote('');
       setError('');
       setCustom('');
-      setPreset(500);
+      setChoice('500');
     }
     onOpenChange(next);
   };
@@ -86,55 +97,48 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
 
         {step === 'amount' && (
           <div className="space-y-3">
-            <div className="grid grid-cols-3 gap-2">
-              {PRESETS.map((value) => {
-                const active = custom.trim() === '' && preset === value;
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => {
-                      setPreset(value);
-                      setCustom('');
-                    }}
-                    className={`glass-soft min-h-[44px] rounded-2xl px-2 py-2.5 text-center transition-colors ${
-                      active ? 'border-primary/60 ring-1 ring-primary/60' : ''
-                    }`}
-                  >
-                    <span className="block font-display text-sm font-semibold">{formatCoins(value)}</span>
-                    <span className="block text-[11px] uppercase tracking-wide text-muted-foreground">coins</span>
-                  </button>
-                );
-              })}
-            </div>
-
             <label className="block">
-              <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                Or enter coins ({COINS_MIN}–{COINS_MAX})
-              </span>
-              <input
-                type="number"
-                inputMode="numeric"
-                min={COINS_MIN}
-                max={COINS_MAX}
-                value={custom}
-                onChange={(e) => setCustom(e.target.value)}
-                placeholder="e.g. 250"
-                className="h-10 w-full rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm outline-none focus:border-primary/60"
+              <span className="mb-1 block text-xs tracking-tight text-muted-foreground">Amount</span>
+              <FormSelect
+                value={choice}
+                onChange={(value) => {
+                  setChoice(value);
+                  if (value !== 'custom') setCustom('');
+                }}
+                options={AMOUNT_OPTIONS}
+                className="glass-soft h-11 w-full rounded-2xl border-white/10 px-3 text-sm"
               />
             </label>
 
-            <p className="text-[10px] text-muted-foreground">
+            {choice === 'custom' && (
+              <label className="block">
+                <span className="mb-1 block text-xs tracking-tight text-muted-foreground">
+                  Coins ({COINS_MIN}–{COINS_MAX})
+                </span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={COINS_MIN}
+                  max={COINS_MAX}
+                  value={custom}
+                  onChange={(e) => setCustom(e.target.value)}
+                  placeholder="e.g. 250"
+                  className="h-11 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm outline-none focus:border-primary/60"
+                />
+              </label>
+            )}
+
+            <p className="text-xs text-muted-foreground">
               Daily limit: ₹5,000 per day (₹1 = 1 coin).
             </p>
 
-            {!amountOk && (
-              <p className="text-[10px] text-destructive">
+            {!amountOk && (choice !== 'custom' || custom.trim() !== '') && (
+              <p className="text-xs text-destructive">
                 Enter a whole number between {COINS_MIN} and {COINS_MAX} coins.
               </p>
             )}
             {!ready && (
-              <p className="rounded-2xl border border-amber-300/40 bg-amber-300/10 px-3 py-2 text-[11px] text-amber-200">
+              <p className="rounded-2xl border border-amber-300/40 bg-amber-300/10 px-3 py-2 text-sm text-amber-200">
                 Coin payments are not set up yet. Please try again later.
               </p>
             )}
@@ -143,7 +147,7 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
               type="button"
               disabled={!amountOk || !ready}
               onClick={() => setStep('pay')}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-full bg-primary font-display text-xs font-semibold text-primary-foreground disabled:opacity-40"
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary font-display text-sm font-semibold text-primary-foreground disabled:opacity-40"
             >
               {auto ? <Zap className="h-4 w-4" /> : <QrCode className="h-4 w-4" />}
               Pay ₹{formatCoins(Number.isFinite(chosen) ? chosen : 0)}
@@ -171,14 +175,14 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
               <button
                 type="button"
                 onClick={copyUpi}
-                className="glass-soft flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-medium"
+                className="glass-soft flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium"
               >
                 <Copy className="h-3 w-3" />
                 {upiId}
               </button>
               <a
                 href={link}
-                className="flex items-center gap-1 text-[10px] font-medium text-primary hover:underline"
+                className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
               >
                 Open in UPI app
                 <ArrowUpRight className="h-3 w-3" />
@@ -186,7 +190,7 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
             </div>
 
             <label className="block">
-              <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              <span className="mb-1 block text-xs tracking-tight text-muted-foreground">
                 UPI reference / UTR
               </span>
               <input
@@ -196,12 +200,12 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
                 value={reference}
                 onChange={(e) => setReference(e.target.value.replace(/\D/g, '').slice(0, 12))}
                 placeholder="12-digit reference from your UPI app"
-                className="h-10 w-full rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm uppercase outline-none focus:border-primary/60"
+                className="h-11 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm uppercase outline-none focus:border-primary/60"
               />
             </label>
 
             <label className="block">
-              <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              <span className="mb-1 block text-xs tracking-tight text-muted-foreground">
                 Note for admin (optional)
               </span>
               <input
@@ -209,17 +213,17 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="e.g. paid from 98xxxxxx12"
-                className="h-10 w-full rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm outline-none focus:border-primary/60"
+                className="h-11 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm outline-none focus:border-primary/60"
               />
             </label>
 
-            {error && <p className="text-[11px] text-destructive">{error}</p>}
+            {error && <p className="text-sm text-destructive">{error}</p>}
 
             <button
               type="button"
               onClick={send}
               disabled={busy}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-full bg-primary font-display text-xs font-semibold text-primary-foreground disabled:opacity-50"
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary font-display text-sm font-semibold text-primary-foreground disabled:opacity-50"
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
               I have paid — send for verification
@@ -231,7 +235,7 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
                 setStep('amount');
                 setError('');
               }}
-              className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground"
+              className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground"
             >
               <ArrowLeft className="h-3 w-3" />
               Change amount
@@ -244,14 +248,14 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
             <div className="flex justify-center">
               <DepositStatusPill status="pending" />
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {formatCoins(chosen)} coins will be added to your wallet once the admin verifies your ₹
               {formatCoins(chosen)} payment. You can track it under “Deposits”.
             </p>
             <button
               type="button"
               onClick={() => handleOpen(false)}
-              className="h-10 w-full rounded-full bg-primary font-display text-xs font-semibold text-primary-foreground"
+              className="h-11 w-full rounded-full bg-primary font-display text-sm font-semibold text-primary-foreground"
             >
               Done
             </button>

@@ -107,7 +107,7 @@ export default function TransactionHistory({ transactions = [], deposits = [], w
       </div>
 
       {visible.length === 0 ? (
-        <div className="glass rounded-[26px] px-6 py-8 text-center text-xs text-muted-foreground">
+        <div className="glass rounded-[26px] px-6 py-8 text-center text-sm text-muted-foreground">
           {items.length === 0
             ? 'No transactions yet. Join a tournament to get started.'
             : 'Nothing in this filter yet.'}

@@ -7,6 +7,7 @@ import AccountActions from '@/components/profile/AccountActions';
 import SupportCard from '@/components/profile/SupportCard';
 import ProfileAddCoins from '@/components/profile/ProfileAddCoins';
 import PullToRefresh from '@/components/common/PullToRefresh';
+import ScreenHeader from '@/components/layout/ScreenHeader';
 
 export default function Profile() {
   const { user, refreshUser } = useAuth();
@@ -14,12 +15,10 @@ export default function Profile() {
   return (
     <PullToRefresh onRefresh={refreshUser}>
     <div className="space-y-5">
-      <div className="px-1">
-        <h1 className="font-display text-2xl font-semibold">Profile</h1>
-        <p className="text-xs text-muted-foreground">
-          Your player details, saved teammates and record.
-        </p>
-      </div>
+      <ScreenHeader
+        title="Profile"
+        subtitle="Your player details, saved teammates and record."
+      />
 
       <section className="glass rounded-[26px] p-4">
         <div className="mb-3 flex justify-start">
@@ -33,7 +32,7 @@ export default function Profile() {
             <p className="truncate font-display text-base font-semibold">
               {user?.full_name || 'Player'}
             </p>
-            <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
+            <p className="truncate text-sm text-muted-foreground">{user?.email}</p>
           </div>
         </div>
         <PlayerStats user={user} />

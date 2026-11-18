@@ -14,7 +14,9 @@ import { useToast } from '@/components/ui/use-toast';
 import { slotCapacity } from '@/lib/slots';
 import { withAuth } from '@/lib/authToken';
 import { isoToIstInput, istInputToIso } from '@/lib/format';
+import { CalendarClock } from 'lucide-react';
 import FormSelect from '@/components/admin/FormSelect';
+import InputShell from '@/components/common/InputShell';
 
 const blank = {
   title: '',
@@ -38,7 +40,7 @@ const blank = {
 function Field({ label, children }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+      <Label className="text-xs uppercase tracking-tight text-muted-foreground">
         {label}
       </Label>
       {children}
@@ -180,18 +182,22 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
           </Field>
 
           <Field label="Match time (IST)">
-            <Input
-              type="datetime-local"
-              value={form.match_time}
-              onChange={(event) => set('match_time', event.target.value)}
-              className="glass-soft h-11 rounded-2xl border-white/10"
-            />
+            <InputShell>
+              <CalendarClock className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <Input
+                type="datetime-local"
+                aria-label="Match time in IST"
+                value={form.match_time}
+                onChange={(event) => set('match_time', event.target.value)}
+                className="h-full w-full border-0 bg-transparent px-0 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
+            </InputShell>
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
             <Field label="Entry fee">
               <Input
-                type="number"
+                type="number" inputMode="numeric" min={0}
                 value={form.entry_fee}
                 onChange={(event) => set('entry_fee', event.target.value)}
                 className="glass-soft h-11 rounded-2xl border-white/10"
@@ -199,7 +205,7 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
             </Field>
             <Field label="Prize pool (total)">
               <Input
-                type="number"
+                type="number" inputMode="numeric" min={0}
                 value={form.prize_pool}
                 onChange={(event) => set('prize_pool', event.target.value)}
                 className="glass-soft h-11 rounded-2xl border-white/10"
@@ -211,7 +217,7 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
             <div className="grid grid-cols-3 gap-3">
               <Field label="1st prize">
                 <Input
-                  type="number"
+                  type="number" inputMode="numeric" min={0}
                   value={form.prize_1st}
                   onChange={(event) => set('prize_1st', event.target.value)}
                   className="glass-soft h-11 rounded-2xl border-white/10"
@@ -219,7 +225,7 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
               </Field>
               <Field label="2nd prize">
                 <Input
-                  type="number"
+                  type="number" inputMode="numeric" min={0}
                   value={form.prize_2nd}
                   onChange={(event) => set('prize_2nd', event.target.value)}
                   className="glass-soft h-11 rounded-2xl border-white/10"
@@ -227,7 +233,7 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
               </Field>
               <Field label="3rd prize">
                 <Input
-                  type="number"
+                  type="number" inputMode="numeric" min={0}
                   value={form.prize_3rd}
                   onChange={(event) => set('prize_3rd', event.target.value)}
                   className="glass-soft h-11 rounded-2xl border-white/10"
@@ -235,7 +241,7 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
               </Field>
             </div>
             <p
-              className={`text-[10px] ${splitOver ? 'text-destructive' : 'text-muted-foreground'}`}
+              className={`text-xs ${splitOver ? 'text-destructive' : 'text-muted-foreground'}`}
             >
               {splitOver
                 ? `1st + 2nd + 3rd (${splitTotal}) is more than the ${pool} coin prize pool.`
@@ -245,7 +251,7 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
 
           <Field label="Per kill (paid from prize pool)">
             <Input
-              type="number"
+              type="number" inputMode="numeric" min={0}
               value={form.per_kill}
               onChange={(event) => set('per_kill', event.target.value)}
               className="glass-soft h-11 rounded-2xl border-white/10"
@@ -289,7 +295,7 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
                 ]}
                 className={triggerClass}
               />
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Live is automatic once the match time is reached.
               </p>
             </Field>

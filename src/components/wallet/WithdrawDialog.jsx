@@ -4,12 +4,22 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { coins as formatCoins } from '@/lib/format';
 import { WITHDRAW_MAX, WITHDRAW_MIN, submitWithdrawal } from '@/lib/withdrawals';
 import DepositStatusPill from '@/components/wallet/DepositStatusPill';
+import FormSelect from '@/components/admin/FormSelect';
 
 const PRESETS = [100, 500, 1000];
 
+// Same glass select as the deposit dialog, so both amounts are chosen the same way.
+const AMOUNT_OPTIONS = [
+  ...PRESETS.map((value) => ({
+    value: String(value),
+    label: `${formatCoins(value)} coins · ₹${formatCoins(value)}`,
+  })),
+  { value: 'custom', label: 'Other amount' },
+];
+
 export default function WithdrawDialog({ open, onOpenChange, available = 0, onSubmitted }) {
   const [step, setStep] = useState('form');
-  const [preset, setPreset] = useState(100);
+  const [choice, setChoice] = useState('100');
   const [custom, setCustom] = useState('');
   const [upiId, setUpiId] = useState('');
   const [accountName, setAccountName] = useState('');
@@ -17,7 +27,7 @@ export default function WithdrawDialog({ open, onOpenChange, available = 0, onSu
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  const chosen = custom.trim() === '' ? preset : Number(custom);
+  const chosen = choice === 'custom' ? Number(custom) : Number(choice);
   const amountOk = Number.isInteger(chosen) && chosen >= WITHDRAW_MIN && chosen <= WITHDRAW_MAX;
   const withinBalance = amountOk && chosen <= available;
 
@@ -26,7 +36,7 @@ export default function WithdrawDialog({ open, onOpenChange, available = 0, onSu
       setStep('form');
       setError('');
       setCustom('');
-      setPreset(100);
+      setChoice('100');
       setNote('');
     }
     onOpenChange(next);
@@ -76,64 +86,60 @@ export default function WithdrawDialog({ open, onOpenChange, available = 0, onSu
 
         {step === 'form' && (
           <div className="space-y-3">
-            <div className="flex items-center justify-between rounded-2xl bg-white/[0.03] px-3 py-2">
-              <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Winnings withdrawable</span>
+            <div className="flex items-center justify-between gap-2 rounded-2xl bg-white/[0.03] px-3 py-2">
+              <span className="text-xs tracking-tight text-muted-foreground">Winnings withdrawable</span>
               <span className="font-display text-sm font-semibold">{formatCoins(available)} coins</span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
-              {PRESETS.map((value) => {
-                const active = custom.trim() === '' && preset === value;
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => {
-                      setPreset(value);
-                      setCustom('');
-                    }}
-                    className={`glass-soft min-h-[44px] rounded-2xl px-2 py-2.5 text-center transition-colors ${
-                      active ? 'border-primary/60 ring-1 ring-primary/60' : ''
-                    }`}
-                  >
-                    <span className="block font-display text-sm font-semibold">{formatCoins(value)}</span>
-                    <span className="block text-[11px] uppercase tracking-wide text-muted-foreground">coins</span>
-                  </button>
-                );
-              })}
-            </div>
-
             <label className="block">
-              <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                Or enter coins ({WITHDRAW_MIN}–{WITHDRAW_MAX})
-              </span>
-              <input
-                type="number"
-                inputMode="numeric"
-                min={WITHDRAW_MIN}
-                max={WITHDRAW_MAX}
-                value={custom}
-                onChange={(e) => setCustom(e.target.value)}
-                placeholder="e.g. 250"
-                className="h-10 w-full rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm outline-none focus:border-primary/60"
+              <span className="mb-1 block text-xs tracking-tight text-muted-foreground">Amount</span>
+              <FormSelect
+                value={choice}
+                onChange={(value) => {
+                  setChoice(value);
+                  if (value !== 'custom') setCustom('');
+                }}
+                options={AMOUNT_OPTIONS}
+                className="glass-soft h-11 w-full rounded-2xl border-white/10 px-3 text-sm"
               />
             </label>
 
+            {choice === 'custom' && (
+              <label className="block">
+                <span className="mb-1 block text-xs tracking-tight text-muted-foreground">
+                  Coins ({WITHDRAW_MIN}–{WITHDRAW_MAX})
+                </span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={WITHDRAW_MIN}
+                  max={WITHDRAW_MAX}
+                  value={custom}
+                  onChange={(e) => setCustom(e.target.value)}
+                  placeholder="e.g. 250"
+                  className="h-11 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm outline-none focus:border-primary/60"
+                />
+              </label>
+            )}
+
             <label className="block">
-              <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              <span className="mb-1 block text-xs tracking-tight text-muted-foreground">
                 Your UPI ID
               </span>
               <input
                 type="text"
+                inputMode="email"
+                autoCapitalize="none"
+                autoCorrect="off"
                 value={upiId}
                 onChange={(e) => setUpiId(e.target.value)}
                 placeholder="yourname@okaxis"
-                className="h-10 w-full rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm outline-none focus:border-primary/60"
+                className="h-11 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm outline-none focus:border-primary/60"
               />
             </label>
 
             <label className="block">
-              <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              <span className="mb-1 block text-xs tracking-tight text-muted-foreground">
                 Name on the account
               </span>
               <input
@@ -141,12 +147,12 @@ export default function WithdrawDialog({ open, onOpenChange, available = 0, onSu
                 value={accountName}
                 onChange={(e) => setAccountName(e.target.value)}
                 placeholder="Full name as per UPI"
-                className="h-10 w-full rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm outline-none focus:border-primary/60"
+                className="h-11 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm outline-none focus:border-primary/60"
               />
             </label>
 
             <label className="block">
-              <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              <span className="mb-1 block text-xs tracking-tight text-muted-foreground">
                 Note for admin (optional)
               </span>
               <input
@@ -154,27 +160,27 @@ export default function WithdrawDialog({ open, onOpenChange, available = 0, onSu
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="e.g. please send before 6 pm"
-                className="h-10 w-full rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm outline-none focus:border-primary/60"
+                className="h-11 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm outline-none focus:border-primary/60"
               />
             </label>
 
-            {!amountOk && (
-              <p className="text-[10px] text-destructive">
+            {!amountOk && (choice !== 'custom' || custom.trim() !== '') && (
+              <p className="text-xs text-destructive">
                 Enter a whole number between {WITHDRAW_MIN} and {WITHDRAW_MAX} coins.
               </p>
             )}
             {amountOk && !withinBalance && (
-              <p className="text-[10px] text-destructive">
+              <p className="text-xs text-destructive">
                 Only {formatCoins(available)} coins of winnings are withdrawable right now.
               </p>
             )}
-            {error && <p className="text-[11px] text-destructive">{error}</p>}
+            {error && <p className="text-sm text-destructive">{error}</p>}
 
             <button
               type="button"
               onClick={send}
               disabled={busy || !withinBalance}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-full bg-primary font-display text-xs font-semibold text-primary-foreground disabled:opacity-40"
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary font-display text-sm font-semibold text-primary-foreground disabled:opacity-40"
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
               Request ₹{formatCoins(Number.isFinite(chosen) ? chosen : 0)} withdrawal
@@ -187,21 +193,21 @@ export default function WithdrawDialog({ open, onOpenChange, available = 0, onSu
             <div className="flex justify-center">
               <DepositStatusPill status="pending" />
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               The admin will pay ₹{formatCoins(chosen)} to {upiId.trim()} and approve it. Coins are
               deducted only after the payout is approved. You can track it under “Withdrawals”.
             </p>
             <button
               type="button"
               onClick={() => handleOpen(false)}
-              className="h-10 w-full rounded-full bg-primary font-display text-xs font-semibold text-primary-foreground"
+              className="h-11 w-full rounded-full bg-primary font-display text-sm font-semibold text-primary-foreground"
             >
               Done
             </button>
             <button
               type="button"
               onClick={() => setStep('form')}
-              className="flex w-full items-center justify-center gap-1.5 text-[11px] text-muted-foreground"
+              className="flex w-full items-center justify-center gap-1.5 text-sm text-muted-foreground"
             >
               <ArrowLeft className="h-3 w-3" />
               Send another request

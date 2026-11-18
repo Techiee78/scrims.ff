@@ -27,7 +27,7 @@ export default function PlayerStats({ user }) {
 
   return (
     <div className="mt-5">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+      <p className="text-xs font-semibold tracking-tight text-muted-foreground">
         Your record
       </p>
 
@@ -46,7 +46,7 @@ export default function PlayerStats({ user }) {
       </div>
 
       {!loading && matches === 0 && (
-        <p className="glass-soft mt-2 rounded-2xl px-3 py-2.5 text-[11px] text-muted-foreground">
+        <p className="glass-soft mt-2 rounded-2xl px-3 py-2.5 text-sm text-muted-foreground">
           No results yet — your wins and kills show up here after your first match.
         </p>
       )}
@@ -61,8 +61,8 @@ export default function PlayerStats({ user }) {
                 className="glass-soft flex items-center justify-between gap-3 rounded-2xl px-3 py-2"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold">{row.tournament_title}</p>
-                  <p className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
+                  <p className="truncate text-sm font-semibold">{row.tournament_title}</p>
+                  <p className="text-xs tracking-tight text-muted-foreground">
                     {row.mode}
                   </p>
                 </div>
@@ -74,8 +74,8 @@ export default function PlayerStats({ user }) {
                   <span
                     className={
                       won
-                        ? 'rounded-full bg-primary/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-primary'
-                        : 'rounded-full bg-white/5 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground'
+                        ? 'rounded-full bg-primary/20 px-2 py-0.5 text-xs font-bold tracking-tight text-primary'
+                        : 'rounded-full bg-white/5 px-2 py-0.5 text-xs font-bold tracking-tight text-muted-foreground'
                     }
                   >
                     {won ? 'Win' : row.placement ? `#${row.placement}` : 'Played'}

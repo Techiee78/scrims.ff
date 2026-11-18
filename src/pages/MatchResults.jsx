@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { callFunction } from '@/lib/callFunction';
+import ScreenHeader from '@/components/layout/ScreenHeader';
 import { useAuth } from '@/lib/AuthContext';
 import { withAuth } from '@/lib/authToken';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,6 @@ import { payoutPlan, podiumSplit } from '@/lib/prizes';
 
 export default function MatchResults() {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [tournaments, setTournaments] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -130,20 +129,11 @@ export default function MatchResults() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => (selected ? setSelected(null) : navigate('/admin'))}
-          className="rounded-full"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="font-display text-lg font-semibold">Enter results</h1>
-          <p className="text-[11px] text-muted-foreground">Record kills & placements for a match.</p>
-        </div>
-      </div>
+      <ScreenHeader
+        title="Enter results"
+        subtitle="Record kills & placements for a match."
+        onBack={selected ? () => setSelected(null) : undefined}
+      />
 
       {!selected ? (
         <div className="space-y-2">

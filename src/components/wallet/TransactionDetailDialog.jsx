@@ -14,8 +14,8 @@ function Row({ label, value }) {
   if (value === undefined || value === null || value === '') return null;
   return (
     <div className="flex items-start justify-between gap-4 border-b border-white/5 py-2 last:border-0">
-      <span className="shrink-0 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{label}</span>
-      <span className="min-w-0 break-words text-right text-xs font-medium">{value}</span>
+      <span className="shrink-0 text-xs tracking-tight text-muted-foreground">{label}</span>
+      <span className="min-w-0 break-words text-right text-sm font-medium">{value}</span>
     </div>
   );
 }
@@ -35,7 +35,7 @@ export default function TransactionDetailDialog({ item, onOpenChange }) {
       <DialogContent className="glass-strong max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-md overflow-y-auto rounded-[26px] border-white/10 p-5">
         <DialogHeader className="text-left">
           <DialogTitle className="font-display text-base">{title}</DialogTitle>
-          <DialogDescription className="text-[11px]">
+          <DialogDescription className="text-sm">
             {when(item?.created_at || item?.created_date)}
           </DialogDescription>
         </DialogHeader>
@@ -48,7 +48,7 @@ export default function TransactionDetailDialog({ item, onOpenChange }) {
                   {credit ? '+' : '−'}
                   {formatCoins(amount)}
                 </p>
-                <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">coins</p>
+                <p className="text-xs text-muted-foreground">coins</p>
               </div>
               {(isDeposit || isWithdrawal) && <DepositStatusPill status={item.status} />}
             </div>

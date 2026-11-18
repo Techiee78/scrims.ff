@@ -70,7 +70,7 @@ export default function Wallet() {
       <div className="space-y-5">
         <div className="px-1">
           <h1 className="font-display text-2xl font-semibold">Wallet</h1>
-          <p className="text-xs text-muted-foreground">Entry fees, winnings and payouts, all in one place.</p>
+          <p className="text-sm text-muted-foreground">Entry fees, winnings and payouts, all in one place.</p>
         </div>
 
         {loadError && (
@@ -85,11 +85,11 @@ export default function Wallet() {
 
         <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-gradient-to-br from-primary/25 via-[#0B0817]/80 to-accent/20 p-5 shadow-[0_18px_60px_rgba(3,2,12,0.5)] backdrop-blur-2xl">
           <div className="flex items-center justify-between">
-            <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <span className="flex items-center gap-2 text-xs font-semibold tracking-tight text-muted-foreground">
               <Coins className="h-3.5 w-3.5 text-primary" />
               Balance
             </span>
-            <span className="glass-soft flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+            <span className="glass-soft flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium text-muted-foreground">
               <Trophy className="h-3 w-3 text-primary" />
               {formatCoins(wallet?.total_won)} won
             </span>
@@ -98,7 +98,7 @@ export default function Wallet() {
             {formatCoins(wallet?.balance)}
             <span className="ml-2 text-sm font-medium text-muted-foreground">coins</span>
           </p>
-          <p className="mt-2 text-[11px] text-muted-foreground">
+          <p className="mt-2 text-sm text-muted-foreground">
             Coins are in-app credits used for entry fees.
           </p>
 
@@ -107,7 +107,7 @@ export default function Wallet() {
               type="button"
               onClick={() => setAddOpen(true)}
               disabled={!settings?.paymentsLive}
-              className="flex h-11 items-center justify-center gap-2 rounded-full bg-primary font-display text-xs font-semibold text-primary-foreground shadow transition-colors hover:bg-primary/90 disabled:opacity-40"
+              className="flex h-11 items-center justify-center gap-2 rounded-full bg-primary font-display text-sm font-semibold text-primary-foreground shadow transition-colors hover:bg-primary/90 disabled:opacity-40"
             >
               <Plus className="h-4 w-4" />
               {settings?.paymentsLive ? 'Add coins' : 'Payments not set up'}
@@ -115,13 +115,13 @@ export default function Wallet() {
             <button
               type="button"
               onClick={() => setWithdrawOpen(true)}
-              className="glass-soft flex h-11 items-center justify-center gap-2 rounded-full font-display text-xs font-semibold text-foreground"
+              className="glass-soft flex h-11 items-center justify-center gap-2 rounded-full font-display text-sm font-semibold text-foreground"
             >
               <ArrowDownToLine className="h-4 w-4 text-primary" />
               Withdraw
             </button>
           </div>
-          <p className="mt-2 text-center text-[10px] text-muted-foreground">
+          <p className="mt-2 text-center text-xs text-muted-foreground">
             {formatCoins(withdrawable)} coins withdrawable · winnings only
           </p>
         </section>

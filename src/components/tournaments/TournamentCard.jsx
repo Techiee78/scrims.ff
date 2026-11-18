@@ -19,20 +19,20 @@ function TournamentCard({ tournament, joined, onJoin }) {
   const timeStatus = getTimeStatus(tournament, now);
 
   return (
-    <article className="glass rounded-[26px] p-4">
+    <article className="glass rounded-[26px] p-3.5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="glass-soft inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="glass-soft inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold tracking-tight text-accent">
               {tournament.mode}
             </span>
-            <span className="glass-soft inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <span className="glass-soft inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold tracking-tight text-muted-foreground">
               {tournament.team_type || 'Solo'}
             </span>
             <LiveStatus tournament={tournament} now={now} />
           </div>
-          <h3 className="mt-2 truncate font-display text-base font-semibold">{tournament.title}</h3>
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+          <h3 className="mt-1.5 truncate font-display text-base font-semibold">{tournament.title}</h3>
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
               {tournament.map || 'TBA'}
@@ -44,7 +44,7 @@ function TournamentCard({ tournament, joined, onJoin }) {
           </div>
         </div>
         <div className="shrink-0 text-right">
-          <p className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Prize</p>
+          <p className="text-xs tracking-tight text-muted-foreground">Prize</p>
           <p className="font-display text-lg font-semibold text-primary">{coins(tournament.prize_pool)}</p>
         </div>
       </div>

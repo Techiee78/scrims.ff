@@ -86,7 +86,7 @@ export default function AutoPayStep({ coins, onPaid, onDone, onBack }) {
     return (
       <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin" />
-        <p className="text-[11px]">Opening your payment page…</p>
+        <p className="text-sm">Opening your payment page…</p>
       </div>
     );
   }
@@ -98,13 +98,13 @@ export default function AutoPayStep({ coins, onPaid, onDone, onBack }) {
           <CheckCircle2 className="h-10 w-10 text-emerald-300" />
         </div>
         <p className="font-display text-sm font-semibold">{formatCoins(coins)} coins added</p>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Payment confirmed. Your new balance is updated in the wallet.
         </p>
         <button
           type="button"
           onClick={onDone}
-          className="h-10 w-full rounded-full bg-primary font-display text-xs font-semibold text-primary-foreground"
+          className="h-11 w-full rounded-full bg-primary font-display text-sm font-semibold text-primary-foreground"
         >
           Done
         </button>
@@ -118,11 +118,11 @@ export default function AutoPayStep({ coins, onPaid, onDone, onBack }) {
         <div className="flex justify-center">
           <XCircle className="h-9 w-9 text-destructive" />
         </div>
-        <p className="text-[11px] text-muted-foreground">{error || 'The payment was not completed.'}</p>
+        <p className="text-sm text-muted-foreground">{error || 'The payment was not completed.'}</p>
         <button
           type="button"
           onClick={onBack}
-          className="h-10 w-full rounded-full bg-primary font-display text-xs font-semibold text-primary-foreground"
+          className="h-11 w-full rounded-full bg-primary font-display text-sm font-semibold text-primary-foreground"
         >
           Try again
         </button>
@@ -135,11 +135,11 @@ export default function AutoPayStep({ coins, onPaid, onDone, onBack }) {
       <div className="flex items-center justify-between px-1">
         <p className="font-display text-sm font-semibold">
           ₹{formatCoins(coins)}
-          <span className="ml-1 text-[10px] font-medium text-muted-foreground">
+          <span className="ml-1 text-xs font-medium text-muted-foreground">
             · {formatCoins(coins)} coins
           </span>
         </p>
-        <p className="text-[10px] text-muted-foreground">Valid {minutes}:{seconds}</p>
+        <p className="text-xs text-muted-foreground">Valid {minutes}:{seconds}</p>
       </div>
 
       <div className="overflow-hidden rounded-[22px] border border-white/10 bg-white">
@@ -150,7 +150,7 @@ export default function AutoPayStep({ coins, onPaid, onDone, onBack }) {
         />
       </div>
 
-      <p className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
+      <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
         <Loader2 className="h-3 w-3 animate-spin" />
         Waiting for the payment to confirm…
       </p>
@@ -158,7 +158,7 @@ export default function AutoPayStep({ coins, onPaid, onDone, onBack }) {
       <button
         type="button"
         onClick={check}
-        className="flex h-10 w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] font-display text-xs font-semibold"
+        className="flex h-11 w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] font-display text-sm font-semibold"
       >
         <RefreshCw className="h-3.5 w-3.5" />
         I have paid — check now
@@ -167,7 +167,7 @@ export default function AutoPayStep({ coins, onPaid, onDone, onBack }) {
       <button
         type="button"
         onClick={onBack}
-        className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground"
+        className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground"
       >
         <ArrowLeft className="h-3 w-3" />
         Change amount

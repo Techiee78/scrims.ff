@@ -57,7 +57,7 @@ export default function GlassNav() {
       style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
     >
       <div
-        className="mx-auto flex w-full max-w-md items-center gap-1 rounded-[28px] p-1.5 md:max-w-2xl"
+        className="mx-auto flex w-full max-w-md items-center gap-0.5 rounded-[28px] p-1 md:max-w-2xl"
         style={{
           ...glassStyle,
           transform: `scale(${compact ? 0.93 : 1})`,
@@ -83,7 +83,7 @@ export default function GlassNav() {
             }}
             className={({ isActive }) =>
               cn(
-                'flex min-h-[44px] flex-1 flex-col items-center justify-center gap-1 rounded-3xl px-0.5 py-2.5 text-[11px] font-bold uppercase leading-tight tracking-tight transition-colors duration-300',
+                'flex min-h-[44px] flex-1 flex-col items-center justify-center gap-0.5 rounded-3xl px-0 py-2 text-sm font-semibold leading-tight tracking-tight transition-colors duration-300',
                 isActive ? 'text-primary' : 'text-white'
               )
             }
