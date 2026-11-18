@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { Home, Trophy, Swords, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { tabRootOf, useTabMemory } from './TabMemory';
 
 const items = [
   { to: '/', label: 'Home', icon: Home, end: true },
@@ -25,6 +26,9 @@ export default function GlassNav() {
   const [compact, setCompact] = useState(false);
   const lastY = useRef(0);
   const queued = useRef(false);
+  const { pathname } = useLocation();
+  const memory = useTabMemory();
+  const activeRoot = tabRootOf(pathname);
 
   useEffect(() => {
     lastY.current = window.scrollY;
@@ -67,9 +71,19 @@ export default function GlassNav() {
             key={to}
             to={to}
             end={end}
+            onClick={(event) => {
+              if (!memory) return;
+              if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+                return;
+              }
+              // Tabs restore the screen they were left on; re-tapping the active
+              // tab goes back to that tab's first screen.
+              event.preventDefault();
+              memory.onTabClick(to, activeRoot === to);
+            }}
             className={({ isActive }) =>
               cn(
-                'flex flex-1 flex-col items-center gap-1 rounded-3xl px-1 py-2.5 text-[10px] font-bold transition-colors duration-300',
+                'flex min-h-[44px] flex-1 flex-col items-center justify-center gap-1 rounded-3xl px-0.5 py-2.5 text-[11px] font-bold uppercase leading-tight tracking-tight transition-colors duration-300',
                 isActive ? 'text-primary' : 'text-white'
               )
             }
@@ -82,7 +96,7 @@ export default function GlassNav() {
                     isActive ? 'scale-110 text-primary' : 'text-white'
                   )}
                 />
-                <span>{label}</span>
+                <span className="whitespace-nowrap">{label}</span>
               </>
             )}
           </NavLink>

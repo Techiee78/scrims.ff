@@ -25,7 +25,15 @@ function teamSizeOf(teamType) {
   return 1;
 }
 
-export default function JoinDialog({ tournament, open, onOpenChange, user, onJoined }) {
+export default function JoinDialog({
+  tournament,
+  open,
+  onOpenChange,
+  user,
+  onOptimistic,
+  onRollback,
+  onSettled,
+}) {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [ign, setIgn] = useState('');
@@ -105,27 +113,37 @@ export default function JoinDialog({ tournament, open, onOpenChange, user, onJoi
       };
     });
 
+    const tournamentId = tournament.id;
+    const title = tournament.title;
+
+    // Optimistic: show the slot as booked right away, close the sheet, then let
+    // the server confirm. A refusal puts the card back and says why.
+    onOptimistic?.({ tournament_id: tournamentId, status: 'pending', optimistic: true });
     setSubmitting(true);
+    onOpenChange?.(false);
+    toast({
+      title: 'Slot booked',
+      description: `You joined ${title}. Room details are in My Matches.`,
+    });
+
     try {
       const res = await callFunction('joinTournament', await withAuth({
-        tournament_id: tournament.id,
+        tournament_id: tournamentId,
         ff_ign: ign,
         ff_uid: uid,
         whatsapp,
         teammates,
       }));
       const data = res?.data ?? res;
-      if (data?.error) {
-        setError(data.error);
-      } else {
-        toast({
-          title: 'Slot booked',
-          description: `You joined ${tournament.title}. Room details are in My Matches.`,
-        });
-        onJoined?.();
-      }
+      if (data?.error) throw new Error(data.error);
+      onSettled?.(tournamentId);
     } catch (err) {
-      setError(err?.response?.data?.error || err?.message || 'Could not join this match.');
+      onRollback?.(tournamentId);
+      toast({
+        title: 'Could not book your slot',
+        description: err?.response?.data?.error || err?.message || 'Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setSubmitting(false);
     }

@@ -13,7 +13,17 @@ const FILTERS = [...ALL_MODES, ...MATCH_MODES];
 const PAGE_SIZE = 8;
 
 export default function Tournaments() {
-  const { loading, error, user, tournaments, registrations, reload } = useTournamentData();
+  const {
+    loading,
+    error,
+    user,
+    tournaments,
+    registrations,
+    reload,
+    joinOptimistic,
+    rollbackJoin,
+    settleJoin,
+  } = useTournamentData();
   const [filter, setFilter] = useState('All');
   const [target, setTarget] = useState(null);
   const [query, setQuery] = useState('');
@@ -38,7 +48,7 @@ export default function Tournaments() {
     <div className="space-y-5">
       <div className="px-1">
         <h1 className="font-display text-2xl font-semibold">Tournaments</h1>
-        <p className="text-xs text-muted-foreground">Pick a room, book your slot, drop in.</p>
+        <p className="text-sm text-muted-foreground">Pick a room, book your slot, drop in.</p>
       </div>
 
       <div className="glass-soft flex items-center gap-2 rounded-full px-3.5 py-2.5">
@@ -54,7 +64,7 @@ export default function Tournaments() {
             type="button"
             onClick={() => setQuery('')}
             aria-label="Clear search"
-            className="text-muted-foreground hover:text-foreground"
+            className="tap-target -mr-2 flex h-11 w-11 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
@@ -101,7 +111,7 @@ export default function Tournaments() {
           <button
             type="button"
             onClick={() => setVisible((count) => count + PAGE_SIZE)}
-            className="glass-soft w-full rounded-full py-3 text-xs font-semibold text-primary"
+            className="glass-soft min-h-[44px] w-full rounded-full py-3 text-sm font-semibold text-primary"
           >
             Load more rooms ({list.length - shown.length} left)
           </button>
@@ -113,10 +123,9 @@ export default function Tournaments() {
         open={!!target}
         onOpenChange={(open) => !open && setTarget(null)}
         user={user}
-        onJoined={() => {
-          setTarget(null);
-          reload();
-        }}
+        onOptimistic={joinOptimistic}
+        onRollback={rollbackJoin}
+        onSettled={settleJoin}
       />
     </div>
     </PullToRefresh>

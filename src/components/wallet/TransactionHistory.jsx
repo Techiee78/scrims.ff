@@ -80,7 +80,7 @@ export default function TransactionHistory({ transactions = [], deposits = [], w
     <section className="space-y-3">
       <div className="flex items-center justify-between px-1">
         <h2 className="font-display text-sm font-semibold">Transaction history</h2>
-        <span className="text-[11px] text-muted-foreground">{counts.all} total</span>
+        <span className="text-xs text-muted-foreground">{counts.all} total</span>
       </div>
 
       <div className="glass-soft no-scrollbar flex gap-1.5 overflow-x-auto rounded-full p-1">
@@ -91,7 +91,7 @@ export default function TransactionHistory({ transactions = [], deposits = [], w
               key={opt.key}
               type="button"
               onClick={() => setFilter(opt.key)}
-              className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-medium transition-colors ${
+              className={`flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-medium transition-colors ${
                 active
                   ? 'bg-primary text-primary-foreground shadow'
                   : 'text-muted-foreground hover:text-foreground'
@@ -145,7 +145,7 @@ export default function TransactionHistory({ transactions = [], deposits = [], w
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{label(item)}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">{formatWhen(item.at)}</p>
+                  <p className="truncate text-xs text-muted-foreground">{formatWhen(item.at)}</p>
                 </div>
                 <div className="shrink-0 text-right">
                   <p className={`font-display text-sm font-semibold ${amountClass}`}>
@@ -158,7 +158,7 @@ export default function TransactionHistory({ transactions = [], deposits = [], w
                     </div>
                   ) : (
                     item.balance_after !== undefined && (
-                      <p className="text-[10px] text-muted-foreground">Bal {formatCoins(item.balance_after)}</p>
+                      <p className="text-xs text-muted-foreground">Bal {formatCoins(item.balance_after)}</p>
                     )
                   )}
                 </div>

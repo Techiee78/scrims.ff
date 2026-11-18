@@ -11,7 +11,17 @@ import { Loader2 } from 'lucide-react';
 import { getTimeStatus } from '@/lib/tournamentTime';
 
 export default function Home() {
-  const { loading, error, user, tournaments, registrations, reload } = useTournamentData();
+  const {
+    loading,
+    error,
+    user,
+    tournaments,
+    registrations,
+    reload,
+    joinOptimistic,
+    rollbackJoin,
+    settleJoin,
+  } = useTournamentData();
   const [mode, setMode] = useState('Full Map');
   const [target, setTarget] = useState(null);
 
@@ -55,7 +65,7 @@ export default function Home() {
 
       <div className="flex items-end justify-between px-1">
         <h2 className="font-display text-lg font-semibold">Matches</h2>
-        <span className="text-[11px] text-muted-foreground">{matches.length} open</span>
+        <span className="text-xs text-muted-foreground">{matches.length} open</span>
       </div>
 
       <ModeTabs value={mode} onChange={setMode} />
@@ -81,10 +91,9 @@ export default function Home() {
         open={!!target}
         onOpenChange={(open) => !open && setTarget(null)}
         user={user}
-        onJoined={() => {
-          setTarget(null);
-          reload();
-        }}
+        onOptimistic={joinOptimistic}
+        onRollback={rollbackJoin}
+        onSettled={settleJoin}
       />
     </div>
     </PullToRefresh>

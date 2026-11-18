@@ -77,18 +77,18 @@ export default function DepositRequestCard({ request, onDecide }) {
             type="button"
             onClick={() => run('approve', '')}
             disabled={busy !== ''}
-            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary text-[11px] font-semibold text-primary-foreground disabled:opacity-40"
+            className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-40"
           >
-            {busy === 'approve' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ThumbsUp className="h-3.5 w-3.5" />}
+            {busy === 'approve' ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />}
             Approve
           </button>
           <button
             type="button"
             onClick={() => setMode('reject')}
             disabled={busy !== ''}
-            className="glass-soft flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full text-[11px] font-medium text-muted-foreground disabled:opacity-40"
+            className="glass-soft flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full text-sm font-medium text-muted-foreground disabled:opacity-40"
           >
-            <ThumbsDown className="h-3.5 w-3.5" />
+            <ThumbsDown className="h-4 w-4" />
             Reject
           </button>
         </div>
@@ -99,23 +99,23 @@ export default function DepositRequestCard({ request, onDecide }) {
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Reason (shown to the player)"
-            className="h-9 w-full rounded-full border border-white/10 bg-white/[0.04] px-3 text-[11px] outline-none focus:border-destructive/60"
+            className="h-11 w-full rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm outline-none focus:border-destructive/60"
           />
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => run('reject', reason.trim())}
               disabled={busy !== '' || reason.trim().length < 3}
-              className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full bg-destructive text-[11px] font-semibold text-destructive-foreground disabled:opacity-40"
+              className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-destructive text-sm font-semibold text-destructive-foreground disabled:opacity-40"
             >
-              {busy === 'reject' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ThumbsDown className="h-3.5 w-3.5" />}
+              {busy === 'reject' ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsDown className="h-4 w-4" />}
               Confirm reject
             </button>
             <button
               type="button"
               onClick={() => setMode('idle')}
               disabled={busy !== ''}
-              className="glass-soft h-9 flex-1 rounded-full text-[11px] font-medium text-muted-foreground"
+              className="glass-soft h-11 flex-1 rounded-full text-sm font-medium text-muted-foreground"
             >
               Cancel
             </button>
@@ -123,7 +123,7 @@ export default function DepositRequestCard({ request, onDecide }) {
         </div>
       )}
 
-      {error && <p className="text-[10px] text-destructive">{error}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }

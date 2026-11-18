@@ -51,26 +51,57 @@ export default function TeammateRoster() {
     load();
   }, [load]);
 
+  // Optimistic roster changes: apply now, undo only if the server refuses.
+  const applyTeammate = (next, previous) =>
+    setTeammates((prev) =>
+      previous
+        ? prev.map((item) => (item.id === previous.id ? { ...next, id: previous.id } : item))
+        : [...prev, next]
+    );
+
+  const undoTeammate = (next, previous) =>
+    setTeammates((prev) =>
+      previous
+        ? prev.map((item) => (item.id === previous.id ? previous : item))
+        : prev.filter((item) => item.id !== next.id)
+    );
+
+  // Swap the temporary row for the one the server saved.
+  const settleTeammate = (saved, optimisticId) =>
+    setTeammates((prev) =>
+      prev.map((item) => (item.id === optimisticId && saved ? saved : item))
+    );
+
   const remove = async () => {
     if (!removeTarget) return;
+    const target = removeTarget;
+
+    // Gone from the list at once; restored below if the server says no.
+    setTeammates((prev) => prev.filter((item) => item.id !== target.id));
+    setRemoveTarget(null);
     setRemoving(true);
+
     try {
       const res = await callFunction(
         'manageTeammates',
-        await withAuth({ action: 'delete', id: removeTarget.id })
+        await withAuth({ action: 'delete', id: target.id })
       );
       const data = res?.data ?? res;
-      if (data?.error) {
-        toast({ title: 'Could not remove', description: data.error, variant: 'destructive' });
-        return;
-      }
-      setTeammates((prev) => prev.filter((item) => item.id !== removeTarget.id));
+      if (data?.error) throw new Error(data.error);
       toast({ title: 'Teammate removed' });
     } catch (err) {
-      toast({ title: 'Could not remove', description: err?.message, variant: 'destructive' });
+      setTeammates((prev) =>
+        [...prev, target].sort(
+          (a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0)
+        )
+      );
+      toast({
+        title: 'Could not remove',
+        description: err?.message,
+        variant: 'destructive',
+      });
     } finally {
       setRemoving(false);
-      setRemoveTarget(null);
     }
   };
 
@@ -83,7 +114,7 @@ export default function TeammateRoster() {
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             Saved teammates · {teammates.length}/{MAX_TEAMMATES}
           </p>
-          <p className="mt-1 text-[11px] text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground">
             {full
               ? `You have saved the maximum of ${MAX_TEAMMATES}. Remove one to add another.`
               : 'Add once, then pick them for any duo or squad match.'}
@@ -111,7 +142,11 @@ export default function TeammateRoster() {
         {!loading && error && (
           <div className="glass-soft flex items-center justify-between gap-3 rounded-2xl px-3.5 py-3">
             <p className="text-xs text-destructive">{error}</p>
-            <button type="button" onClick={load} className="text-[11px] font-semibold text-primary">
+            <button
+              type="button"
+              onClick={load}
+              className="tap-target flex h-11 items-center px-2 text-sm font-semibold text-primary"
+            >
               Retry
             </button>
           </div>
@@ -133,8 +168,8 @@ export default function TeammateRoster() {
               {mate.ign.slice(0, 2).toUpperCase()}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold">{mate.ign}</p>
-              <p className="truncate text-[10px] text-muted-foreground">
+              <p className="truncate text-sm font-semibold">{mate.ign}</p>
+              <p className="truncate text-[11px] uppercase tracking-wide text-muted-foreground">
                 UID {mate.ff_uid} · {mate.whatsapp}
               </p>
             </div>
@@ -146,17 +181,17 @@ export default function TeammateRoster() {
                   setEditing(mate);
                   setFormOpen(true);
                 }}
-                className="rounded-full p-1.5 text-muted-foreground transition-colors hover:text-foreground"
+                className="flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
               >
-                <Pencil className="h-3.5 w-3.5" />
+                <Pencil className="h-4 w-4" />
               </button>
               <button
                 type="button"
                 aria-label="Remove teammate"
                 onClick={() => setRemoveTarget(mate)}
-                className="rounded-full p-1.5 text-muted-foreground transition-colors hover:text-destructive"
+                className="flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-destructive"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -167,7 +202,9 @@ export default function TeammateRoster() {
         open={formOpen}
         onOpenChange={setFormOpen}
         teammate={editing}
-        onSaved={load}
+        onOptimistic={applyTeammate}
+        onRollback={undoTeammate}
+        onSettled={settleTeammate}
       />
 
       <AlertDialog open={!!removeTarget} onOpenChange={(open) => !open && setRemoveTarget(null)}>

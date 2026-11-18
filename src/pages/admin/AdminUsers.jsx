@@ -5,6 +5,7 @@ import { withAuth } from '@/lib/authToken';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/use-toast';
 
 function initials(name, email) {
   const base = (name || email || '?').trim();
@@ -15,6 +16,7 @@ function initials(name, email) {
 
 export default function AdminUsers() {
   const { user: currentUser } = useAuth();
+  const { toast } = useToast();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -42,6 +44,10 @@ export default function AdminUsers() {
 
   const toggleRole = async (u) => {
     const newRole = u.role === 'admin' ? 'user' : 'admin';
+    const previousRole = u.role;
+    // Optimistic: flip the badge immediately, undo it if the server refuses.
+    setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, role: newRole } : x)));
+    setError('');
     setUpdatingId(u.id);
     try {
       const res = await callFunction('manageUsers', await withAuth({
@@ -51,9 +57,11 @@ export default function AdminUsers() {
       }));
       const data = res?.data ?? res;
       if (data?.error) throw new Error(data.error);
-      setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, role: newRole } : x)));
     } catch (err) {
-      setError(err.message || 'Failed to update role');
+      setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, role: previousRole } : x)));
+      const message = err.message || 'Failed to update role';
+      setError(message);
+      toast({ title: 'Role not changed', description: message, variant: 'destructive' });
     } finally {
       setUpdatingId(null);
     }
@@ -75,7 +83,7 @@ export default function AdminUsers() {
     <div className="space-y-5">
       <div>
         <h1 className="font-display text-lg font-semibold">Users</h1>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {users.length} total · {adminCount} admin{adminCount === 1 ? '' : 's'} · promote or demote from here.
         </p>
       </div>
@@ -123,14 +131,16 @@ export default function AdminUsers() {
                       <span className="ml-1.5 text-[10px] font-medium text-muted-foreground">(you)</span>
                     )}
                   </p>
-                  <p className="truncate text-[11px] text-muted-foreground">{u.email}</p>
+                  <p className="truncate text-xs text-muted-foreground">{u.email}</p>
                   {u.ff_ign && (
-                    <p className="truncate text-[10px] text-muted-foreground">IGN: {u.ff_ign}</p>
+                    <p className="truncate text-[11px] uppercase tracking-wide text-muted-foreground">
+                      IGN: {u.ff_ign}
+                    </p>
                   )}
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1.5">
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
                       isAdmin
                         ? 'bg-primary/20 text-primary'
                         : 'bg-white/8 text-muted-foreground'
@@ -143,7 +153,7 @@ export default function AdminUsers() {
                     variant={isAdmin ? 'outline' : 'default'}
                     disabled={isSelf || updatingId === u.id}
                     onClick={() => toggleRole(u)}
-                    className="h-7 rounded-full px-2.5 text-[11px]"
+                    className="h-11 rounded-full px-3 text-sm"
                   >
                     {updatingId === u.id ? (
                       <Loader2 className="w-3 h-3 animate-spin" />

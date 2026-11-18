@@ -13,7 +13,14 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { withAuth } from '@/lib/authToken';
 
-export default function TeammateFormDialog({ open, onOpenChange, teammate, onSaved }) {
+export default function TeammateFormDialog({
+  open,
+  onOpenChange,
+  teammate,
+  onOptimistic,
+  onRollback,
+  onSettled,
+}) {
   const { toast } = useToast();
   const [ign, setIgn] = useState('');
   const [uid, setUid] = useState('');
@@ -35,22 +42,35 @@ export default function TeammateFormDialog({ open, onOpenChange, teammate, onSav
     if (!uid.trim()) return setError('Teammate Free Fire UID is required.');
     if (whatsapp.length !== 10) return setError('Enter a valid 10-digit WhatsApp number.');
 
+    const previous = teammate || null;
+    const draft = {
+      id: previous?.id || `optimistic-${Date.now()}`,
+      ign: ign.trim(),
+      ff_uid: uid.trim(),
+      whatsapp,
+    };
+
+    // Show it in the roster at once and close; a refusal rolls it back.
+    onOptimistic?.(draft, previous);
+    onOpenChange(false);
     setSaving(true);
+
     try {
-      const payload = teammate
-        ? { action: 'update', id: teammate.id, teammate: { ign, ff_uid: uid, whatsapp } }
-        : { action: 'create', teammate: { ign, ff_uid: uid, whatsapp } };
+      const payload = previous
+        ? { action: 'update', id: previous.id, teammate: { ign: draft.ign, ff_uid: draft.ff_uid, whatsapp: draft.whatsapp } }
+        : { action: 'create', teammate: { ign: draft.ign, ff_uid: draft.ff_uid, whatsapp: draft.whatsapp } };
       const res = await callFunction('manageTeammates', await withAuth(payload));
       const data = res?.data ?? res;
-      if (data?.error) {
-        setError(data.error);
-        return;
-      }
-      toast({ title: teammate ? 'Teammate updated' : 'Teammate added' });
-      onSaved?.();
-      onOpenChange(false);
+      if (data?.error) throw new Error(data.error);
+      toast({ title: previous ? 'Teammate updated' : 'Teammate added' });
+      onSettled?.(data?.teammate || null, draft.id);
     } catch (err) {
-      setError(err?.response?.data?.error || err?.message || 'Could not save teammate.');
+      onRollback?.(draft, previous);
+      toast({
+        title: previous ? 'Could not update teammate' : 'Could not add teammate',
+        description: err?.response?.data?.error || err?.message || 'Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setSaving(false);
     }

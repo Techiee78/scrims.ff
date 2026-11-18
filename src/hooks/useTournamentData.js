@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { callFunction } from '@/lib/callFunction';
 import { useAuth } from '@/lib/AuthContext';
@@ -39,10 +40,14 @@ export default function useTournamentData() {
     refetchOnMount: 'always',
   });
 
+  // Slots booked in this session before the server has answered, so a card
+  // flips to "booked" the moment the player confirms.
+  const [pendingJoins, setPendingJoins] = useState([]);
+
   const loading = tournamentsQuery.isLoading || registrationsQuery.isLoading;
   const error = tournamentsQuery.isError || registrationsQuery.isError;
   const tournaments = tournamentsQuery.data ?? [];
-  const registrations = registrationsQuery.data?.registrations ?? [];
+  const registrations = [...(registrationsQuery.data?.registrations ?? []), ...pendingJoins];
   const winnings = registrationsQuery.data?.winnings ?? [];
   // Room ID / password for the matches this player joined — the public board
   // does not carry them.
@@ -56,5 +61,29 @@ export default function useTournamentData() {
     ]);
   };
 
-  return { loading, error, user, tournaments, registrations, winnings, rooms, reload };
+  const joinOptimistic = (registration) =>
+    setPendingJoins((prev) => [...prev, registration]);
+
+  const rollbackJoin = (tournamentId) =>
+    setPendingJoins((prev) => prev.filter((item) => item.tournament_id !== tournamentId));
+
+  // Keep the optimistic slot until the server data already contains it.
+  const settleJoin = async (tournamentId) => {
+    await reload();
+    setPendingJoins((prev) => prev.filter((item) => item.tournament_id !== tournamentId));
+  };
+
+  return {
+    loading,
+    error,
+    user,
+    tournaments,
+    registrations,
+    winnings,
+    rooms,
+    reload,
+    joinOptimistic,
+    rollbackJoin,
+    settleJoin,
+  };
 }

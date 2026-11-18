@@ -39,15 +39,45 @@ export default function AdminRequests() {
   }, [load]);
 
   const decide = async (requestId, action, reason) => {
-    const result = await adminDecideDeposit(requestId, action, reason);
-    toast({
-      title: action === 'approve' ? 'Payment approved' : 'Request rejected',
-      description:
-        action === 'approve'
-          ? `${result?.coins} coins credited · new balance ${result?.balance}`
-          : 'No coins were credited.',
-    });
-    await load();
+    const previous = data;
+    const request = (data?.pending || []).find((item) => item.id === requestId);
+
+    // Optimistic: the card moves to Decided with its new pill at once.
+    if (request) {
+      setData({
+        ...data,
+        pending: (data.pending || []).filter((item) => item.id !== requestId),
+        decided: [
+          {
+            ...request,
+            status: action === 'approve' ? 'approved' : 'rejected',
+            decision: { reason, created_at: new Date().toISOString() },
+          },
+          ...(data.decided || []),
+        ],
+      });
+    }
+
+    try {
+      const result = await adminDecideDeposit(requestId, action, reason);
+      toast({
+        title: action === 'approve' ? 'Payment approved' : 'Request rejected',
+        description:
+          action === 'approve'
+            ? `${result?.coins} coins credited · new balance ${result?.balance}`
+            : 'No coins were credited.',
+      });
+      await load();
+    } catch (err) {
+      // Put the request back in the queue and say what happened.
+      setData(previous);
+      toast({
+        title: 'Decision not saved',
+        description: err?.message || 'Please try again.',
+        variant: 'destructive',
+      });
+      throw err;
+    }
   };
 
   const pending = data?.pending || [];
@@ -58,14 +88,14 @@ export default function AdminRequests() {
       <div className="flex items-end justify-between gap-2">
         <div>
           <h1 className="font-display text-lg font-semibold">Deposit requests</h1>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Verify each UPI payment in your bank account, then approve or reject it.
           </p>
         </div>
         <button
           type="button"
           onClick={load}
-          className="glass-soft flex h-8 items-center gap-1.5 rounded-full px-3 text-[11px] font-medium text-muted-foreground"
+          className="glass-soft flex h-11 items-center gap-1.5 rounded-full px-4 text-sm font-medium text-muted-foreground"
         >
           <RefreshCw className="h-3.5 w-3.5" />
           Refresh
@@ -85,7 +115,7 @@ export default function AdminRequests() {
         onSaved={load}
       />
 
-      {error && <div className="rounded-2xl bg-destructive/10 px-3 py-2 text-[11px] text-destructive">{error}</div>}
+      {error && <div className="rounded-2xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</div>}
 
       <div className="glass-soft no-scrollbar flex gap-1.5 overflow-x-auto rounded-full p-1">
         {TABS.map((opt) => {
@@ -96,7 +126,7 @@ export default function AdminRequests() {
               key={opt.key}
               type="button"
               onClick={() => setTab(opt.key)}
-              className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-medium transition-colors ${
+              className={`flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-medium transition-colors ${
                 active ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:text-foreground'
               }`}
             >

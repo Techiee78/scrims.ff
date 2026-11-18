@@ -68,7 +68,7 @@ export default function WithdrawDialog({ open, onOpenChange, available = 0, onSu
       <DialogContent className="glass-strong max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-md overflow-y-auto rounded-[26px] border-white/10 p-5">
         <DialogHeader className="text-left">
           <DialogTitle className="font-display text-base">Withdraw coins</DialogTitle>
-          <DialogDescription className="text-[11px]">
+          <DialogDescription className="text-sm">
             {step === 'form' && 'Only your tournament winnings can be withdrawn. ₹1 = 1 coin, paid by hand to your UPI.'}
             {step === 'done' && 'Sent. The admin will review your request.'}
           </DialogDescription>
@@ -92,12 +92,12 @@ export default function WithdrawDialog({ open, onOpenChange, available = 0, onSu
                       setPreset(value);
                       setCustom('');
                     }}
-                    className={`glass-soft rounded-2xl px-2 py-2.5 text-center transition-colors ${
+                    className={`glass-soft min-h-[44px] rounded-2xl px-2 py-2.5 text-center transition-colors ${
                       active ? 'border-primary/60 ring-1 ring-primary/60' : ''
                     }`}
                   >
                     <span className="block font-display text-sm font-semibold">{formatCoins(value)}</span>
-                    <span className="block text-[10px] text-muted-foreground">coins</span>
+                    <span className="block text-[11px] uppercase tracking-wide text-muted-foreground">coins</span>
                   </button>
                 );
               })}

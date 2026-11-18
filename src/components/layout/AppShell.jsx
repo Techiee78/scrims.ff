@@ -7,6 +7,7 @@ import GlassNav from './GlassNav';
 import FloatingSupport from './FloatingSupport';
 import ConnectionBanner from '@/components/states/ConnectionBanner';
 import ShellErrorBoundary from './ShellErrorBoundary';
+import { TabMemoryProvider } from './TabMemory';
 
 export default function AppShell() {
   const { user } = useAuth();
@@ -15,6 +16,7 @@ export default function AppShell() {
   const outlet = useOutlet();
 
   return (
+    <TabMemoryProvider>
     <div className="relative min-h-[100dvh]">
       <AppBackground />
       <TopBar user={user} onProfile={() => navigate('/profile')} />
@@ -35,5 +37,6 @@ export default function AppShell() {
       <GlassNav />
       <FloatingSupport />
     </div>
+    </TabMemoryProvider>
   );
 }

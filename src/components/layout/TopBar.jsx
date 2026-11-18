@@ -24,7 +24,7 @@ export default function TopBar({ user, onProfile }) {
           type="button"
           onClick={onProfile}
           aria-label="Profile"
-          className="glass flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-300 hover:scale-105"
+          className="glass flex h-11 w-11 items-center justify-center rounded-full transition-transform duration-300 hover:scale-105"
         >
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent font-display text-xs font-semibold text-primary-foreground">
             {initials(user)}

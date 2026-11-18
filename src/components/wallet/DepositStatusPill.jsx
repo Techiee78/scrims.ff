@@ -23,7 +23,7 @@ export default function DepositStatusPill({ status }) {
   const Icon = meta.icon;
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${meta.tone}`}
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] ${meta.tone}`}
     >
       <Icon className="h-3 w-3" />
       {meta.label}
