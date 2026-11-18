@@ -1,5 +1,5 @@
 import { getUserFromRequest, serviceClient } from '../_shared/supabase.ts';
-import { COINS_MIN, COINS_MAX, REFERENCE_RE, normalizeReference, loadUpiSettings, mapDepositError } from '../_shared/deposits.ts';
+import { COINS_MIN, COINS_MAX, REFERENCE_RE, normalizeReference, loadUpiSettings, mapDepositError, dailyLimitError } from '../_shared/deposits.ts';
 
 // Player submits "I have paid" with the UPI reference from their payment.
 // Only the reference/amount come from the client: identity and the money are
@@ -42,6 +42,9 @@ export default async function handler(req: Request): Promise<Response> {
         { status: 503 },
       );
     }
+
+    const limit = await dailyLimitError(supa, user.id, coins);
+    if (limit) return Response.json({ error: limit.error }, { status: limit.status });
 
     const { data, error } = await supa.rpc('deposit_request_create', {
       p_user_id: user.id,

@@ -124,6 +124,10 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
               />
             </label>
 
+            <p className="text-[10px] text-muted-foreground">
+              Daily limit: ₹5,000 per day (₹1 = 1 coin).
+            </p>
+
             {!amountOk && (
               <p className="text-[10px] text-destructive">
                 Enter a whole number between {COINS_MIN} and {COINS_MAX} coins.

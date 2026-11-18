@@ -7,6 +7,48 @@ export const COINS_MAX = 10000;
 export const MAX_PENDING = 3;
 export const UPI_KEY = 'upi_payment';
 
+// One player can add at most ₹5,000 (coins are 1:1 with rupees) in a day.
+// The day is counted in IST and includes payments still waiting to settle.
+export const DAILY_DEPOSIT_LIMIT = 5000;
+
+function startOfIstDay(): string {
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const dayStart = Math.floor((now + IST_OFFSET_MS) / DAY_MS) * DAY_MS - IST_OFFSET_MS;
+  return new Date(dayStart).toISOString();
+}
+
+// Coins added today: pending and approved count, rejected ones do not.
+export async function dailyDepositTotal(supa: any, userId: string): Promise<number> {
+  const { data } = await supa
+    .from('deposit_requests')
+    .select('coins, status')
+    .eq('user_id', userId)
+    .gte('created_at', startOfIstDay());
+  return (data || [])
+    .filter((row: any) => row.status === 'pending' || row.status === 'approved')
+    .reduce((sum: number, row: any) => sum + Number(row.coins || 0), 0);
+}
+
+// Returns the error to send back when this payment would cross the daily cap.
+export async function dailyLimitError(
+  supa: any,
+  userId: string,
+  coins: number,
+): Promise<{ status: number; error: string } | null> {
+  const used = await dailyDepositTotal(supa, userId);
+  if (used + coins <= DAILY_DEPOSIT_LIMIT) return null;
+  const left = Math.max(0, DAILY_DEPOSIT_LIMIT - used);
+  return {
+    status: 429,
+    error:
+      left > 0
+        ? `Only ₹${DAILY_DEPOSIT_LIMIT} can be added in a day. You can add ₹${left} more today.`
+        : `You have reached today's ₹${DAILY_DEPOSIT_LIMIT} deposit limit. Try again tomorrow.`,
+  };
+}
+
 export type UpiSettings = { upiId: string; payeeName: string; active: boolean };
 
 // A UPI reference (UTR) is always exactly 12 digits: everything else the player

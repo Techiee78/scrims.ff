@@ -1,5 +1,5 @@
 import { getUserFromRequest, serviceClient } from '../_shared/supabase.ts';
-import { COINS_MIN, COINS_MAX } from '../_shared/deposits.ts';
+import { COINS_MIN, COINS_MAX, dailyLimitError } from '../_shared/deposits.ts';
 import {
   createProviderOrder,
   generateOrderId,
@@ -54,6 +54,9 @@ export default async function handler(req: Request): Promise<Response> {
         { status: 503 },
       );
     }
+
+    const limit = await dailyLimitError(supa, user.id, coins);
+    if (limit) return Response.json({ error: limit.error }, { status: limit.status });
 
     const orderId = generateOrderId();
 
