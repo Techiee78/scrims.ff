@@ -142,5 +142,7 @@ export function finishSignIn(accessToken, returnTo) {
     window.close();
     return;
   }
-  window.location.href = returnTo;
+  // Replace, not push: a completed sign-in must not leave the auth screen in
+  // the WebView history for the Android back button to return to.
+  window.location.replace(returnTo);
 }

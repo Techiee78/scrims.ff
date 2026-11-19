@@ -59,7 +59,8 @@ export default function Register() {
       // If email confirmation is enabled, data.session is null until
       // the user verifies; otherwise they are signed in immediately.
       if (data?.session) {
-        window.location.href = safeReturnTo();
+        // Keeps the sign-up screen out of history so back never returns to it.
+        window.location.replace(safeReturnTo());
       } else {
         setConfirmSent(true);
       }

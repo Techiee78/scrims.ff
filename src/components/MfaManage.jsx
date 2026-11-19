@@ -67,7 +67,7 @@ export default function MfaManage({ session, returnTo }) {
               </div>
             );
           })}
-          <Button className="w-full h-12 font-medium" onClick={() => { window.location.href = returnTo; }}>
+          <Button className="w-full h-12 font-medium" onClick={() => { window.location.replace(returnTo); }}>
             Done
           </Button>
         </div>

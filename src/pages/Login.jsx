@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getSupabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
@@ -8,14 +8,23 @@ import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import { safeReturnTo } from "@/lib/authReturnTo";
 import GoogleButton, { AuthDivider } from "@/components/auth/SocialAuth";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function Login() {
+  const { isAuthenticated, authChecked } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const returnTo = safeReturnTo();
+
+  // An already signed-in player must never be shown the login screen (for
+  // example after the Android back button lands on a stale auth entry): send
+  // them straight back into the app instead of looking logged out.
+  useEffect(() => {
+    if (authChecked && isAuthenticated) window.location.replace(returnTo);
+  }, [authChecked, isAuthenticated, returnTo]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,7 +34,9 @@ export default function Login() {
       const supa = await getSupabase();
       const { error: signInError } = await supa.auth.signInWithPassword({ email, password });
       if (signInError) throw signInError;
-      window.location.href = returnTo;
+      // replace() instead of href: the login screen must not stay in the
+      // WebView history, or the Android back button walks back onto it.
+      window.location.replace(returnTo);
     } catch (err) {
       setError(err.message || "Invalid email or password");
       setLoading(false);

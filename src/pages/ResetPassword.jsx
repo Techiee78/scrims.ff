@@ -58,7 +58,7 @@ export default function ResetPassword() {
       if (updateError) throw updateError;
       clearRecoveryPending();
       await supa.auth.signOut();
-      window.location.href = "/login";
+      window.location.replace("/login");
     } catch (err) {
       setError(err.message || "Failed to reset password");
       setLoading(false);
