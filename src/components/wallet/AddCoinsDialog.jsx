@@ -9,7 +9,7 @@ import DepositStatusPill from '@/components/wallet/DepositStatusPill';
 import AutoPayStep from '@/components/wallet/AutoPayStep';
 import FormSelect from '@/components/admin/FormSelect';
 
-const PRESETS = [100, 500, 1500];
+const PRESETS = [50, 100, 500];
 
 // Preset amounts plus a custom entry, in the same glass select the admin forms
 // use instead of a button grid followed by a bare number field.
@@ -129,7 +129,7 @@ export default function AddCoinsDialog({ open, onOpenChange, settings, onSubmitt
             )}
 
             <p className="text-xs text-muted-foreground">
-              Daily limit: ₹5,000 per day (₹1 = 1 coin).
+              ₹{COINS_MIN}–₹{COINS_MAX} per payment · Daily limit: ₹5,000 (₹1 = 1 coin).
             </p>
 
             {!amountOk && (choice !== 'custom' || custom.trim() !== '') && (

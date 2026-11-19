@@ -5,8 +5,8 @@ import { withAuth } from '@/lib/authToken';
 // payment reference; an admin verifies the money and approves or rejects it.
 // Coins are only ever credited by the server when an admin approves.
 
-export const COINS_MIN = 1;
-export const COINS_MAX = 10000;
+export const COINS_MIN = 10;
+export const COINS_MAX = 500;
 
 async function call(name, payload) {
   const res = await callFunction(name, await withAuth(payload));
