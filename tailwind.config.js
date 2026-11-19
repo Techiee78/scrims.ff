@@ -62,6 +62,19 @@ module.exports = {
   				ring: 'hsl(var(--sidebar-ring))'
   			}
   		},
+  		/* Compact type scale: the app's original, tighter sizes. Tailwind's
+  		   default scale (12/14/16px) made every label and line read heavy, so
+  		   the steps are pulled back down here instead of per-component. */
+  		fontSize: {
+  			xs: ['0.6875rem', { lineHeight: '1.45' }],
+  			sm: ['0.8125rem', { lineHeight: '1.45' }],
+  			base: ['0.875rem', { lineHeight: '1.5' }],
+  			lg: ['1rem', { lineHeight: '1.4' }],
+  			xl: ['1.125rem', { lineHeight: '1.35' }],
+  			'2xl': ['1.375rem', { lineHeight: '1.25' }],
+  			'3xl': ['1.75rem', { lineHeight: '1.2' }],
+  			'4xl': ['2.125rem', { lineHeight: '1.15' }]
+  		},
   		fontFamily: {
   			heading: ['var(--font-heading)'],
   			body: ['var(--font-body)'],
