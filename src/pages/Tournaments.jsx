@@ -46,7 +46,7 @@ export default function Tournaments() {
   return (
     <PullToRefresh onRefresh={reload}>
     <div className="space-y-5">
-      <div className="px-1">
+      <div className="px-1 pt-4">
         <h1 className="font-display text-2xl font-semibold">Tournaments</h1>
         <p className="text-sm text-muted-foreground">Pick a room, book your slot, drop in.</p>
       </div>
