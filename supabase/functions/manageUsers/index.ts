@@ -29,6 +29,32 @@ export default async function handler(req: Request): Promise<Response> {
       return Response.json({ users: data || [] });
     }
 
+    // Full player profile + joined registrations, for the admin profile view.
+    if (body.action === 'profile') {
+      const targetId = body.user_id;
+      if (!targetId || typeof targetId !== 'string') {
+        return Response.json({ error: 'user_id is required' }, { status: 400 });
+      }
+      const { data: profile, error: profileError } = await supa
+        .from('profiles')
+        .select('id, email, full_name, role, ff_ign, ff_uid, whatsapp, created_at')
+        .eq('id', targetId)
+        .maybeSingle();
+      if (profileError) return Response.json({ error: profileError.message }, { status: 500 });
+      if (!profile) return Response.json({ error: 'User not found' }, { status: 404 });
+
+      const { data: registrations, error: regError } = await supa
+        .from('registrations')
+        .select('*')
+        .eq('user_email', profile.email)
+        .eq('status', 'joined')
+        .order('created_at', { ascending: false })
+        .limit(60);
+      if (regError) return Response.json({ error: regError.message }, { status: 500 });
+
+      return Response.json({ profile, registrations: registrations || [] });
+    }
+
     if (body.action === 'update') {
       const targetId = body.user_id;
       const newRole = body.role;

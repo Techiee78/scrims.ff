@@ -1,5 +1,9 @@
+import { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { initials } from '@/lib/format';
+import { callFunction } from '@/lib/callFunction';
+import { withAuth } from '@/lib/authToken';
+import AdminUserRecord from '@/components/admin/AdminUserRecord';
 
 function Field({ label, value }) {
   return (
@@ -11,7 +15,25 @@ function Field({ label, value }) {
 }
 
 export default function AdminUserProfileDialog({ user, open, onOpenChange }) {
+  const [detail, setDetail] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open || !user?.id) return;
+    setDetail(null);
+    setLoading(true);
+    (async () => {
+      try {
+        const res = await callFunction('manageUsers', await withAuth({ action: 'profile', user_id: user.id }));
+        setDetail(res?.data ?? res);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [open, user?.id]);
+
   if (!open || !user) return null;
+  const profile = detail?.profile ?? user;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-background px-4 pb-10 pt-[env(safe-area-inset-top)]">
@@ -34,12 +56,19 @@ export default function AdminUserProfileDialog({ user, open, onOpenChange }) {
         <section className="glass rounded-[26px] p-4">
           <div className="flex items-center gap-4">
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent font-display text-xl font-semibold text-primary-foreground">
-              {initials(user)}
+              {initials(profile)}
             </span>
             <div className="min-w-0">
-              <p className="truncate font-display text-base font-semibold">{user.full_name || 'Player'}</p>
-              <p className="truncate text-sm text-muted-foreground">{user.email}</p>
+              <p className="truncate font-display text-base font-semibold">{profile.full_name || 'Player'}</p>
+              <p className="truncate text-sm text-muted-foreground">{profile.email}</p>
             </div>
+          </div>
+          <div className="mt-5">
+            {loading || !detail ? (
+              <div className="glass-soft h-[66px] animate-pulse rounded-2xl" />
+            ) : (
+              <AdminUserRecord registrations={detail.registrations} />
+            )}
           </div>
         </section>
 
@@ -48,9 +77,9 @@ export default function AdminUserProfileDialog({ user, open, onOpenChange }) {
             Player details
           </p>
           <div className="mt-3 grid gap-2">
-            <Field label="Free Fire IGN" value={user.ff_ign} />
-            <Field label="Free Fire UID" value={user.ff_uid} />
-            <Field label="WhatsApp" value={user.whatsapp} />
+            <Field label="Free Fire IGN" value={profile.ff_ign} />
+            <Field label="Free Fire UID" value={profile.ff_uid} />
+            <Field label="WhatsApp" value={profile.whatsapp} />
           </div>
         </section>
       </div>
