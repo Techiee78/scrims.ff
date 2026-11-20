@@ -5,11 +5,20 @@ import { ScrollText } from 'lucide-react';
 const DEFAULT_RULES = [
   {
     title: '⚔️ Match restrictions',
-    items: ['Double Vector is NOT allowed', 'M79 Launcher is banned', 'Gun Attributes must be ON'],
+    items: [
+      'Double Vector is NOT allowed (Single Vector allowed)',
+      'M79 Launcher is strictly banned',
+      'Gun Attributes must be ON',
+    ],
   },
   {
     title: '🚫 Violations',
-    items: ['Rule violations lead to an account ban, disqualification and forfeited rewards'],
+    items: [
+      'Any rule violation will result in immediate action',
+      'Account ban',
+      'Disqualification',
+      'Rewards forfeited',
+    ],
   },
   {
     title: '📋 Entry requirements',
@@ -26,7 +35,12 @@ const DEFAULT_RULES = [
   },
   {
     title: '🕹️ Gameplay rules',
-    items: ['No teaming or griefing', 'No position changes', 'Mobile only — emulators are not allowed', 'Hackers are banned'],
+    items: [
+      'Teaming and griefing are strictly prohibited',
+      'Do not change your position after joining the room',
+      'Only mobile devices allowed — no emulators or hacks',
+      'Hackers are permanently banned',
+    ],
   },
   {
     title: '🏆 Rewards',
@@ -49,15 +63,17 @@ const DEFAULT_RULES = [
   },
   {
     title: '👥 Squad rule',
-    items: ['The squad leader is responsible for the team — no toxic behavior'],
+    items: ['The squad leader is responsible for team behavior', 'No bullying or toxic behavior'],
   },
   {
     title: '📌 General rules',
     items: [
-      'Contact Telegram for any issue',
-      'Matches can be rescheduled',
-      'Do not share the Room ID',
-      'Paid match — personal issues do not restart the match',
+      'Contact Telegram support for any issue',
+      'Matches may be rescheduled if there are fewer players',
+      'Do not share the Room ID or password',
+      'This is a paid match — entry fee is required',
+      'Players are responsible for their own technical issues',
+      'No match restart for personal problems',
     ],
   },
   {
