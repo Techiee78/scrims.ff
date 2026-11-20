@@ -22,6 +22,7 @@ import StateScreen from '@/components/states/StateScreen';
 // chunk, so the phone only downloads what it is about to show.
 const Tournaments = lazy(() => import('./pages/Tournaments'));
 const MyMatches = lazy(() => import('./pages/MyMatches'));
+const MatchDetail = lazy(() => import('./pages/MatchDetail'));
 const WalletPage = lazy(() => import('./pages/Wallet'));
 const Profile = lazy(() => import('./pages/Profile'));
 const MatchResults = lazy(() => import('./pages/MatchResults'));
@@ -81,6 +82,7 @@ const AuthenticatedApp = () => {
         <Route element={<AppShell />}>
           <Route path="/" element={<Home />} />
           <Route path="/tournaments" element={<Tournaments />} />
+          <Route path="/match/:id" element={<MatchDetail />} />
           <Route path="/my-matches" element={<MyMatches />} />
           <Route path="/wallet" element={<WalletPage />} />
           <Route path="/profile" element={<Profile />} />

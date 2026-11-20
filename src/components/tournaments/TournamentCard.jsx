@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check, Clock, Coins, Lock, MapPin, Trophy, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import useNow from '@/hooks/useNow';
@@ -11,6 +12,7 @@ import { slotCapacity } from '@/lib/slots';
 import { getTimeStatus } from '@/lib/tournamentTime';
 
 function TournamentCard({ tournament, joined, onJoin }) {
+  const navigate = useNavigate();
   // Shared clock: one timer for the whole list instead of one per card.
   const now = useNow();
 
@@ -19,7 +21,10 @@ function TournamentCard({ tournament, joined, onJoin }) {
   const timeStatus = getTimeStatus(tournament, now);
 
   return (
-    <article className="glass rounded-[26px] p-3.5">
+    <article
+      onClick={() => navigate(`/match/${tournament.id}`)}
+      className="glass cursor-pointer rounded-[26px] p-3.5 transition-transform active:scale-[0.995]"
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
@@ -81,7 +86,10 @@ function TournamentCard({ tournament, joined, onJoin }) {
         </div>
       ) : (
         <Button
-          onClick={onJoin}
+          onClick={(event) => {
+            event.stopPropagation();
+            onJoin();
+          }}
           className="mt-3.5 h-11 w-full rounded-full font-display font-semibold"
         >
           {tournament.entry_fee ? `Join · ${coins(tournament.entry_fee)} coins` : 'Join free'}
