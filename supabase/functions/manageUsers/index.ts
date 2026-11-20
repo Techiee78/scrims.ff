@@ -21,7 +21,7 @@ export default async function handler(req: Request): Promise<Response> {
     if (body.action === 'list' || !body.action) {
       const { data, error } = await supa
         .from('profiles')
-        .select('id, email, full_name, role, ff_ign, ff_uid, created_at')
+        .select('id, email, full_name, role, ff_ign, ff_uid, whatsapp, created_at')
         .order('created_at', { ascending: false })
         .limit(1000);
 

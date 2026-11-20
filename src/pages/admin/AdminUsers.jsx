@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { fetchWalletBalances } from '@/lib/adminWallet';
 import { coins as formatCoins } from '@/lib/format';
 import AdminCoinDialog from '@/components/admin/AdminCoinDialog';
+import AdminUserProfileDialog from '@/components/admin/AdminUserProfileDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
@@ -27,6 +28,7 @@ export default function AdminUsers() {
   const [updatingId, setUpdatingId] = useState(null);
   const [balances, setBalances] = useState({});
   const [coinUser, setCoinUser] = useState(null);
+  const [profileUser, setProfileUser] = useState(null);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -160,6 +162,14 @@ export default function AdminUsers() {
                   <Button
                     size="sm"
                     variant="outline"
+                    onClick={() => setProfileUser(u)}
+                    className="h-9 rounded-full px-3 text-xs"
+                  >
+                    View profile
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
                     onClick={() => setCoinUser(u)}
                     className="h-9 rounded-full px-3 text-xs"
                   >
@@ -193,6 +203,13 @@ export default function AdminUsers() {
           })}
         </div>
       )}
+
+      <AdminUserProfileDialog
+        user={profileUser}
+        balance={profileUser ? balances[profileUser.email] ?? 0 : 0}
+        open={Boolean(profileUser)}
+        onOpenChange={(next) => !next && setProfileUser(null)}
+      />
 
       <AdminCoinDialog
         user={coinUser}
