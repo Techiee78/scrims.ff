@@ -1,46 +1,58 @@
-import { X } from 'lucide-react';
-import { coins as formatCoins } from '@/lib/format';
-import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import { initials } from '@/lib/format';
 
-function Row({ label, value }) {
+function Field({ label, value }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-white/5 py-3 last:border-0">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="truncate text-sm font-medium">{value || '—'}</span>
+    <div className="glass-soft rounded-2xl px-3.5 py-3">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+      <p className="mt-1 truncate text-sm font-medium">{value || '—'}</p>
     </div>
   );
 }
 
-export default function AdminUserProfileDialog({ user, balance, open, onOpenChange }) {
+export default function AdminUserProfileDialog({ user, open, onOpenChange }) {
   if (!open || !user) return null;
-  const joined = user.created_at ? new Date(user.created_at).toLocaleDateString('en-IN') : '';
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-background">
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
-        <div className="min-w-0">
-          <p className="font-display text-lg font-semibold truncate">{user.full_name || user.email || 'User'}</p>
-          <p className="text-xs text-muted-foreground">Player profile (view only)</p>
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-background px-4 pb-10 pt-[env(safe-area-inset-top)]">
+      <div className="mx-auto max-w-xl space-y-5">
+        <div className="flex items-center gap-2 pt-4">
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="glass-soft flex h-11 w-11 items-center justify-center rounded-full"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div className="min-w-0 flex-1">
+            <p className="font-display text-xl font-semibold">Player profile</p>
+            <p className="text-sm text-muted-foreground">View only.</p>
+          </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onOpenChange(false)}
-          aria-label="Close profile"
-        >
-          <X className="h-5 w-5" />
-        </Button>
-      </div>
-      <div className="mx-auto w-full max-w-xl px-4 py-6">
-        <div className="glass rounded-[26px] px-4">
-          <Row label="Email" value={user.email} />
-          <Row label="Free Fire IGN" value={user.ff_ign} />
-          <Row label="Free Fire UID" value={user.ff_uid} />
-          <Row label="WhatsApp" value={user.whatsapp} />
-          <Row label="Role" value={user.role === 'admin' ? 'Admin' : 'User'} />
-          <Row label="Wallet" value={`${formatCoins(balance ?? 0)} coins`} />
-          <Row label="Joined" value={joined} />
-        </div>
+
+        <section className="glass rounded-[26px] p-4">
+          <div className="flex items-center gap-4">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent font-display text-xl font-semibold text-primary-foreground">
+              {initials(user)}
+            </span>
+            <div className="min-w-0">
+              <p className="truncate font-display text-base font-semibold">{user.full_name || 'Player'}</p>
+              <p className="truncate text-sm text-muted-foreground">{user.email}</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="glass rounded-[26px] p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            Player details
+          </p>
+          <div className="mt-3 grid gap-2">
+            <Field label="Free Fire IGN" value={user.ff_ign} />
+            <Field label="Free Fire UID" value={user.ff_uid} />
+            <Field label="WhatsApp" value={user.whatsapp} />
+          </div>
+        </section>
       </div>
     </div>
   );

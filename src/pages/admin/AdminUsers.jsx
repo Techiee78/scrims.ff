@@ -206,7 +206,6 @@ export default function AdminUsers() {
 
       <AdminUserProfileDialog
         user={profileUser}
-        balance={profileUser ? balances[profileUser.email] ?? 0 : 0}
         open={Boolean(profileUser)}
         onOpenChange={(next) => !next && setProfileUser(null)}
       />
