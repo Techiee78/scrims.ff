@@ -33,7 +33,6 @@ const blank = {
   banner_url: '',
   room_id: '',
   room_password: '',
-  featured: false,
   status: 'upcoming',
 };
 
@@ -99,7 +98,6 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
         banner_url: form.banner_url,
         room_id: form.room_id,
         room_password: form.room_password,
-        featured: form.featured,
         status: form.status,
       };
       const body = tournament
@@ -306,15 +304,6 @@ export default function TournamentFormDialog({ open, onOpenChange, tournament, o
             </Field>
           </div>
 
-          <label className="glass-soft flex items-center justify-between rounded-2xl px-3 py-2.5">
-            <span className="text-xs font-medium">Feature on home</span>
-            <input
-              type="checkbox"
-              checked={form.featured}
-              onChange={(event) => set('featured', event.target.checked)}
-              className="h-4 w-4 accent-primary"
-            />
-          </label>
         </div>
 
         <Button
