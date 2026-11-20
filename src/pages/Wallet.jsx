@@ -68,7 +68,7 @@ export default function Wallet() {
   return (
     <PullToRefresh onRefresh={loadWallet}>
       <div className="space-y-5">
-        <div className="px-1">
+        <div className="px-1 pt-4">
           <h1 className="font-display text-2xl font-semibold">Wallet</h1>
           <p className="text-sm text-muted-foreground">Entry fees, winnings and payouts, all in one place.</p>
         </div>

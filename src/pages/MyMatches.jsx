@@ -25,7 +25,7 @@ export default function MyMatches() {
   return (
     <PullToRefresh onRefresh={reload}>
     <div className="space-y-5">
-      <div className="px-1">
+      <div className="px-1 pt-4">
         <h1 className="font-display text-2xl font-semibold">My Matches</h1>
         <p className="text-xs text-muted-foreground">Your booked slots and room details.</p>
       </div>

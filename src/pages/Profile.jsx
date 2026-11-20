@@ -15,10 +15,12 @@ export default function Profile() {
   return (
     <PullToRefresh onRefresh={refreshUser}>
     <div className="space-y-5">
-      <ScreenHeader
-        title="Profile"
-        subtitle="Your player details, saved teammates and record."
-      />
+      <div className="pt-4">
+        <ScreenHeader
+          title="Profile"
+          subtitle="Your player details, saved teammates and record."
+        />
+      </div>
 
       <section className="glass rounded-[26px] p-4">
         <div className="mb-3 flex justify-start">
