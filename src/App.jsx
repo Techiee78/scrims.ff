@@ -9,7 +9,6 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AppShell from '@/components/layout/AppShell';
-import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -80,7 +79,7 @@ const AuthenticatedApp = () => {
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route path="/payment-return" element={<PaymentReturn />} />
         <Route element={<AppShell />}>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Navigate to="/tournaments" replace />} />
           <Route path="/tournaments" element={<Tournaments />} />
           <Route path="/match/:id" element={<MatchDetail />} />
           <Route path="/my-matches" element={<MyMatches />} />

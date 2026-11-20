@@ -1,16 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-// The four bottom tabs, in bar order. Everything under a tab root belongs to
+// The three bottom tabs, in bar order. Everything under a tab root belongs to
 // that tab, so a deeper screen can be restored later without touching routes.
-export const TAB_ROOTS = ['/', '/tournaments', '/my-matches', '/wallet'];
+export const TAB_ROOTS = ['/tournaments', '/my-matches', '/wallet'];
 
 export function tabRootOf(pathname) {
-  return (
-    TAB_ROOTS.find(
-      (root) => root === pathname || (root !== '/' && pathname.startsWith(`${root}/`))
-    ) || null
-  );
+  return TAB_ROOTS.find((root) => root === pathname || pathname.startsWith(`${root}/`)) || null;
 }
 
 const TabMemoryContext = createContext(null);

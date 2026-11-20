@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Trophy, Swords, Wallet } from 'lucide-react';
+import { Trophy, Swords, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { tabRootOf, useTabMemory } from './TabMemory';
 
 const items = [
-  { to: '/', label: 'Home', icon: Home, end: true },
   { to: '/tournaments', label: 'Tournament', icon: Trophy },
   { to: '/my-matches', label: 'My Matches', icon: Swords },
   { to: '/wallet', label: 'Wallet', icon: Wallet },
