@@ -1,8 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Shield, ShieldOff, Search, Users as UsersIcon, Loader2 } from 'lucide-react';
+import { Coins, Shield, ShieldOff, Search, Users as UsersIcon, Loader2 } from 'lucide-react';
 import { callFunction } from '@/lib/callFunction';
 import { withAuth } from '@/lib/authToken';
 import { useAuth } from '@/lib/AuthContext';
+import { fetchWalletBalances } from '@/lib/adminWallet';
+import { coins as formatCoins } from '@/lib/format';
+import AdminCoinDialog from '@/components/admin/AdminCoinDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
@@ -22,6 +25,8 @@ export default function AdminUsers() {
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
+  const [balances, setBalances] = useState({});
+  const [coinUser, setCoinUser] = useState(null);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -31,6 +36,7 @@ export default function AdminUsers() {
       const data = res?.data ?? res;
       if (data?.error) throw new Error(data.error);
       setUsers(data?.users || []);
+      fetchWalletBalances().then(setBalances).catch(() => {});
     } catch (err) {
       setError(err.message || 'Failed to load users');
     } finally {
@@ -137,6 +143,9 @@ export default function AdminUsers() {
                       IGN: {u.ff_ign}
                     </p>
                   )}
+                  <p className="truncate text-[11px] font-semibold text-primary">
+                    {formatCoins(balances[u.email] ?? 0)} coins
+                  </p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1.5">
                   <span
@@ -148,6 +157,15 @@ export default function AdminUsers() {
                   >
                     {isAdmin ? 'ADMIN' : 'USER'}
                   </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setCoinUser(u)}
+                    className="h-9 rounded-full px-3 text-xs"
+                  >
+                    <Coins className="mr-1 h-3 w-3" />
+                    Coins
+                  </Button>
                   <Button
                     size="sm"
                     variant={isAdmin ? 'outline' : 'default'}
@@ -175,6 +193,22 @@ export default function AdminUsers() {
           })}
         </div>
       )}
+
+      <AdminCoinDialog
+        user={coinUser}
+        balance={coinUser ? balances[coinUser.email] ?? 0 : 0}
+        open={Boolean(coinUser)}
+        onOpenChange={(next) => !next && setCoinUser(null)}
+        onDone={(u, newBalance, mode, value) => {
+          setBalances((prev) => ({ ...prev, [u.email]: newBalance }));
+          toast({
+            title: mode === 'add' ? 'Coins added' : 'Coins removed',
+            description: `${formatCoins(value)} coins ${mode === 'add' ? 'added to' : 'removed from'} ${
+              u.full_name || u.email
+            } · balance ${formatCoins(newBalance)}`,
+          });
+        }}
+      />
     </div>
   );
 }
