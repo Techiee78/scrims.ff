@@ -25,6 +25,10 @@ export default async function handler(req: Request): Promise<Response> {
     const supa = serviceClient();
     const action = body?.action || 'list';
 
+    // Wallet balances are sensitive financial data; require MFA for reads and writes.
+    const mfa = await assertAdminMfa(admin.id, token);
+    if (!mfa.ok) return mfa.response;
+
     if (action === 'list') {
       const { data, error } = await supa.rpc('admin_wallet_list', { p_actor_id: admin.id });
       if (error) return Response.json({ error: 'Could not load wallet balances' }, { status: 500 });
@@ -32,8 +36,6 @@ export default async function handler(req: Request): Promise<Response> {
     }
 
     if (action === 'adjust') {
-      const mfa = await assertAdminMfa(admin.id, token);
-      if (!mfa.ok) return mfa.response;
 
       const email = String(body?.email || '').trim();
       const coins = Math.floor(Number(body?.coins));
