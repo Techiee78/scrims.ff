@@ -1,4 +1,5 @@
 import { getUserFromRequest, serviceClient } from '../_shared/supabase.ts';
+import { checkUserRateLimit } from '../_shared/rateLimit.ts';
 import { normalizePlayer } from '../_shared/players.ts';
 
 // Saved teammate roster for the signed-in player.
@@ -9,6 +10,9 @@ export default async function handler(req: Request): Promise<Response> {
   try {
     const user = await getUserFromRequest(req);
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const rate = await checkUserRateLimit(serviceClient(), user.id, 'manage_teammates', 300, 30);
+    if (rate === false) return Response.json({ error: 'Too many teammate actions. Please wait and try again.' }, { status: 429 });
+    if (rate === null) return Response.json({ error: 'Request protection is temporarily unavailable.' }, { status: 503 });
 
     const body = await req.json().catch(() => ({}));
     const action = body.action || 'list';
