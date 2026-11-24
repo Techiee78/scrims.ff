@@ -11,9 +11,14 @@ export default async function handler(req: Request): Promise<Response> {
 
     const body = await req.json();
     const registrationId = body.registration_id;
-    const fileUri = body.file_uri;
+    const fileUri = typeof body.file_uri === 'string' ? body.file_uri.trim() : '';
     if (!registrationId || !fileUri) {
       return Response.json({ error: 'Missing registration or file' }, { status: 400 });
+    }
+    // Only accept this player's uploaded image path in the private bucket; reject external URLs.
+    const safePath = new RegExp(`^${user.id}/[a-zA-Z0-9_-]+\\.(?:jpg|jpeg|png|webp)$`, 'i');
+    if (fileUri.length > 200 || !safePath.test(fileUri) || fileUri.includes('..') || fileUri.includes('://')) {
+      return Response.json({ error: 'Invalid screenshot path' }, { status: 400 });
     }
 
     const supa = serviceClient();
