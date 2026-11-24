@@ -1,4 +1,5 @@
 import { getUserFromRequest, serviceClient } from '../_shared/supabase.ts';
+import { checkUserRateLimit } from '../_shared/rateLimit.ts';
 
 // Records the player's account-deletion request for the organizers to action.
 // (The old version emailed admins through Base44's email integration; an
