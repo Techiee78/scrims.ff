@@ -1,4 +1,5 @@
 import { getUserFromRequest, serviceClient } from '../_shared/supabase.ts';
+import { checkUserRateLimit } from '../_shared/rateLimit.ts';
 import { testModeGate, mapTopupError } from '../_shared/testMode.ts';
 
 // TEST MODE ONLY — settles a simulated recharge order as success or failure.
@@ -9,6 +10,9 @@ export default async function handler(req: Request): Promise<Response> {
   try {
     const user = await getUserFromRequest(req);
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const rate = await checkUserRateLimit(serviceClient(), user.id, 'test_recharge_settle', 600, 8);
+    if (rate === false) return Response.json({ error: 'Too many test recharge attempts.' }, { status: 429 });
+    if (rate === null) return Response.json({ error: 'Request protection is temporarily unavailable.' }, { status: 503 });
 
     const gate = testModeGate(user);
     if (!gate.ok) return Response.json({ error: gate.error }, { status: gate.status });
