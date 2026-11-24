@@ -34,7 +34,15 @@ export default async function handler(req: Request): Promise<Response> {
       return Response.json({ error: 'This registration belongs to another player' }, { status: 403 });
     }
 
-    await supa.from('registrations').update({ standings_screenshot: fileUri }).eq('id', registrationId);
+    const { data: updated, error: updateError } = await supa
+      .from('registrations')
+      .update({ standings_screenshot: fileUri })
+      .eq('id', registrationId)
+      .eq('user_id', user.id)
+      .select('id')
+      .maybeSingle();
+    if (updateError) return Response.json({ error: 'Could not save screenshot.' }, { status: 500 });
+    if (!updated) return Response.json({ error: 'Registration not found' }, { status: 404 });
     return Response.json({ success: true });
   } catch (error: any) {
     return Response.json({ error: error.message }, { status: 500 });
