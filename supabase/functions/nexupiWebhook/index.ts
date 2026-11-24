@@ -44,7 +44,7 @@ export default async function handler(req: Request): Promise<Response> {
     if (!order || order.status !== 'pending') return Response.json({ received: true });
 
     const settings = await loadNexupiSettings(supa);
-    if (!settings.ready) return Response.json({ received: true });
+    if (!settings.ready) return Response.json({ received: false, error: 'Payment verification is not configured.' }, { status: 503 });
 
     const result = await fetchProviderOrder(settings, orderId);
     if (result.state === 'paid') {
@@ -55,8 +55,8 @@ export default async function handler(req: Request): Promise<Response> {
 
     return Response.json({ received: true });
   } catch (_error: any) {
-    // Always acknowledge so NexUPI does not keep retrying a payload we cannot use.
-    return Response.json({ received: true });
+    // Fail visibly so the payment provider can retry transient verification/settlement failures.
+    return Response.json({ received: false, error: 'Webhook processing failed; retry later.' }, { status: 503 });
   }
 }
 
