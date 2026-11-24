@@ -1,4 +1,4 @@
-import { getAdminFromRequest, serviceClient } from '../_shared/supabase.ts';
+import { assertAdminMfa, requireAdmin, serviceClient } from '../_shared/supabase.ts';
 import { mapWithdrawalError, normalizePayoutRef } from '../_shared/withdrawals.ts';
 
 // Admin side of the coin withdrawals.
@@ -8,8 +8,9 @@ import { mapWithdrawalError, normalizePayoutRef } from '../_shared/withdrawals.t
 //   { action: 'history' }                                     -> append-only admin audit log
 export default async function handler(req: Request): Promise<Response> {
   try {
-    const admin = await getAdminFromRequest(req);
-    if (!admin) return Response.json({ error: 'Admins only' }, { status: 403 });
+    const guard = await requireAdmin(req);
+    if (!guard.ok) return guard.response;
+    const { admin, token } = guard.value;
 
     let body: any = {};
     try {
@@ -20,6 +21,12 @@ export default async function handler(req: Request): Promise<Response> {
 
     const supa = serviceClient();
     const action = body?.action || 'list';
+
+    // Approving or rejecting moves coins out of a player's wallet.
+    if (action !== 'list' && action !== 'history') {
+      const mfa = await assertAdminMfa(admin.id, token);
+      if (!mfa.ok) return mfa.response;
+    }
 
     if (action === 'list') {
       const { data: pending, error: pendingError } = await supa

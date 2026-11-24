@@ -1,10 +1,12 @@
-import { getUserFromRequest, serviceClient } from '../_shared/supabase.ts';
+import { requireAdmin, serviceClient } from '../_shared/supabase.ts';
 
 export default async function handler(req: Request): Promise<Response> {
   try {
-    const user = await getUserFromRequest(req);
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'admin') return Response.json({ error: 'Organizers only' }, { status: 403 });
+    // Recording results pays coins out of the prize pool — always MFA-gated
+    // once the admin has a second factor enrolled.
+    const guard = await requireAdmin(req, { requireMfa: true });
+    if (!guard.ok) return guard.response;
+    const user = guard.value.admin;
 
     const body = await req.json();
     const tournamentId = body.tournament_id;
@@ -90,6 +92,24 @@ export default async function handler(req: Request): Promise<Response> {
     });
     if (error) return Response.json({ error: error.message }, { status: 500 });
     if (data?.error) return Response.json({ error: data.error }, { status: data.status || 400 });
+
+    // Payouts move real coins, so the action itself is recorded as well.
+    try {
+      await supa.from('admin_audit_log').insert({
+        actor_id: user.id,
+        actor_email: user.email,
+        action: 'results.record',
+        entity: 'tournament',
+        entity_id: tournamentId,
+        details: {
+          title: tournament.title,
+          players: cleaned.length,
+          paid_total: payouts.reduce((sum, p) => sum + p.amount, 0),
+        },
+      });
+    } catch (_e) {
+      // The payout already committed; audit bookkeeping must not fail it.
+    }
 
     return Response.json({ success: true, ...data });
   } catch (error: any) {

@@ -1,11 +1,10 @@
-import { getUserFromRequest, serviceClient } from '../_shared/supabase.ts';
+import { requireAdmin, serviceClient } from '../_shared/supabase.ts';
 
 // Admin-only: all joined registrations for a given match.
 export default async function handler(req: Request): Promise<Response> {
   try {
-    const user = await getUserFromRequest(req);
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'admin') return Response.json({ error: 'Admins only' }, { status: 403 });
+    const guard = await requireAdmin(req);
+    if (!guard.ok) return guard.response;
 
     const body = await req.json();
     const tournamentId = body.tournament_id;

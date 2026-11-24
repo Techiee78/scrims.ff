@@ -113,3 +113,60 @@ export async function hasVerifiedMfaFactor(supa: any, userId: string): Promise<b
     return false;
   }
 }
+
+// ------------------------------------------------------------
+// Admin authorization — one fail-closed gate for every privileged action.
+// Identity always comes from the verified access token plus the profiles row,
+// never from the request body or anything the client can set.
+// ------------------------------------------------------------
+
+export type Guard<T> = { ok: true; value: T } | { ok: false; response: Response };
+
+const MFA_REQUIRED_RESPONSE = () =>
+  Response.json(
+    {
+      error:
+        'Multi-factor authentication is required for admin actions. Verify your authenticator code and try again.',
+      code: 'mfa_required',
+    },
+    { status: 403 }
+  );
+
+// Requires the second factor once the admin has one enrolled (native Supabase
+// TOTP/phone only). An account with no factor is unaffected, so an admin can
+// never be locked out of the panel by this check alone.
+export async function assertAdminMfa(userId: string, token: string): Promise<Guard<true>> {
+  const enrolled = await hasVerifiedMfaFactor(serviceClient(), userId);
+  if (enrolled && getTokenAal(token) !== 'aal2') {
+    return { ok: false, response: MFA_REQUIRED_RESPONSE() };
+  }
+  return { ok: true, value: true };
+}
+
+// 401 when the caller has no valid session, 403 when the session is not an
+// admin (re-read from the database on every request, so a demotion takes effect
+// immediately), 403 mfa_required for privileged mutations.
+export async function requireAdmin(
+  req: Request,
+  options: { requireMfa?: boolean } = {}
+): Promise<Guard<{ admin: SupabaseUser; token: string }>> {
+  const token = await getRequestToken(req);
+  if (!token) {
+    return { ok: false, response: Response.json({ error: 'Unauthorized' }, { status: 401 }) };
+  }
+
+  const admin = await getUserFromRequest(req);
+  if (!admin) {
+    return { ok: false, response: Response.json({ error: 'Unauthorized' }, { status: 401 }) };
+  }
+  if (admin.role !== 'admin') {
+    return { ok: false, response: Response.json({ error: 'Admins only' }, { status: 403 }) };
+  }
+
+  if (options.requireMfa) {
+    const mfa = await assertAdminMfa(admin.id, token);
+    if (!mfa.ok) return mfa;
+  }
+
+  return { ok: true, value: { admin, token } };
+}

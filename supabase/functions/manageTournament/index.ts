@@ -1,4 +1,4 @@
-import { getUserFromRequest, serviceClient } from '../_shared/supabase.ts';
+import { requireAdmin, serviceClient } from '../_shared/supabase.ts';
 import { slotCapacity } from '../_shared/slots.ts';
 
 // Every tournament change by an admin leaves a trail in admin_audit_log.
@@ -23,9 +23,11 @@ async function logAdminAction(
 
 export default async function handler(req: Request): Promise<Response> {
   try {
-    const user = await getUserFromRequest(req);
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'admin') return Response.json({ error: 'Admins only' }, { status: 403 });
+    // Every action here creates, edits or deletes a tournament, so the second
+    // factor is required once the admin has one enrolled.
+    const guard = await requireAdmin(req, { requireMfa: true });
+    if (!guard.ok) return guard.response;
+    const user = guard.value.admin;
 
     const body = await req.json();
     const action = body.action;

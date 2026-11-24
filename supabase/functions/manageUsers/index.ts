@@ -1,10 +1,4 @@
-import {
-  getUserFromRequest,
-  getRequestToken,
-  getTokenAal,
-  hasVerifiedMfaFactor,
-  serviceClient,
-} from '../_shared/supabase.ts';
+import { assertAdminMfa, requireAdmin, serviceClient } from '../_shared/supabase.ts';
 
 // Admin-only user management.
 //   { action: 'list' }
@@ -18,9 +12,9 @@ import {
 // here because a rolled-back transaction cannot record them.
 export default async function handler(req: Request): Promise<Response> {
   try {
-    const user = await getUserFromRequest(req);
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'admin') return Response.json({ error: 'Admins only' }, { status: 403 });
+    const guard = await requireAdmin(req);
+    if (!guard.ok) return guard.response;
+    const { admin: user, token } = guard.value;
 
     let body: any = {};
     try {
@@ -69,20 +63,10 @@ export default async function handler(req: Request): Promise<Response> {
     }
 
     if (body.action === 'update' || body.action === 'transfer') {
-      // Native MFA: once the admin has an authenticator enrolled, admin actions
+      // Native MFA: once the admin has an authenticator enrolled, role changes
       // require the second factor (aal2 token). No custom OTP is involved.
-      const token = await getRequestToken(req);
-      const mfaEnrolled = await hasVerifiedMfaFactor(supa, user.id);
-      if (mfaEnrolled && getTokenAal(token) !== 'aal2') {
-        return Response.json(
-          {
-            error:
-              'Multi-factor authentication is required for admin actions. Verify your authenticator code and try again.',
-            code: 'mfa_required',
-          },
-          { status: 403 }
-        );
-      }
+      const mfa = await assertAdminMfa(user.id, token);
+      if (!mfa.ok) return mfa.response;
 
       const targetId = body.user_id;
       if (!targetId || typeof targetId !== 'string') {

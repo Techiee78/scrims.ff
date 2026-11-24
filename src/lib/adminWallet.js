@@ -1,15 +1,17 @@
-// Admin-only wallet helpers. Both calls run on the admin's own session and the
-// database refuses anyone whose profile is not an admin.
-import { getSupabase } from '@/lib/supabaseClient';
+// Admin-only wallet helpers. Both calls run through the adminWallet Edge
+// Function, which verifies the caller's admin role from the database (never
+// from client state) and records every adjustment in the audit trail.
+import { callFunction } from '@/lib/callFunction';
+import { withAuth } from '@/lib/authToken';
 
 // Every wallet balance, keyed by the user's email.
 export async function fetchWalletBalances() {
-  const supabase = await getSupabase();
-  const { data, error } = await supabase.rpc('admin_list_wallets');
-  if (error) throw new Error(error.message || 'Could not load wallet balances');
+  const res = await callFunction('adminWallet', await withAuth({ action: 'list' }));
+  const data = res?.data ?? res;
+  if (data?.error) throw new Error(data.error);
 
   const map = {};
-  (data || []).forEach((row) => {
+  (data?.wallets || []).forEach((row) => {
     if (row?.user_email) map[row.user_email] = Number(row.balance || 0);
   });
   return map;
@@ -17,12 +19,13 @@ export async function fetchWalletBalances() {
 
 // Adds (positive amount) or removes (negative amount) coins; returns the new balance.
 export async function adjustCoins(email, amount, note) {
-  const supabase = await getSupabase();
-  const { data, error } = await supabase.rpc('admin_adjust_coins', {
-    p_user_email: email,
-    p_coins: amount,
-    p_label: note || null,
-  });
-  if (error) throw new Error(error.message || 'Could not update the wallet');
-  return Number(data || 0);
+  const res = await callFunction('adminWallet', await withAuth({
+    action: 'adjust',
+    email,
+    coins: amount,
+    label: note || '',
+  }));
+  const data = res?.data ?? res;
+  if (data?.error) throw new Error(data.error);
+  return Number(data?.balance || 0);
 }

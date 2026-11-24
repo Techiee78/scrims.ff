@@ -1,4 +1,4 @@
-import { getAdminFromRequest, serviceClient } from '../_shared/supabase.ts';
+import { assertAdminMfa, requireAdmin, serviceClient } from '../_shared/supabase.ts';
 import { loadUpiSettings, mapDepositError, UPI_ID_RE, UPI_KEY } from '../_shared/deposits.ts';
 import { loadNexupiSettings, loadPaymentMode, MODE_KEY, NEXUPI_KEY } from '../_shared/nexupi.ts';
 
@@ -10,8 +10,9 @@ import { loadNexupiSettings, loadPaymentMode, MODE_KEY, NEXUPI_KEY } from '../_s
 //   { action: 'save_settings', upi_id, payee_name, active }
 export default async function handler(req: Request): Promise<Response> {
   try {
-    const admin = await getAdminFromRequest(req);
-    if (!admin) return Response.json({ error: 'Admins only' }, { status: 403 });
+    const guard = await requireAdmin(req);
+    if (!guard.ok) return guard.response;
+    const { admin, token: adminToken } = guard.value;
 
     let body: any = {};
     try {
@@ -22,6 +23,12 @@ export default async function handler(req: Request): Promise<Response> {
 
     const supa = serviceClient();
     const action = body?.action || 'list';
+
+    // Everything except reading the queue changes money or payment settings.
+    if (action !== 'list' && action !== 'history') {
+      const mfa = await assertAdminMfa(admin.id, adminToken);
+      if (!mfa.ok) return mfa.response;
+    }
 
     if (action === 'list') {
       const settings = await loadUpiSettings(supa);
