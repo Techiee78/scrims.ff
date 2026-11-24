@@ -22,11 +22,9 @@ export default async function handler(req: Request): Promise<Response> {
     const supa = serviceClient();
     const action = body?.action || 'list';
 
-    // Approving or rejecting moves coins out of a player's wallet.
-    if (action !== 'list' && action !== 'history') {
-      const mfa = await assertAdminMfa(admin.id, token);
-      if (!mfa.ok) return mfa.response;
-    }
+    // Withdrawal queue/history includes payout data; require MFA for every action.
+    const mfa = await assertAdminMfa(admin.id, token);
+    if (!mfa.ok) return mfa.response;
 
     if (action === 'list') {
       const { data: pending, error: pendingError } = await supa
