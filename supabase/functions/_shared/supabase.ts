@@ -131,12 +131,11 @@ const MFA_REQUIRED_RESPONSE = () =>
     { status: 403 }
   );
 
-// Requires the second factor once the admin has one enrolled (native Supabase
-// TOTP/phone only). An account with no factor is unaffected, so an admin can
-// never be locked out of the panel by this check alone.
+// Require verified enrollment and an AAL2 token for sensitive admin mutations.
+// Missing enrollment or an MFA-provider failure denies access (fail closed).
 export async function assertAdminMfa(userId: string, token: string): Promise<Guard<true>> {
   const enrolled = await hasVerifiedMfaFactor(serviceClient(), userId);
-  if (enrolled && getTokenAal(token) !== 'aal2') {
+  if (!enrolled || getTokenAal(token) !== 'aal2') {
     return { ok: false, response: MFA_REQUIRED_RESPONSE() };
   }
   return { ok: true, value: true };
