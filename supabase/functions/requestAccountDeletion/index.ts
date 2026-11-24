@@ -8,6 +8,9 @@ export default async function handler(req: Request): Promise<Response> {
   try {
     const user = await getUserFromRequest(req);
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const rate = await checkUserRateLimit(serviceClient(), user.id, 'account_deletion_request', 86400, 1);
+    if (rate === false) return Response.json({ error: 'A deletion request was already submitted recently.' }, { status: 429 });
+    if (rate === null) return Response.json({ error: 'Request protection is temporarily unavailable.' }, { status: 503 });
 
     const supa = serviceClient();
     let recorded = false;
