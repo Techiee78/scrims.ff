@@ -100,9 +100,8 @@ export function getTokenAal(token: string): string | null {
   }
 }
 
-// True when the account has at least one verified MFA factor enrolled.
-// Fails closed to "not enrolled" so a provider hiccup can never lock an admin
-// out of the panel; authorization still relies on the database role.
+// True only when the account has at least one verified MFA factor enrolled.
+// Fail closed: a provider error is treated as missing enrollment.
 export async function hasVerifiedMfaFactor(supa: any, userId: string): Promise<boolean> {
   try {
     const { data, error } = await supa.auth.admin.mfa.listFactors({ userId });
