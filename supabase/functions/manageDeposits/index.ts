@@ -24,11 +24,9 @@ export default async function handler(req: Request): Promise<Response> {
     const supa = serviceClient();
     const action = body?.action || 'list';
 
-    // Everything except reading the queue changes money or payment settings.
-    if (action !== 'list' && action !== 'history') {
-      const mfa = await assertAdminMfa(admin.id, adminToken);
-      if (!mfa.ok) return mfa.response;
-    }
+    // Deposit queue/history contains payment references; require MFA for all actions.
+    const mfa = await assertAdminMfa(admin.id, adminToken);
+    if (!mfa.ok) return mfa.response;
 
     if (action === 'list') {
       const settings = await loadUpiSettings(supa);
