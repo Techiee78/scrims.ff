@@ -1,9 +1,13 @@
 import { getUserFromRequest, serviceClient } from '../_shared/supabase.ts';
+import { checkUserRateLimit } from '../_shared/rateLimit.ts';
 
 export default async function handler(req: Request): Promise<Response> {
   try {
     const user = await getUserFromRequest(req);
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const rate = await checkUserRateLimit(serviceClient(), user.id, 'attach_standings_screenshot', 3600, 5);
+    if (rate === false) return Response.json({ error: 'Too many screenshot submissions. Please try later.' }, { status: 429 });
+    if (rate === null) return Response.json({ error: 'Request protection is temporarily unavailable.' }, { status: 503 });
 
     const body = await req.json();
     const registrationId = body.registration_id;
