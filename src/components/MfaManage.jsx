@@ -17,6 +17,7 @@ const SMS_RESEND_SECONDS = 30;
 // The helper also offers session.forgetDevices(code, method) for a "forget remembered devices" control.
 export default function MfaManage({ session, returnTo }) {
   const [status, setStatus] = useState(null);
+  /** @type {import('react').Dispatch<import('react').SetStateAction<{name: "list"} | {name: "setup" | "disable", method: "totp" | "sms"}>>} */
   const [view, setView] = useState({ name: "list" });
   const [error, setError] = useState(null);
 
@@ -119,7 +120,7 @@ function Disable({ session, method, onDone, onBack }) {
       {codeSent ? (
         <>
           <CodeField id="mfa-disable-code" value={code} onChange={setCode} onComplete={confirm} />
-          {method === "sms" && <ResendLine cooldown={cooldown} disabled={busy} onResend={sendCode} />}
+          {method === "sms" && <ResendLine cooldown={cooldown} disabled={busy} onResend={sendCode} error={error?.message} />}
         </>
       ) : (
         <Button className="w-full h-11" disabled={busy} onClick={sendCode}>
