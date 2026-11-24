@@ -1,4 +1,5 @@
 import { getUserFromRequest, serviceClient } from '../_shared/supabase.ts';
+import { checkUserRateLimit } from '../_shared/rateLimit.ts';
 import { COINS_MIN, COINS_MAX, dailyLimitError } from '../_shared/deposits.ts';
 import {
   createProviderOrder,
