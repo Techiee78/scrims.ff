@@ -1,4 +1,4 @@
-import { requireAdmin, serviceClient } from '../_shared/supabase.ts';
+import { assertAdminMfa, requireAdmin, serviceClient } from '../_shared/supabase.ts';
 
 // Admin-only dashboard stats.
 export default async function handler(req: Request): Promise<Response> {
