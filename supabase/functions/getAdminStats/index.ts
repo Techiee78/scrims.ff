@@ -5,6 +5,9 @@ export default async function handler(req: Request): Promise<Response> {
   try {
     const guard = await requireAdmin(req);
     if (!guard.ok) return guard.response;
+    const { admin, token } = guard.value;
+    const mfa = await assertAdminMfa(admin.id, token);
+    if (!mfa.ok) return mfa.response;
 
     const supa = serviceClient();
     const { data: tours } = await supa.from('tournaments').select('*').order('created_at', { ascending: false }).limit(500);
