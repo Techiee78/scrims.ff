@@ -1,4 +1,5 @@
 import { getUserFromRequest, serviceClient } from '../_shared/supabase.ts';
+import { checkUserRateLimit } from '../_shared/rateLimit.ts';
 import { COINS_MIN, COINS_MAX, REFERENCE_RE, normalizeReference, loadUpiSettings, mapDepositError, dailyLimitError } from '../_shared/deposits.ts';
 
 // Player submits "I have paid" with the UPI reference from their payment.
