@@ -18,7 +18,7 @@ export default function SlotBar({ filled = 0, total = 0 }) {
         <div
           className={cn(
             'h-full rounded-full transition-all duration-500',
-            full ? 'bg-destructive' : 'bg-gradient-to-r from-primary to-accent'
+            full ? 'bg-destructive' : 'bg-primary'
           )}
           style={{ width: `${percent}%` }}
         />
