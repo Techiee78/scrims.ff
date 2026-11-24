@@ -17,8 +17,7 @@ const SMS_RESEND_SECONDS = 30;
 // The helper also offers session.forgetDevices(code, method) for a "forget remembered devices" control.
 export default function MfaManage({ session, returnTo }) {
   const [status, setStatus] = useState(null);
-  /** @type {[{name: "list"} | {name: "setup" | "disable", method: "totp" | "sms"}, import('react').Dispatch<import('react').SetStateAction<{name: "list"} | {name: "setup" | "disable", method: "totp" | "sms"}>>]} */
-  const [view, setView] = useState({ name: "list" });
+  const [view, setView] = useState(/** @type {{name: "list"} | {name: "setup" | "disable", method: "totp" | "sms"}} */ ({ name: "list" }));
   const [error, setError] = useState(null);
 
   const load = async () => {
