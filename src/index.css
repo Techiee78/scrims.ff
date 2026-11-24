@@ -132,7 +132,7 @@
   }
 
   .glass-strong {
-    background: linear-gradient(135deg, hsl(var(--primary) / 0.2), rgba(15, 24, 34, 0.97) 55%, hsl(var(--accent) / 0.16)), #131f2b;
+    background: rgba(15, 24, 34, 0.97);
     backdrop-filter: blur(32px) saturate(170%);
     -webkit-backdrop-filter: blur(32px) saturate(170%);
     border: 1px solid rgba(255, 255, 255, 0.14);
