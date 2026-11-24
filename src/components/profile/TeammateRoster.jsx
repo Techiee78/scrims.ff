@@ -164,7 +164,7 @@ export default function TeammateRoster() {
             key={mate.id}
             className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
           >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent font-display text-[10px] font-semibold text-primary-foreground">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary font-display text-[10px] font-semibold text-primary-foreground">
               {mate.ign.slice(0, 2).toUpperCase()}
             </span>
             <div className="min-w-0 flex-1">
