@@ -63,7 +63,22 @@ export function normalizeOrderId(raw: unknown): string {
   return String(raw ?? '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
 }
 
+function isSafeProviderEndpoint(raw: string): boolean {
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.toLowerCase();
+    if (url.protocol !== 'https:' || url.username || url.password) return false;
+    if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local')) return false;
+    if (/^(127\.|10\.|192\.168\.|169\.254\.|0\.)/.test(host)) return false;
+    if (/^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host)) return false;
+    if (!host.includes('.') || host.startsWith('.') || host.endsWith('.')) return false;
+    return true;
+  } catch (_e) {
+    return false;
+  }
+}
 async function postForm(url: string, fields: Record<string, string>) {
+  if (!isSafeProviderEndpoint(url)) throw new Error('Payment provider endpoint must be a safe HTTPS URL.');
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
