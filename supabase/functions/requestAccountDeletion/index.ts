@@ -23,7 +23,8 @@ export default async function handler(req: Request): Promise<Response> {
       // best-effort record
     }
 
-    return Response.json({ success: true, recorded });
+    if (!recorded) return Response.json({ error: 'The deletion request could not be saved. Please try again later.', recorded: false }, { status: 503 });
+    return Response.json({ success: true, recorded: true });
   } catch (error: any) {
     return Response.json({ error: error.message }, { status: 500 });
   }
