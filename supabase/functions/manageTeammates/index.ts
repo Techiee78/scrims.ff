@@ -15,10 +15,11 @@ export default async function handler(req: Request): Promise<Response> {
     const supa = serviceClient();
 
     if (action === 'list') {
+      // Ownership is the immutable auth id, never the email.
       const { data, error } = await supa
         .from('teammates')
-        .select('*')
-        .eq('user_email', user.email)
+        .select('id, ign, whatsapp, ff_uid, created_at')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: true })
         .limit(100);
       if (error) throw error;
@@ -34,7 +35,7 @@ export default async function handler(req: Request): Promise<Response> {
         const { count } = await supa
           .from('teammates')
           .select('id', { count: 'exact', head: true })
-          .eq('user_email', user.email);
+          .eq('user_id', user.id);
         if ((count || 0) >= MAX_TEAMMATES) {
           return Response.json(
             { error: `You can save up to ${MAX_TEAMMATES} teammates — remove one to add another.` },
@@ -51,7 +52,7 @@ export default async function handler(req: Request): Promise<Response> {
             whatsapp: player.whatsapp,
             ff_uid: player.ff_uid,
           })
-          .select()
+          .select('id, ign, whatsapp, ff_uid, created_at')
           .single();
         if (error) throw error;
         return Response.json({ teammate: data });
@@ -63,8 +64,8 @@ export default async function handler(req: Request): Promise<Response> {
         .from('teammates')
         .update({ ign: player.ign, whatsapp: player.whatsapp, ff_uid: player.ff_uid })
         .eq('id', id)
-        .eq('user_email', user.email)
-        .select()
+        .eq('user_id', user.id)
+        .select('id, ign, whatsapp, ff_uid, created_at')
         .maybeSingle();
       if (error) throw error;
       if (!data) return Response.json({ error: 'Teammate not found' }, { status: 404 });
@@ -78,7 +79,7 @@ export default async function handler(req: Request): Promise<Response> {
         .from('teammates')
         .delete()
         .eq('id', id)
-        .eq('user_email', user.email);
+        .eq('user_id', user.id);
       if (error) throw error;
       return Response.json({ success: true });
     }

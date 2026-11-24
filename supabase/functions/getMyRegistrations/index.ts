@@ -8,8 +8,10 @@ export default async function handler(req: Request): Promise<Response> {
     const supa = serviceClient();
     const { data, error } = await supa
       .from('registrations')
-      .select('*')
-      .eq('user_email', user.email)
+      .select(
+        'id, tournament_id, tournament_title, mode, user_name, ff_ign, teammates, teammate_details, slot_number, entry_fee, status, standings_screenshot, kills, placement, created_at'
+      )
+      .eq('user_id', user.id)
       .eq('status', 'joined')
       .order('created_at', { ascending: false })
       .limit(60);
@@ -20,7 +22,7 @@ export default async function handler(req: Request): Promise<Response> {
     const { data: winnings } = await supa
       .from('wallet_transactions')
       .select('tournament_id, amount')
-      .eq('user_email', user.email)
+      .eq('user_id', user.id)
       .eq('type', 'credit')
       .not('tournament_id', 'is', null);
 

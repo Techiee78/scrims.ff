@@ -50,10 +50,14 @@ export default async function handler(req: Request): Promise<Response> {
       if (profileError) return Response.json({ error: profileError.message }, { status: 500 });
       if (!profile) return Response.json({ error: 'User not found' }, { status: 404 });
 
+      // Admin-only cross-user read: still scoped on the immutable id, so a
+      // recycled or edited address can never pull another player's history.
       const { data: registrations, error: regError } = await supa
         .from('registrations')
-        .select('*')
-        .eq('user_email', profile.email)
+        .select(
+          'id, tournament_id, tournament_title, mode, ff_ign, teammates, slot_number, entry_fee, status, placement, kills, created_at'
+        )
+        .eq('user_id', targetId)
         .eq('status', 'joined')
         .order('created_at', { ascending: false })
         .limit(60);

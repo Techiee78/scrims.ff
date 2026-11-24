@@ -23,8 +23,8 @@ function serviceClient() {
 async function handler(req: Request): Promise<Response> {
   try {
     const body = await req.json().catch(() => ({}));
-    const tournamentId = body?.tournament_id;
-    if (tournamentId === undefined || tournamentId === null || tournamentId === '') {
+    const tournamentId = Number(body?.tournament_id);
+    if (!Number.isFinite(tournamentId)) {
       return Response.json({ error: 'Missing match' }, { status: 400 });
     }
 
@@ -38,10 +38,11 @@ async function handler(req: Request): Promise<Response> {
       .limit(200);
     if (error) throw error;
 
+    // Allowlist: slot number, in-game name and teammate in-game names only.
     const players = (data || []).map((row: any) => ({
       slot: row.slot_number,
-      ign: row.ff_ign || '',
-      teammates: Array.isArray(row.teammates) ? row.teammates : [],
+      ign: String(row.ff_ign || ''),
+      teammates: Array.isArray(row.teammates) ? row.teammates.map((name: any) => String(name)) : [],
     }));
 
     return Response.json({ players });

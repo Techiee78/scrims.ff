@@ -10,8 +10,8 @@ export default async function handler(req: Request): Promise<Response> {
     const wallet = await ensureWallet(supa, user.email);
     const { data: transactions, error } = await supa
       .from('wallet_transactions')
-      .select('*')
-      .eq('user_email', user.email)
+      .select('id, type, amount, label, balance_after, tournament_id, topup_order_id, created_at')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(25);
     if (error) throw error;
@@ -21,7 +21,7 @@ export default async function handler(req: Request): Promise<Response> {
     const { data: topups } = await supa
       .from('coin_topups')
       .select('id, order_id, coins, amount_inr, status, mode, created_at, updated_at')
-      .eq('user_email', user.email)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(10);
 

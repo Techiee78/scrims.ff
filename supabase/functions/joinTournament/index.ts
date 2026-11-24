@@ -33,8 +33,17 @@ export default async function handler(req: Request): Promise<Response> {
       return Response.json({ error: 'Missing tournament' }, { status: 400 });
     }
 
-    const self = normalizePlayer({ ign: body.ff_ign, whatsapp: body.whatsapp, ff_uid: body.ff_uid });
-    if (self.error) return Response.json({ error: self.error }, { status: 400 });
+    // The joiner's own identity always comes from the verified profile row
+    // loaded from the token — never from the request body. The join sheet shows
+    // these read-only with an "Edit in profile" link, so nothing in the UI
+    // changes; a tampered body simply cannot register someone else's details.
+    const self = normalizePlayer({ ign: user.ff_ign, whatsapp: user.whatsapp, ff_uid: user.ff_uid });
+    if (self.error) {
+      return Response.json(
+        { error: 'Your profile details are incomplete — update them in Profile and try again.' },
+        { status: 400 }
+      );
+    }
     const me = self.player!;
 
     const supa = serviceClient();

@@ -13,13 +13,15 @@ export default async function handler(req: Request): Promise<Response> {
     }
 
     const supa = serviceClient();
+    // Ownership is the immutable auth id. A registration that carries no owner
+    // is never treated as the caller's, so an email match alone grants nothing.
     const { data: registration } = await supa
       .from('registrations')
-      .select('id, user_email')
+      .select('id, user_id')
       .eq('id', registrationId)
       .maybeSingle();
     if (!registration) return Response.json({ error: 'Registration not found' }, { status: 404 });
-    if (registration.user_email !== user.email) {
+    if (!registration.user_id || registration.user_id !== user.id) {
       return Response.json({ error: 'This registration belongs to another player' }, { status: 403 });
     }
 
