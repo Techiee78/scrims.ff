@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { ArrowDownToLine, ClipboardList, IndianRupee, LayoutDashboard, Trophy, Users } from 'lucide-react';
+import { ArrowDownToLine, ClipboardList, IndianRupee, LayoutDashboard, ShieldCheck, Trophy, Users } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import ScreenHeader from '@/components/layout/ScreenHeader';
@@ -12,6 +12,7 @@ const items = [
   { to: '/admin/requests', label: 'Deposit Requests', icon: IndianRupee },
   { to: '/admin/withdrawals', label: 'Withdrawals', icon: ArrowDownToLine },
   { to: '/admin/users', label: 'Users', icon: Users },
+  { to: '/admin/security', label: 'Security', icon: ShieldCheck },
 ];
 
 export default function AdminLayout() {

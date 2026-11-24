@@ -30,6 +30,7 @@ const AdminTournaments = lazy(() => import('./pages/admin/AdminTournaments'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 const AdminRequests = lazy(() => import('./pages/admin/AdminRequests'));
 const AdminWithdrawals = lazy(() => import('./pages/admin/AdminWithdrawals'));
+const AdminSecurity = lazy(() => import('./pages/admin/AdminSecurity'));
 
 const RouteFallback = () => (
   <div className="glass flex items-center justify-center rounded-[26px] px-6 py-12">
@@ -92,6 +93,7 @@ const AuthenticatedApp = () => {
           <Route path="/admin/requests" element={<AdminRequests />} />
           <Route path="/admin/withdrawals" element={<AdminWithdrawals />} />
           <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/security" element={<AdminSecurity />} />
           <Route path="/admin/results" element={<MatchResults />} />
         </Route>
       </Route>
