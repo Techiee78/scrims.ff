@@ -107,7 +107,7 @@ function pickPaymentUrl(json: any): string {
     json.data?.url,
     json.url,
   ];
-  const found = candidates.find((value) => typeof value === 'string' && /^https?:\/\//i.test(value));
+  const found = candidates.find((value) => typeof value === 'string' && isSafeProviderEndpoint(value));
   return found ? String(found) : '';
 }
 
