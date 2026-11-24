@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect, useCallback } fr
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
 import { getSupabase } from '@/lib/supabaseClient';
-import { isOnResetPage } from '@/lib/passwordRecovery';
+import { isOnResetPage, markRecoveryVerified } from '@/lib/passwordRecovery';
 
 const AuthContext = createContext();
 
@@ -92,6 +92,9 @@ export const AuthProvider = ({ children }) => {
           // temporary session. Do NOT log the user in from that session —
           // the ResetPassword page uses it to set a new password, then signs
           // out. Auto-logging in here would bypass the reset entirely.
+          // The provider emits this only after it validated a recovery token,
+          // so it is the signal the reset page trusts.
+          if (event === 'PASSWORD_RECOVERY') markRecoveryVerified();
           if (event === 'PASSWORD_RECOVERY' || isOnResetPage()) {
             setIsAuthenticated(false);
             setUser(null);
@@ -133,6 +136,22 @@ export const AuthProvider = ({ children }) => {
       // ignore
     }
   }, [loadProfile]);
+
+  // A demoted admin must lose the admin UI without a full reload: re-read the
+  // profile whenever the app comes back to the foreground. Server-side
+  // authorization never relies on this — every admin function re-checks the
+  // role in the database on each request.
+  useEffect(() => {
+    const sync = () => {
+      if (document.visibilityState === 'visible' && !isOnResetPage()) refreshUser();
+    };
+    document.addEventListener('visibilitychange', sync);
+    window.addEventListener('focus', sync);
+    return () => {
+      document.removeEventListener('visibilitychange', sync);
+      window.removeEventListener('focus', sync);
+    };
+  }, [refreshUser]);
 
   const checkUserAuth = useCallback(async () => {
     try {

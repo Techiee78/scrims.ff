@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Lock, Loader2, AlertTriangle } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
-import { isRecoveryPending, clearRecoveryPending } from "@/lib/passwordRecovery";
+import { isRecoveryVerified, hadRecoveryTokenInUrl, clearRecoveryPending } from "@/lib/passwordRecovery";
 
 export default function ResetPassword() {
   const [newPassword, setNewPassword] = useState("");
@@ -23,15 +23,20 @@ export default function ResetPassword() {
     (async () => {
       try {
         const supa = await getSupabase();
-        // Supabase recovery links deliver the token in the URL hash. The
-        // client exchanges it into a session on init (detectSessionInUrl).
-        // Give that a brief tick, then confirm a recovery session exists.
-        await new Promise((r) => setTimeout(r, 250));
-        const { data: { session } } = await supa.auth.getSession();
+        // Supabase exchanges the recovery token from the URL into a session on
+        // client init (detectSessionInUrl). Give that up to ~2s to finish.
+        let session = null;
+        for (let attempt = 0; attempt < 8; attempt += 1) {
+          const { data } = await supa.auth.getSession();
+          session = data?.session ?? null;
+          if (session || (!hadRecoveryTokenInUrl() && !isRecoveryVerified())) break;
+          await new Promise((r) => setTimeout(r, 250));
+        }
         if (!active) return;
-        // Supabase clears the URL hash after reading it, so rely on the
-        // flag captured at page load to confirm this came from a reset link.
-        setHasSession(!!session && isRecoveryPending());
+        // A session alone isn't proof: only a session the auth provider
+        // created from a recovery link (PASSWORD_RECOVERY event, or a recovery
+        // token the provider issued in this URL) may change the password.
+        setHasSession(!!session && (isRecoveryVerified() || hadRecoveryTokenInUrl()));
         setChecking(false);
       } catch {
         if (active) setChecking(false);
@@ -47,8 +52,8 @@ export default function ResetPassword() {
       setError("Passwords do not match");
       return;
     }
-    if (newPassword.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (newPassword.length < 8) {
+      setError("Password must be at least 8 characters");
       return;
     }
     setLoading(true);

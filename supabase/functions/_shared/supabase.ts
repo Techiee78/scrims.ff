@@ -22,26 +22,30 @@ export interface SupabaseUser {
   whatsapp?: string;
 }
 
+// The caller's Supabase access token: the __supabase_token body field (what the
+// app sends), or an Authorization: Bearer header when it carries a Supabase JWT.
+export async function getRequestToken(req: Request): Promise<string> {
+  let bodyToken = '';
+  try {
+    const cloned = req.clone();
+    const body = await cloned.json();
+    if (body && typeof body.__supabase_token === 'string' && body.__supabase_token) {
+      bodyToken = body.__supabase_token;
+    }
+  } catch (_e) {
+    // no JSON body — ignore
+  }
+  if (bodyToken) return bodyToken;
+
+  const authHeader = req.headers.get('Authorization') || '';
+  return authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+}
+
 // Verifies the caller's Supabase access token against Supabase Auth and
 // returns their identity merged with their public.profiles row, or null.
-// Token source: the __supabase_token body field (what the app sends), or an
-// Authorization: Bearer header when it carries a Supabase JWT.
 export async function getUserFromRequest(req: Request): Promise<SupabaseUser | null> {
   try {
-    let bodyToken: string | null = null;
-    try {
-      const cloned = req.clone();
-      const body = await cloned.json();
-      if (body && typeof body.__supabase_token === 'string' && body.__supabase_token) {
-        bodyToken = body.__supabase_token;
-      }
-    } catch (_e) {
-      // no JSON body — ignore
-    }
-
-    const authHeader = req.headers.get('Authorization') || '';
-    const headerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
-    const accessToken = bodyToken || headerToken;
+    const accessToken = await getRequestToken(req);
     if (!accessToken) return null;
 
     const supa = serviceClient();
@@ -77,4 +81,35 @@ export async function getAdminFromRequest(req: Request): Promise<SupabaseUser | 
   if (!user) return null;
   if (user.role !== 'admin') return null;
   return user;
+}
+
+// ------------------------------------------------------------
+// Native MFA (Supabase TOTP / phone factors — no custom OTP)
+// ------------------------------------------------------------
+
+// Assurance level carried in the verified access token: 'aal1' (password only)
+// or 'aal2' (second factor completed).
+export function getTokenAal(token: string): string | null {
+  try {
+    const part = token.split('.')[1];
+    if (!part) return null;
+    const json = JSON.parse(atob(part.replace(/-/g, '+').replace(/_/g, '/')));
+    return typeof json?.aal === 'string' ? json.aal : null;
+  } catch (_e) {
+    return null;
+  }
+}
+
+// True when the account has at least one verified MFA factor enrolled.
+// Fails closed to "not enrolled" so a provider hiccup can never lock an admin
+// out of the panel; authorization still relies on the database role.
+export async function hasVerifiedMfaFactor(supa: any, userId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supa.auth.admin.mfa.listFactors({ userId });
+    if (error || !data) return false;
+    const factors = (data as any).factors || [];
+    return factors.some((f: any) => f?.status === 'verified');
+  } catch (_e) {
+    return false;
+  }
 }

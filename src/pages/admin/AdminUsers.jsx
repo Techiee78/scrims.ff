@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Coins, Shield, ShieldOff, Search, Users as UsersIcon, Loader2 } from 'lucide-react';
 import { callFunction } from '@/lib/callFunction';
 import { withAuth } from '@/lib/authToken';
@@ -10,6 +11,16 @@ import AdminUserProfileDialog from '@/components/admin/AdminUserProfileDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 function initials(name, email) {
   const base = (name || email || '?').trim();
@@ -19,7 +30,8 @@ function initials(name, email) {
 }
 
 export default function AdminUsers() {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, refreshUser } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +41,8 @@ export default function AdminUsers() {
   const [balances, setBalances] = useState({});
   const [coinUser, setCoinUser] = useState(null);
   const [profileUser, setProfileUser] = useState(null);
+  const [transferTarget, setTransferTarget] = useState(null);
+  const [transferring, setTransferring] = useState(false);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -72,6 +86,36 @@ export default function AdminUsers() {
       toast({ title: 'Role not changed', description: message, variant: 'destructive' });
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  // Single-admin policy: admin access is handed over, never duplicated. The new
+  // admin is promoted and the current one drops to 'user' in one transaction.
+  const transferAdmin = async () => {
+    const target = transferTarget;
+    if (!target) return;
+    setTransferring(true);
+    setError('');
+    try {
+      const res = await callFunction('manageUsers', await withAuth({
+        action: 'transfer',
+        user_id: target.id,
+      }));
+      const data = res?.data ?? res;
+      if (data?.error) throw new Error(data.error);
+      setTransferTarget(null);
+      toast({
+        title: 'Admin transferred',
+        description: `${target.full_name || target.email} is now the admin. You no longer have admin access.`,
+      });
+      await refreshUser();
+      navigate('/');
+    } catch (err) {
+      const message = err.message || 'Transfer failed';
+      setError(message);
+      toast({ title: 'Admin not transferred', description: message, variant: 'destructive' });
+    } finally {
+      setTransferring(false);
     }
   };
 
@@ -179,8 +223,8 @@ export default function AdminUsers() {
                   <Button
                     size="sm"
                     variant={isAdmin ? 'outline' : 'default'}
-                    disabled={isSelf || updatingId === u.id}
-                    onClick={() => toggleRole(u)}
+                    disabled={isSelf || updatingId === u.id || transferring}
+                    onClick={() => (isAdmin ? toggleRole(u) : setTransferTarget(u))}
                     className="h-11 rounded-full px-3 text-sm"
                   >
                     {updatingId === u.id ? (
@@ -209,6 +253,39 @@ export default function AdminUsers() {
         open={Boolean(profileUser)}
         onOpenChange={(next) => !next && setProfileUser(null)}
       />
+
+      <AlertDialog
+        open={Boolean(transferTarget)}
+        onOpenChange={(next) => !next && !transferring && setTransferTarget(null)}
+      >
+        <AlertDialogContent className="glass-strong rounded-[28px] border-white/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display">Transfer admin access?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Only one admin is allowed. Making{' '}
+              <span className="font-semibold text-foreground">
+                {transferTarget?.full_name || transferTarget?.email}
+              </span>{' '}
+              the admin removes your admin access immediately.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-2">
+            <AlertDialogCancel className="mt-0 flex-1 rounded-full" disabled={transferring}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                transferAdmin();
+              }}
+              disabled={transferring}
+              className="flex-1 rounded-full"
+            >
+              {transferring ? 'Transferring…' : 'Transfer'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AdminCoinDialog
         user={coinUser}
