@@ -30,10 +30,10 @@ function Enroll({ session, onDone }) {
     <>
       <MfaHeader
         title={info && `${info.name || "This app"} requires multi-factor authentication`}
-        description={method ? null : "Add a second sign-in step to keep your account secure. Choose how you want to get your codes."}
+        description={method ? undefined : "Add a second sign-in step to keep your account secure. Choose how you want to get your codes."}
       />
       {method ? (
-        <MfaMethodSetup session={session} method={method} onDone={onDone} onBack={() => setMethod(null)} />
+        <MfaMethodSetup session={session} method={method} signInPath="/mfa" onDone={onDone} onBack={() => setMethod(null)} />
       ) : (
         <div className="space-y-3">
           <Button className="w-full h-12 font-medium" onClick={() => setMethod("totp")}>Set up your authenticator app</Button>
@@ -105,7 +105,7 @@ function Verify({ session, challenge, returnTo, onDone }) {
           {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
           {busy ? "Verifying..." : "Verify"}
         </Button>
-        {method === "sms" && <ResendLine cooldown={cooldown} disabled={sending} onResend={sendCode} />}
+        {method === "sms" && <ResendLine cooldown={cooldown} disabled={sending} onResend={sendCode} error={error?.message} />}
         {other && (
           <Button variant="outline" className="w-full" onClick={() => { setMethod(other); setCode(""); setError(null); }}>
             {other === "sms" ? "Verify via Text Message" : "Verify via Authenticator App"}
