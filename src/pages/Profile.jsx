@@ -27,7 +27,7 @@ export default function Profile() {
           <ProfileAddCoins />
         </div>
         <div className="flex items-center gap-4">
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary font-display text-xl font-semibold text-primary-foreground">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent font-display text-xl font-semibold text-primary-foreground">
             {initials(user)}
           </span>
           <div className="min-w-0">

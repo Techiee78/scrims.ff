@@ -83,7 +83,7 @@ export default function Wallet() {
           />
         )}
 
-        <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-primary/10 p-5 shadow-[0_18px_60px_rgba(3,2,12,0.5)] backdrop-blur-2xl">
+        <section className="relative overflow-hidden rounded-[30px] border border-white/10 bg-gradient-to-br from-primary/25 via-[#0B0817]/80 to-accent/20 p-5 shadow-[0_18px_60px_rgba(3,2,12,0.5)] backdrop-blur-2xl">
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-2 text-xs font-semibold tracking-tight text-muted-foreground">
               <Coins className="h-3.5 w-3.5 text-primary" />

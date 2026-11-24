@@ -14,7 +14,7 @@ const STEP = 8;
 
 const glassStyle = {
   background:
-    'rgba(19, 31, 43, 0.82)',
+    'linear-gradient(135deg, hsl(var(--primary) / 0.16), rgba(17, 27, 38, 0.44) 55%, hsl(var(--accent) / 0.13)), rgba(19, 31, 43, 0.3)',
   backdropFilter: 'blur(22px) saturate(190%)',
   WebkitBackdropFilter: 'blur(22px) saturate(190%)',
   border: '1px solid rgba(255, 255, 255, 0.14)',

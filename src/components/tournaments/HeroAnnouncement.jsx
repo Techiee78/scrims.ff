@@ -29,7 +29,7 @@ export default function HeroAnnouncement({ tournament, joined, onJoin }) {
           alt={tournament.title}
           className="h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-[#0B0817]/45" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0B0817] via-[#0B0817]/40 to-transparent" />
         <div className="absolute left-4 top-4">
           <LiveStatus tournament={tournament} now={now} />
         </div>

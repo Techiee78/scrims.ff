@@ -74,7 +74,7 @@ export default function FloatingSupport() {
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-label="Customer support"
-        className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_rgba(3,2,12,0.6)] transition-transform hover:scale-105 active:scale-95"
+        className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-[0_10px_30px_rgba(3,2,12,0.6)] transition-transform hover:scale-105 active:scale-95"
       >
         {open ? <X className="h-5 w-5" /> : <Headset className="h-5 w-5" />}
       </button>

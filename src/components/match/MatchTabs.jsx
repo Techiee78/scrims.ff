@@ -19,7 +19,7 @@ export default function MatchTabs({ value, onChange, memberCount }) {
             className={cn(
               'flex min-h-[44px] items-center justify-center gap-1.5 rounded-3xl px-2 py-2.5 font-display text-xs font-semibold tracking-tight transition-all duration-300',
               active
-                ? 'bg-primary text-primary-foreground shadow-[0_6_24px_rgba(56,189,248,0.32)]'
+                ? 'bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-[0_6px_24px_rgba(56,189,248,0.32)]'
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
