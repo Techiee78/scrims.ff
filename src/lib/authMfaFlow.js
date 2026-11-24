@@ -25,7 +25,9 @@ function authPath(suffix) {
   return `/api/apps/${appParams.appId}/auth/${suffix}`;
 }
 
-async function request(suffix, { method = 'POST', body, token, headers } = {}) {
+/** @param {string} suffix @param {{method?: string, body?: unknown, token?: string, headers?: Record<string, string>}} options */
+async function request(suffix, options = {}) {
+  const { method = 'POST', body, token, headers } = options;
   const response = await fetch(authPath(suffix), {
     method,
     credentials: 'include',
@@ -113,7 +115,7 @@ export async function signInWithProvider(provider, returnTo, { manage = false } 
   if (isInAppBrowser()) {
     // In-app browsers hand sign-in to the system browser through the platform's MFA page.
     const url = new URL('/auth/mfa', window.location.origin);
-    url.search = new URLSearchParams({ app_id: appParams.appId, oauth_start: provider, from_url: returnTo, ...(manage ? { security: '1' } : {}) });
+    url.search = new URLSearchParams({ app_id: appParams.appId, oauth_start: provider, from_url: returnTo, ...(manage ? { security: '1' } : {}) }).toString();
     window.location.assign(url.href);
     return;
   }
@@ -131,7 +133,7 @@ export async function signInWithProvider(provider, returnTo, { manage = false } 
     ...(manage ? { app_mfa_action: 'manage' } : {}),
     app_mfa_code_challenge: challenge,
     app_mfa_return: '/mfa',
-  });
+  }).toString();
   window.location.assign(url.href);
 }
 
