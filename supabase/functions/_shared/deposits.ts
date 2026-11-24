@@ -91,6 +91,8 @@ export function mapDepositError(message: string): { status: number; error: strin
     return { status: 400, error: 'Enter the 12-digit UTR from your payment app.' };
   if (m.includes('too_many_pending'))
     return { status: 429, error: `You already have ${MAX_PENDING} requests waiting for approval.` };
+  if (m.includes('daily_limit_exceeded'))
+    return { status: 429, error: 'You have reached the daily deposit limit. Try again tomorrow or lower the amount.' };
   if (m.includes('request_not_found'))
     return { status: 404, error: 'That deposit request does not exist.' };
   if (m.includes('already_decided'))
