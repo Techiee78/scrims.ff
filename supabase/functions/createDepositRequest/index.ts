@@ -9,8 +9,11 @@ export default async function handler(req: Request): Promise<Response> {
   try {
     const user = await getUserFromRequest(req);
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const rate = await checkUserRateLimit(serviceClient(), user.id, 'manual_deposit_request', 900, 5);
+    if (rate === false) return Response.json({ error: 'Too many deposit requests. Please wait and try again.' }, { status: 429 });
+    if (rate === null) return Response.json({ error: 'Request protection is temporarily unavailable.' }, { status: 503 });
 
-    let body: any = {};
+    let body: any;
     try {
       body = await req.json();
     } catch (_e) {
