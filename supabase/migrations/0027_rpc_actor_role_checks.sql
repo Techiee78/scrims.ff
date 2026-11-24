@@ -130,7 +130,7 @@ declare
   v_balance numeric;
   v_new_balance numeric;
   v_reason text := nullif(btrim(coalesce(p_reason, '')), '');
-  v_ref text := nullif(upper(regexp_replace(coalesce(p_payout_ref, ''), '\\s+', '', 'g')), '');
+  v_ref text := nullif(upper(regexp_replace(coalesce(p_payout_ref, ''), '\s+', '', 'g')), '');
   v_txn uuid;
 begin
   if p_admin_id is null or not exists (
