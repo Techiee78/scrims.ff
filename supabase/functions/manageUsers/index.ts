@@ -15,6 +15,9 @@ export default async function handler(req: Request): Promise<Response> {
     const guard = await requireAdmin(req);
     if (!guard.ok) return guard.response;
     const { admin: user, token } = guard.value;
+    // User directory/profile data is sensitive; require AAL2 for every action.
+    const mfa = await assertAdminMfa(user.id, token);
+    if (!mfa.ok) return mfa.response;
 
     let body: any = {};
     try {
