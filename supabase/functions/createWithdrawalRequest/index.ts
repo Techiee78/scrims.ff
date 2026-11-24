@@ -1,4 +1,5 @@
 import { getUserFromRequest, serviceClient } from '../_shared/supabase.ts';
+import { checkUserRateLimit } from '../_shared/rateLimit.ts';
 import { WITHDRAW_MIN, WITHDRAW_MAX, UPI_ID_RE, mapWithdrawalError } from '../_shared/withdrawals.ts';
 
 // Player asks to cash out coins to their own UPI ID.
